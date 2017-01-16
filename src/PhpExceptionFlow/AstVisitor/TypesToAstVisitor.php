@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpExceptionFlow\Visitor;
+namespace PhpExceptionFlow\AstVisitor;
 
 use PHPCfg\Op;
 use PHPCfg\Operand;

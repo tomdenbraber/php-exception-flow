@@ -1,5 +1,5 @@
 <?php
-namespace PhpExceptionFlow\Visitor;
+namespace PhpExceptionFlow\AstVisitor;
 
 use PhpExceptionFlow\GuardedScope;
 use PhpExceptionFlow\Scope;
