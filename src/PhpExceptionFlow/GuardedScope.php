@@ -51,7 +51,7 @@ class GuardedScope {
 	}
 
 	/**
-	 * @return SCope that is inclosed by this guarded scope
+	 * @return Scope that is inclosed by this guarded scope
 	 */
 	public function getInclosedScope() {
 		return $this->inclosed_scope;
