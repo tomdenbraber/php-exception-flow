@@ -1,8 +1,6 @@
 <?php
 namespace PhpExceptionFlow;
 
-use PHPCfg\Parser;
-
 class ScopeTraverser implements ScopeTraverserInterface {
 
 	/** @var ScopeVisitorInterface[]  */
