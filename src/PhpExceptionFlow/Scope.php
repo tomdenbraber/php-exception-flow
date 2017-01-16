@@ -3,6 +3,7 @@ namespace PhpExceptionFlow;
 
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Throw_;
+use PHPTypes\State;
 use PHPTypes\Type;
 
 
@@ -122,7 +123,7 @@ class Scope {
 		foreach ($this->instructions as $instruction) {
 			if ($instruction instanceof Throw_) {
 				/** @var Type $type */
-				$type = $instruction->getAttribute("exceptionType", new Type(Type::TYPE_UNKNOWN));
+				$type = $instruction->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
 				$this->raises[(string)$type] = $type;
 			}
 		}
@@ -151,7 +152,7 @@ class Scope {
 	}
 
 	/**
-	 * Determines the propagates, geenerates, uncaught and raises sets
+	 * Determines the propagates, generates, uncaught and raises sets
 	 */
 	public function determineEncounters() {
 		$this->determineRaises();

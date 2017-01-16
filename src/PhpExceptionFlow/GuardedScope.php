@@ -3,6 +3,7 @@ namespace PhpExceptionFlow;
 
 use PhpParser\Node\Stmt\Catch_;
 use PHPTypes\Type;
+use PHPTypes\State;
 
 class GuardedScope {
 	/** @var $enclosing_scope Scope: the scope that encloses this guarded scope */
@@ -11,8 +12,12 @@ class GuardedScope {
 	private $inclosed_scope;
 	/** @var $catch_clauses Catch_[] */
 	private $catch_clauses;
-	/** @var $caught_exceptions \SplObjectStorage */
+
+	/** @var \SplObjectStorage */
 	private $caught_exceptions;
+
+	/** @var Type[] */
+	private $unchaught = [];
 
 	/**
 	 * GuardedScope constructor.
@@ -68,7 +73,7 @@ class GuardedScope {
 
 	/**
 	 * @param Catch_ $catch_clause
-	 * @return Type
+	 * @return string[]
 	 * @throws \LogicException
 	 */
 	public function getCaughtExceptionsForClause(Catch_ $catch_clause) {
@@ -82,13 +87,57 @@ class GuardedScope {
 	/**
 	 * Determines for each catch clause which exception types are caught
 	 */
-	public function determineCaughtExceptionTypes() {
+	public function determineCaughtExceptionTypes(State $state) {
+		$already_caught = array();
 		foreach ($this->catch_clauses as $catch_clause) {
-			$this->caught_exceptions[$catch_clause] = $this->determineCaughtExceptionType($catch_clause);
+			if ($this->caught_exceptions->contains($catch_clause) === false) {
+				$this->caught_exceptions[$catch_clause] = array();
+			}
+
+			$exc_types = $this->determineCaughtExceptionTypesForCatch($catch_clause, $state);
+			$caught_by_clause = $this->caught_exceptions[$catch_clause];
+			$caught_by_clause = array_merge($caught_by_clause, array_diff($exc_types, $already_caught));
+			$this->caught_exceptions[$catch_clause] = $caught_by_clause;
+
+			$already_caught = array_merge($exc_types, $already_caught);
 		}
 	}
 
-	private function determineCaughtExceptionType(Catch_ $catch) {
-		return new Type(Type::TYPE_OBJECT, array(), implode('\\', $catch->type->parts));
+	/**
+	 * @param Catch_ $catch
+	 * @param State $state
+	 * @return string[]
+	 */
+	private function determineCaughtExceptionTypesForCatch(Catch_ $catch, State $state) {
+		$caught_type = strtolower(implode('\\', $catch->type->parts));
+		return $state->classResolvedBy[$caught_type];
+	}
+
+
+	public function determineUncaughtExceptions(State $state) {
+		$resolves = $state->classResolves;
+		$exceptions_to_be_caught = $this->inclosed_scope->getEncounters();
+		$uncaught = array();
+		foreach ($exceptions_to_be_caught as $exception) {
+			$caught = false;
+			$current_type_str = strtolower($exception->userType);
+			foreach ($this->catch_clauses as $catch_clause) {
+				$current_catches = $this->caught_exceptions[$catch_clause];
+				foreach ($current_catches as $current_catch) {
+					if (isset($resolves[$current_catch][$current_type_str]) === true) {
+						$caught = true;
+						break;
+					}
+				}
+			}
+			if ($caught === false) {
+				$uncaught[] = $exception;
+			}
+		}
+		$this->unchaught = $uncaught;
+	}
+
+	public function getUncaught() {
+		return $this->unchaught;
 	}
 }

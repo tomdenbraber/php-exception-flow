@@ -5,6 +5,7 @@ use PhpExceptionFlow\GuardedScope;
 use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
+use PHPTypes\State;
 
 /**
  * Class ScopeCollector
@@ -14,18 +15,21 @@ use PhpParser\NodeVisitorAbstract;
 class ScopeCollector extends NodeVisitorAbstract {
 	/** @var Scope $main_scope */
 	private $main_scope;
-
-	/** @var Scope[] $scopes */
-	private $scopes;
+	/** @var Scope[] $function_scopes */
+	private $function_scopes;
 	/** @var Scope $current_scope */
 	private $current_scope;
 	/** @var GuardedScope current_guarded_scope */
 	private $current_guarded_scope;
 
-	public function __construct() {
+	/** @var State $state */
+	private $state;
+
+	public function __construct(State $state) {
 		$this->main_scope = new Scope("{main}");
-		$this->scopes = array();
+		$this->function_scopes = array();
 		$this->current_scope = $this->main_scope;
+		$this->state = $state;
 
 		$this->current_guarded_scope = null;
 	}
@@ -53,11 +57,11 @@ class ScopeCollector extends NodeVisitorAbstract {
 	public function leaveNode(Node $node) {
 		if ($node instanceof Node\Stmt\Function_) {
 			// go back to main scope when we leave a function
-			$this->scopes[] = $this->current_scope;
+			$this->function_scopes[] = $this->current_scope;
 			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			// calculate the types of the catch clauses
-			$this->current_guarded_scope->determineCaughtExceptionTypes();
+			$this->current_guarded_scope->determineCaughtExceptionTypes($this->state);
 
 			// restore the current scope to the scope in which this try/catch block resides
 			// restore the current guarded scope to the the guarded scope in which the current scope resides
@@ -80,7 +84,7 @@ class ScopeCollector extends NodeVisitorAbstract {
 	/**
 	 * @return Scope[]
 	 */
-	public function getScopes() {
-		return $this->scopes;
+	public function getFunctionScopes() {
+		return $this->function_scopes;
 	}
 }
