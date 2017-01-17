@@ -11,6 +11,11 @@ interface ScopeTraverserInterface
 	public function addVisitor(ScopeVisitorInterface $visitor);
 
 	/**
+	 * @param ScopeVisitorInterface $visitor
+	 */
+	public function removeVisitor(ScopeVisitorInterface $visitor);
+
+	/**
 	 * @param Scope[] $scopes
 	 * @return mixed
 	 */

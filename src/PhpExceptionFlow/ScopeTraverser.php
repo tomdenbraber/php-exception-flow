@@ -27,6 +27,16 @@ class ScopeTraverser implements ScopeTraverserInterface {
 	}
 
 	/**
+	 * @param $visitor ScopeVisitorInterface
+	 * @return void
+	 */
+	public function removeVisitor(ScopeVisitorInterface $visitor) {
+		if (false !== $pos = array_search($visitor, $this->visitors, true)) {
+			unset($this->visitors[$pos]);
+		}
+	}
+
+	/**
 	 * @param Scope[] $scopes
 	 * @return void
 	 */
