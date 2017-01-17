@@ -60,9 +60,6 @@ class ScopeCollector extends NodeVisitorAbstract {
 			$this->function_scopes[] = $this->current_scope;
 			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
-			// calculate the types of the catch clauses
-			$this->current_guarded_scope->determineCaughtExceptionTypes($this->state);
-
 			// restore the current scope to the scope in which this try/catch block resides
 			// restore the current guarded scope to the the guarded scope in which the current scope resides
 			$this->current_scope = $this->current_guarded_scope->getEnclosingScope();

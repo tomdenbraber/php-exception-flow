@@ -7,5 +7,5 @@ try {
 	encounters: []
 	try
 		encounters: [InvalidArgumentException]
-	catch#0 catches: [InvalidArgumentException]
+	catch#0 catches: [invalidargumentexception]
 	uncaught: []

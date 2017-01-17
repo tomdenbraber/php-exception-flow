@@ -11,7 +11,7 @@ try {
 		encounters: [InvalidArgumentException]
 		try
 			encounters: [InvalidArgumentException]
-		catch#0 catches: [DomainException]
+		catch#0 catches: [domainexception]
 		uncaught: [InvalidArgumentException]
-	catch#0 catches: [InvalidArgumentException]
+	catch#0 catches: [invalidargumentexception]
 	uncaught: []

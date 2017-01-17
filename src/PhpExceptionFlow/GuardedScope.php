@@ -110,7 +110,16 @@ class GuardedScope {
 	 */
 	private function determineCaughtExceptionTypesForCatch(Catch_ $catch, State $state) {
 		$caught_type = strtolower(implode('\\', $catch->type->parts));
-		return $state->classResolvedBy[$caught_type];
+		$resolved_by_list = [];
+		foreach ($state->classResolvedBy[$caught_type] as $resolved_by) {
+			if (isset($state->classLookup[$resolved_by]) === true) {
+				$resolved_by_list[] = new Type(Type::TYPE_OBJECT, $state->classLookup[$resolved_by]->name->value);
+			} else {
+				$resolved_by_list[] = new Type(Type::TYPE_OBJECT, [], $resolved_by);
+			}
+		}
+
+		return array_unique($resolved_by_list);
 	}
 
 
@@ -124,7 +133,8 @@ class GuardedScope {
 			foreach ($this->catch_clauses as $catch_clause) {
 				$current_catches = $this->caught_exceptions[$catch_clause];
 				foreach ($current_catches as $current_catch) {
-					if (isset($resolves[$current_catch][$current_type_str]) === true) {
+					$current_catch_str = $current_catch->userType;
+					if (isset($resolves[$current_catch_str][$current_type_str]) === true) {
 						$caught = true;
 						break;
 					}

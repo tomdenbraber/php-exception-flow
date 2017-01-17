@@ -8,6 +8,6 @@ try {
 	encounters: []
 	try
 		encounters: []
-	catch#0 catches: [BadFunctionCallException, BadMethodCallException]
+	catch#0 catches: [badfunctioncallexception, badmethodcallexception]
 	catch#1 catches: []
 	uncaught: []
