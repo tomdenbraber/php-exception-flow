@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\ScopeVisitor\ScopeVisitorInterface;
+
 class ScopeTraverserTest extends \PHPUnit_Framework_TestCase {
 
 	/** @var Scope */

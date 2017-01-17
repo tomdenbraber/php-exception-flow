@@ -1,5 +1,8 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\ScopeVisitor;
+
+use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\GuardedScope;
 
 interface ScopeVisitorInterface {
 

@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\ScopeVisitor\ScopeVisitorInterface;
+
 interface ScopeTraverserInterface
 {
 	/**
