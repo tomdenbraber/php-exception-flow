@@ -21,6 +21,8 @@ class ScopeCollector extends NodeVisitorAbstract {
 	private $current_scope;
 	/** @var GuardedScope current_guarded_scope */
 	private $current_guarded_scope;
+	/** @var Node\Stmt\ClassLike */
+	private $current_class;
 
 	/** @var State $state */
 	private $state;
@@ -32,12 +34,32 @@ class ScopeCollector extends NodeVisitorAbstract {
 		$this->state = $state;
 
 		$this->current_guarded_scope = null;
+		$this->current_class = null;
 	}
 
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\Function_) {
-			/** @var Node\Stmt\Function_ $node */
-			$this->current_scope = new Scope($node->name);
+		if ($node instanceof Node\Stmt\ClassLike) {
+			$this->current_class = $node;
+		} else if ($node instanceof Node\FunctionLike) {
+			$name = "";
+			switch (get_class($node)) {
+				case Node\Expr\Closure::class:
+					//todo: implement correctly, thinking of how closures behave.
+					$name = md5(random_bytes(64));
+					break;
+				case Node\Stmt\Function_::class:
+					/** @var Node\Stmt\Function_ $node */
+					$name = $node->name;
+					break;
+				case Node\Stmt\ClassMethod::class:
+					/** @var Node\Stmt\ClassMethod $node */
+					$name = $this->current_class->name . "::" . $node->name;
+					break;
+				default:
+					throw new \LogicException("Unknown implementation of FunctionLike: " . get_class($node));
+			}
+
+			$this->current_scope = new Scope($name);
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing_scope = $this->current_scope;
 			$inclosed_scope = new Scope(md5(random_bytes(64)));
@@ -55,7 +77,9 @@ class ScopeCollector extends NodeVisitorAbstract {
 	}
 
 	public function leaveNode(Node $node) {
-		if ($node instanceof Node\Stmt\Function_) {
+		if ($node instanceof Node\Stmt\ClassLike) {
+			$this->current_class = null;
+		} else if ($node instanceof Node\FunctionLike) {
 			// go back to main scope when we leave a function
 			$this->function_scopes[] = $this->current_scope;
 			$this->current_scope = $this->main_scope;

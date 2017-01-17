@@ -1,0 +1,11 @@
+<?php
+class A {
+	public function a_method() {
+		throw new BadMethodCallException();
+	}
+}
+-----
+{main}:
+	encounters: []
+A::a_method:
+	encounters: [BadMethodCallException]
