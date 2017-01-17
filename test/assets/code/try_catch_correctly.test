@@ -1,0 +1,11 @@
+<?php
+try {
+	throw new \InvalidArgumentException();
+} catch (\InvalidArgumentException $le) {}
+-----
+{main}:
+	encounters: []
+	try
+		encounters: [InvalidArgumentException]
+	catch#0 catches: [InvalidArgumentException]
+	uncaught: []

@@ -1,0 +1,13 @@
+<?php
+try {
+
+} catch (\BadFunctionCallException $bf) {
+} catch (\BadMethodCallException $bm) {}
+-----
+{main}:
+	encounters: []
+	try
+		encounters: []
+	catch#0 catches: [BadFunctionCallException, BadMethodCallException]
+	catch#1 catches: []
+	uncaught: []
