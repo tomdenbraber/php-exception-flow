@@ -148,7 +148,10 @@ class Scope {
 	 * Determine the set of Exceptions that are encountered in the enclosed guarded scopes, but not caught.
 	 */
 	private function determineUncaught() {
-
+		foreach ($this->guarded_scopes as $guarded_scope) {
+			$this->uncaught = array_merge($this->uncaught, $guarded_scope->getUncaught());
+		}
+		$this->uncaught = array_unique($this->uncaught);
 	}
 
 	/**
