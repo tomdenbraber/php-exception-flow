@@ -1,18 +1,18 @@
 <?php
 namespace PhpExceptionFlow\CHA;
 
-class Method {
-	/** @var string $class*/
-	private $class;
-	/** @var string $name */
-	private $name;
-	/** @var array $args  */
-	private $args;
+use PhpParser\Node\Stmt\ClassMethod;
 
-	public function __construct($class, $name, $args) {
+class Method {
+	/** @var string $class */
+	private $class;
+	/** @var ClassMethod $method */
+	private $method_node;
+
+
+	public function __construct($class, ClassMethod $method) {
 		$this->class = $class;
-		$this->name = $name;
-		$this->args = $args;
+		$this->method_node = $method;
 	}
 
 	public function getClass() {
@@ -20,6 +20,6 @@ class Method {
 	}
 
 	public function getName() {
-		return $this->name;
+		return $this->method_node->name;
 	}
 }

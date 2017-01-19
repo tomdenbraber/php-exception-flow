@@ -4,6 +4,7 @@ namespace PhpExceptionFlow\Test\CHA;
 use PhpExceptionFlow\CHA\MethodComparator;
 use PhpExceptionFlow\CHA\Method;
 use PhpExceptionFlow\CHA\PartialOrder;
+use PhpParser\Node\Stmt\ClassMethod;
 
 class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 	/**
@@ -45,49 +46,56 @@ class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 	/** @var MethodComparator */
 	private $comparator;
 
+	/** @var ClassMethod */
+	private $method_m;
+	/** @var ClassMethod */
+	private $method_f;
+
 	public function setUp() {
 		$this->comparator = new MethodComparator($this->resolves);
+		$this->method_m = new ClassMethod("m");
+		$this->method_f = new ClassMethod("f");
 	}
 
 	public function testMethodsWithDifferentNamesAreNotComparable() {
-		$m1 = new Method("a", "m", array());
-		$m2 = new Method("a", "f", array());
+		$m1 = new Method("a", $this->method_m);
+		$m2 = new Method("a", $this->method_f);
 		$this->assertEquals(PartialOrder::NOT_COMPARABLE, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testMethodsWithSameNamesAndSameClassAreEqual() {
-		$m1 = new Method("a", "m", array());
-		$m2 = new Method("a", "m", array());
+		$m1 = new Method("a", $this->method_m);
+		$m2 = new Method("a", $this->method_m);
 		$this->assertEquals(PartialOrder::EQUAL, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testOverridingMethodIsSmaller() {
-		$m1 = new Method("b", "m", array());
-		$m2 = new Method("a", "m", array());
+		$m1 = new Method("b", $this->method_m);
+		$m2 = new Method("a", $this->method_m);
 		$this->assertEquals(PartialOrder::SMALLER, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testOverriddenMethodIsGreater() {
-		$m1 = new Method("a", "m", array());
-		$m2 = new Method("b", "m", array());
+		$m1 = new Method("a", $this->method_m);
+		$m2 = new Method("b", $this->method_m);
 		$this->assertEquals(PartialOrder::GREATER, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testOverriddenDeeperInChainMethodIsGreater() {
-		$m1 = new Method("a", "m", array());
-		$m2 = new Method("e", "m", array());
+		$m1 = new Method("a", $this->method_m);
+		$m2 = new Method("e", $this->method_m);
 		$this->assertEquals(PartialOrder::GREATER, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testSiblingsAreNotComparable() {
-		$m1 = new Method("d", "m", array());
-		$m2 = new Method("e", "m", array());
+		$m1 = new Method("d", $this->method_m);
+		$m2 = new Method("e", $this->method_m);
 		$this->assertEquals(PartialOrder::NOT_COMPARABLE, $this->comparator->compare($m1, $m2));
 	}
 
 	public function testNonRelatedClassesAreNotComparable() {
-		$m1 = new Method("a", "m", array());
-		$m2 = new Method("f", "m", array());
+		$m1 = new Method("a", $this->method_m);
+		$m2 = new Method("f", $this->method_m);
 		$this->assertEquals(PartialOrder::NOT_COMPARABLE, $this->comparator->compare($m1, $m2));
 	}
 }
