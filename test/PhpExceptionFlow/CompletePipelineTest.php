@@ -44,7 +44,7 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function provideTestSetsCalculation() {
-		$dir = __DIR__ . '/../assets/code';
+		$dir = __DIR__ . '/../assets/code/exception_flow';
 		$iter = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($dir), \RecursiveIteratorIterator::LEAVES_ONLY);
 
