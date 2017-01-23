@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow\CHA;
 
+use PhpExceptionFlow\Collection\Set\Set;
+
 class AppliesToVisitorTest extends \PHPUnit_Framework_TestCase {
 
 	/** @var  AppliesToVisitor */
@@ -20,7 +22,7 @@ class AppliesToVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->applies_to_calculator_mock->expects($this->once())
 			->method("calculateAppliesTo")
 			->with($this->equalTo($method_mock))
-			->willReturn(array("a"));
+			->willReturn(new Set(array("a")));
 
 		$method_mock->expects($this->exactly(2))
 			->method("getName")
@@ -52,7 +54,7 @@ class AppliesToVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->applies_to_calculator_mock->expects($this->exactly(2))
 			->method("calculateAppliesTo")
 			->withConsecutive(array($this->equalTo($method_mock_a_m)), array($this->equalTo($method_mock_b_m)))
-			->will($this->onConsecutiveCalls(array("a", "c", "d"), array("b")));
+			->will($this->onConsecutiveCalls(new Set(array("a", "c", "d")), new Set(array("b"))));
 
 		$this->applies_to_visitor->visitElement($method_mock_a_m);
 		$this->applies_to_visitor->visitElement($method_mock_b_m);

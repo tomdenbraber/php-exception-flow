@@ -21,11 +21,11 @@ class AppliesToVisitor implements PartialOrderVisitorInterface {
 	 * @param Method $method
 	 */
 	public function visitElement($method) {
-		$method_applies_to = $this->applies_to_calculator->calculateAppliesTo($method);
+		$method_applies_to = $this->applies_to_calculator->calculateAppliesTo($method)->evaluate();
 
 		foreach ($method_applies_to as $class) {
 			if (isset($this->class_to_method_map[$class]) === false) {
-				$this->class_to_method_map[$class] = [$method->getName() => $method];
+				$this->class_to_method_map[$class] = [];
 			}
 			$this->class_to_method_map[$class][$method->getName()] = $method;
 		}
