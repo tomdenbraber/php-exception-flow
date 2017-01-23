@@ -204,8 +204,13 @@ class PartialOrder implements PartialOrderInterface {
 	}
 
 
-
+	/**
+	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 */
 	public function getAncestors($element) {
+		if ($this->elements->contains($element) === false) {
+			throw new \UnexpectedValueException("No such element in this partial order.");
+		}
 		$parents = $this->getParents($element);
 		$ancestors = $parents;
 		foreach ($parents as $parent) {
@@ -218,15 +223,33 @@ class PartialOrder implements PartialOrderInterface {
 		return $ancestors;
 	}
 
+	/**
+	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 */
 	public function getParents($element) {
+		if ($this->elements->contains($element) === false) {
+			throw new \UnexpectedValueException("No such element in this partial order.");
+		}
 		return $this->super_links[$element];
 	}
 
+	/**
+	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 */
 	public function getChildren($element) {
+		if ($this->elements->contains($element) === false) {
+			throw new \UnexpectedValueException("No such element in this partial order.");
+		}
 		return $this->sub_links[$element];
 	}
 
+	/**
+	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 */
 	public function getDescendants($element) {
+		if ($this->elements->contains($element) === false) {
+			throw new \UnexpectedValueException("No such element in this partial order.");
+		}
 		$children = $this->getChildren($element);
 		$descendants = $children;
 		foreach ($children as $child) {
