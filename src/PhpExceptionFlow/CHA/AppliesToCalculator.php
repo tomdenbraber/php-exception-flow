@@ -10,9 +10,9 @@ class AppliesToCalculator implements AppliesToCalculatorInterface {
 	private $partial_order;
 	private $class_resolved_by;
 
-	public function __construct(PartialOrderInterface $partial_order, $class_resolves) {
+	public function __construct(PartialOrderInterface $partial_order, $class_resolved_by) {
 		$this->partial_order = $partial_order;
-		$this->class_resolved_by = $class_resolves;
+		$this->class_resolved_by = $class_resolved_by;
 	}
 
 	/**
