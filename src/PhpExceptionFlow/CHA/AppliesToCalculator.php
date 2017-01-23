@@ -14,7 +14,7 @@ class AppliesToCalculator implements AppliesToCalculatorInterface {
 	/**
 	 * calculates the applies_to set for a given method
 	 * @param Method $method
-	 * @return Set|SetInterface
+	 * @return SetInterface
 	 * @throws \UnexpectedValueException when the given method is not included in the partial order
 	 */
 	public function calculateAppliesTo(Method $method) {

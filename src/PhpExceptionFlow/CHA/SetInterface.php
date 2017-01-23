@@ -10,7 +10,7 @@ interface SetInterface {
 	public function differenceWith(SetInterface $otherSet);
 
 	/**
-	 * @return array of all the classes in this set
+	 * @return array of all the elements in this set
 	 */
 	public function evaluate();
 }
