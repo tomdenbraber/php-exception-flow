@@ -15,8 +15,6 @@ class Set implements SetInterface {
 
 	public function __construct(array $elements = []) {
 		$this->elements = $elements;
-		$this->union = [];
-		$this->difference = [];
 	}
 
 	public function addEntry($element) {
