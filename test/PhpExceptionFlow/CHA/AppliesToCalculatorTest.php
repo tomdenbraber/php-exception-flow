@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow\CHA;
 
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
+
 class AppliesToCalculatorTest extends \PHPUnit_Framework_TestCase {
 
 	/** @var array $resolves */

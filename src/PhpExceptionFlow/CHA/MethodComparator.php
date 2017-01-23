@@ -1,6 +1,9 @@
 <?php
 namespace PhpExceptionFlow\CHA;
 
+use PhpExceptionFlow\Collection\PartialOrder\ComparatorInterface;
+use PhpExceptionFlow\Collection\PartialOrderInterface;
+
 class MethodComparator implements ComparatorInterface {
 	/** @var array */
 	private $class_resolves;
@@ -18,19 +21,19 @@ class MethodComparator implements ComparatorInterface {
 		 * @var $element2 Method
 		 */
 		if ($element1->getName() !== $element2->getName()) {
-			return PartialOrder::NOT_COMPARABLE;
+			return PartialOrderInterface::NOT_COMPARABLE;
 		} else if ($element1->getClass() === $element2->getClass()) {
-			return PartialOrder::EQUAL;
+			return PartialOrderInterface::EQUAL;
 		} else {
 			$element1_class_resolves = $this->class_resolves[$element1->getClass()];
 			$element2_class_resolves = $this->class_resolves[$element2->getClass()];
 
 			if (isset($element1_class_resolves[$element2->getClass()]) === true) {
-				return PartialOrder::SMALLER;
+				return PartialOrderInterface::SMALLER;
 			} else if (isset($element2_class_resolves[$element1->getClass()]) === true) {
-				return PartialOrder::GREATER;
+				return PartialOrderInterface::GREATER;
 			} else {
-				return PartialOrder::NOT_COMPARABLE;
+				return PartialOrderInterface::NOT_COMPARABLE;
 			}
 		}
 	}

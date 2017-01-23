@@ -1,8 +1,8 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\Collection\PartialOrder;
 
-use PhpExceptionFlow\CHA\Test\Number;
-use PhpExceptionFlow\CHA\Test\TestDivisibilityComparator;
+use PhpExceptionFlow\Collection\Test\Number;
+use PhpExceptionFlow\Collection\Test\TestDivisibilityComparator;
 
 class PartialOrderTest extends \PHPUnit_Framework_TestCase {
 	/** @var PartialOrder */
@@ -98,6 +98,5 @@ class PartialOrderTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(array($fifteen), $this->partial_order->getParents($five));
 		$this->assertEquals(array($fourtyfive), $this->partial_order->getParents($fifteen));
 		$this->assertEquals(array(), $this->partial_order->getParents($fourtyfive));
-
 	}
 }

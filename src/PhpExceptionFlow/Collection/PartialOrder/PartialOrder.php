@@ -1,5 +1,7 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\Collection\PartialOrder;
+
+use PhpExceptionFlow\Collection\PartialOrderInterface;
 
 class PartialOrder implements PartialOrderInterface {
 	/** @var ComparatorInterface */
@@ -13,11 +15,6 @@ class PartialOrder implements PartialOrderInterface {
 
 	/** @var \SplObjectStorage */
 	private $sub_links;
-
-	const NOT_COMPARABLE = 1;
-	const SMALLER = 2;
-	const EQUAL = 4;
-	const GREATER = 8;
 
 	public function __construct(ComparatorInterface $comparator) {
 		$this->comparator = $comparator;
@@ -162,7 +159,7 @@ class PartialOrder implements PartialOrderInterface {
 				foreach ($this->sub_links[$member_element] as $smaller_element) {
 					$smaller_parents = $this->getSmallestPossibleParents($new_element, $smaller_element);
 					if ($smaller_parents !== false) {
-						$resulting_elems = array_merge($resulting_elems, $smaller_element);
+						$resulting_elems[] = $smaller_element;
 					}
 				}
 				if (empty($resulting_elems) === true) {
@@ -192,7 +189,7 @@ class PartialOrder implements PartialOrderInterface {
 				foreach ($this->super_links[$member_element] as $greater_element) {
 					$greater_children = $this->getGreatestPossibleChildren($new_element, $greater_element);
 					if ($greater_children !== false) {
-						$resulting_elems = array_merge($resulting_elems, $greater_element);
+						$resulting_elems[] = $greater_element;
 					}
 				}
 				if (empty($resulting_elems) === true) {

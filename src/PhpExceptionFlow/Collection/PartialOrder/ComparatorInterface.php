@@ -1,5 +1,5 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\Collection\PartialOrder;
 
 interface ComparatorInterface {
 

@@ -3,8 +3,9 @@ namespace PhpExceptionFlow\Test\CHA;
 
 use PhpExceptionFlow\CHA\MethodComparator;
 use PhpExceptionFlow\CHA\Method;
-use PhpExceptionFlow\CHA\PartialOrder;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
+
 
 class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 	/**

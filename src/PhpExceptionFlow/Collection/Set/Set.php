@@ -1,5 +1,7 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\Collection\Set;
+
+use PhpExceptionFlow\Collection\SetInterface;
 
 class Set implements SetInterface {
 

@@ -1,12 +1,16 @@
 <?php
 namespace PhpExceptionFlow\CHA;
 
+use PhpExceptionFlow\Collection\PartialOrderInterface;
+use PhpExceptionFlow\Collection\SetInterface;
+use PhpExceptionFlow\Collection\Set\Set;
+
 class AppliesToCalculator implements AppliesToCalculatorInterface {
-	/** @var PartialOrder partial_order */
+	/** @var PartialOrderInterface partial_order */
 	private $partial_order;
 	private $class_resolved_by;
 
-	public function __construct(PartialOrder $partial_order, $class_resolves) {
+	public function __construct(PartialOrderInterface $partial_order, $class_resolves) {
 		$this->partial_order = $partial_order;
 		$this->class_resolved_by = $class_resolves;
 	}

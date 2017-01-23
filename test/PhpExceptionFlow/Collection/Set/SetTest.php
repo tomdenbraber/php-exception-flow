@@ -1,5 +1,5 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\Collection\Set;
 
 class SetTest extends \PHPUnit_Framework_TestCase {
 

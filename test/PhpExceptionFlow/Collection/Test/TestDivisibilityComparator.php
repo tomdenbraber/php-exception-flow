@@ -1,8 +1,8 @@
 <?php
-namespace PhpExceptionFlow\CHA\Test;
+namespace PhpExceptionFlow\Collection\Test;
 
-use PhpExceptionFlow\CHA\ComparatorInterface;
-use PhpExceptionFlow\CHA\PartialOrder;
+use PhpExceptionFlow\Collection\PartialOrder\ComparatorInterface;
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
 
 // this class is used for testing the PartialOrder
 class TestDivisibilityComparator implements ComparatorInterface {
