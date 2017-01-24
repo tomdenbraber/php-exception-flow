@@ -1,16 +1,15 @@
 <?php
 namespace PhpExceptionFlow;
 
-use PhpParser\Node\Stmt;
+use PhpParser\Node;
 use PhpParser\Node\Stmt\Throw_;
-use PHPTypes\State;
 use PHPTypes\Type;
 
 
 class Scope {
 	/** @var string $name */
 	private $name;
-	/** @var Stmt[] $instructions */
+	/** @var Node[] $instructions */
 	private $instructions;
 	/** @var GuardedScope[] $guarded_scopes */
 	private $guarded_scopes;
@@ -30,7 +29,7 @@ class Scope {
 	 * Scope constructor.
 	 * @param string $name
 	 * @param GuardedScope $enclosing_guarded_scope
-	 * @param Stmt[] $instructions
+	 * @param Node[] $instructions
 	 * @param GuardedScope[] $guarded_scopes
 	 */
 	public function __construct($name, GuardedScope $enclosing_guarded_scope = null, $instructions = array(), $guarded_scopes = array()) {
@@ -55,9 +54,9 @@ class Scope {
 	}
 
 	/**
-	 * @param Stmt $stmt
+	 * @param Node $stmt
 	 */
-	public function addInstruction(Stmt $stmt) {
+	public function addInstruction(Node $stmt) {
 		$this->instructions[] = $stmt;
 	}
 
@@ -83,7 +82,7 @@ class Scope {
 	}
 
 	/**
-	 * @return Stmt[]
+	 * @return Node[]
 	 */
 	public function getInstructions() {
 		return $this->instructions;
