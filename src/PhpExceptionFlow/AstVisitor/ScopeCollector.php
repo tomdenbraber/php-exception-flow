@@ -124,16 +124,28 @@ class ScopeCollector extends NodeVisitorAbstract {
 	}
 
 	/**
+	 * @param boolean $flat
 	 * @return Scope[]
 	 */
-	public function getFunctionScopes() {
+	public function getFunctionScopes($flat = false) {
+		if ($flat === true) {
+			return array_values($this->function_scopes);
+		}
 		return $this->function_scopes;
 	}
 
 	/**
-	 * return Scope[][]
+	 * @param boolean $flat
+	 * @return Scope[][]|Scope[]
 	 */
-	public function getMethodScopes() {
+	public function getMethodScopes($flat = false) {
+		if ($flat === true) {
+			$method_scopes = [];
+			foreach ($this->method_scopes as $class => $methods) {
+				$method_scopes = array_merge($method_scopes, array_values($methods));
+			}
+			return $method_scopes;
+		}
 		return $this->method_scopes;
 	}
 
@@ -144,18 +156,16 @@ class ScopeCollector extends NodeVisitorAbstract {
 		return $this->non_function_scopes;
 	}
 
+	public function getTopLevelScopes() {
+		return array_merge(array($this->main_scope), $this->getFunctionScopes(true), $this->getMethodScopes(true));
+	}
+
+
 	/**
 	 * @return Scope[]
 	 */
 	public function getAllScopes() {
-		$method_scopes = array();
-		foreach ($this->method_scopes as $class => $methods) {
-			foreach ($methods as $method_name => $method_scope) {
-				$method_scopes[] = $method_scope;
-			}
-		}
-
-		return array_merge(array($this->main_scope), array_values($this->function_scopes), $method_scopes, $this->non_function_scopes);
+		return array_merge(array($this->main_scope), $this->getFunctionScopes(true), $this->getMethodScopes(true), $this->non_function_scopes);
 	}
 
 	/**

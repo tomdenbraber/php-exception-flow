@@ -70,6 +70,6 @@ class PipelineTestHelper {
 		$ast_traverser->addVisitor($scope_collector);
 		$ast_traverser->traverse($ast);
 
-		return $scope_collector->getAllScopes();
+		return $scope_collector->getTopLevelScopes();
 	}
 }
