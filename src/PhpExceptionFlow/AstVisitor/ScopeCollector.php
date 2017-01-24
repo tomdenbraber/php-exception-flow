@@ -17,10 +17,15 @@ class ScopeCollector extends NodeVisitorAbstract {
 	private $main_scope;
 	/** @var Scope[] $function_scopes */
 	private $function_scopes;
+	/** @var Scope[] $non_function_scopes */
+	private $non_function_scopes;
+
 	/** @var Scope $current_scope */
 	private $current_scope;
 	/** @var GuardedScope current_guarded_scope */
 	private $current_guarded_scope;
+
+
 	/** @var Node\Stmt\ClassLike */
 	private $current_class;
 
@@ -84,6 +89,8 @@ class ScopeCollector extends NodeVisitorAbstract {
 			$this->function_scopes[] = $this->current_scope;
 			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
+			//a scope inside a try catch can never be a function scope, so add to non-function scopes
+			$this->non_function_scopes[] = $this->current_scope;
 			// restore the current scope to the scope in which this try/catch block resides
 			// restore the current guarded scope to the the guarded scope in which the current scope resides
 			$this->current_scope = $this->current_guarded_scope->getEnclosingScope();
@@ -107,5 +114,19 @@ class ScopeCollector extends NodeVisitorAbstract {
 	 */
 	public function getFunctionScopes() {
 		return $this->function_scopes;
+	}
+
+	/**
+	 * @return Scope[]
+	 */
+	public function getNonFunctionScopes() {
+		return $this->non_function_scopes;
+	}
+
+	/**
+	 * @return Scope[]
+	 */
+	public function getAllScopes() {
+		return array_merge(array($this->main_scope), $this->function_scopes, $this->non_function_scopes);
 	}
 }
