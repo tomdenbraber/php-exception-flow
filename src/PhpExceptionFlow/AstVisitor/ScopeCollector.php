@@ -15,10 +15,12 @@ use PHPTypes\State;
 class ScopeCollector extends NodeVisitorAbstract {
 	/** @var Scope $main_scope */
 	private $main_scope;
-	/** @var Scope[] $function_scopes */
-	private $function_scopes;
+	/** @var Scope[] $function_scopes, indexed by name */
+	private $function_scopes = [];
+	/** @var Scope[][] $method_scopes, indexed by class, method name */
+	private $method_scopes = [];
 	/** @var Scope[] $non_function_scopes */
-	private $non_function_scopes;
+	private $non_function_scopes = [];
 
 	/** @var Scope $current_scope */
 	private $current_scope;
@@ -34,12 +36,20 @@ class ScopeCollector extends NodeVisitorAbstract {
 
 	public function __construct(State $state) {
 		$this->main_scope = new Scope("{main}");
-		$this->function_scopes = array();
 		$this->current_scope = $this->main_scope;
 		$this->state = $state;
 
 		$this->current_guarded_scope = null;
 		$this->current_class = null;
+	}
+
+	public function beforeTraverse(array $nodes) {
+		//add all top level nodes that are not declarations to the main scope
+		foreach ($nodes as $node) {
+			if (($node instanceof Node\Stmt\ClassLike) === false && ($node instanceof Node\FunctionLike) === false) {
+				$this->main_scope->addInstruction($node);
+			}
+		}
 	}
 
 	public function enterNode(Node $node) {
@@ -65,19 +75,19 @@ class ScopeCollector extends NodeVisitorAbstract {
 			}
 
 			$this->current_scope = new Scope($name);
+			$this->addInstructionsToScope($this->current_scope, $node->getStmts());
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing_scope = $this->current_scope;
 			$inclosed_scope = new Scope(md5(random_bytes(64)));
 			$new_guarded_scope = new GuardedScope($enclosing_scope, $inclosed_scope);
 			$enclosing_scope->addGuardedScope($new_guarded_scope);
 			$inclosed_scope->setEnclosingGuardedScope($new_guarded_scope);
+			$this->addInstructionsToScope($inclosed_scope, $node->stmts);
 
 			$this->current_scope = $inclosed_scope;
 			$this->current_guarded_scope = $new_guarded_scope;
 		} else if ($node instanceof Node\Stmt\Catch_) {
 			$this->current_guarded_scope->addCatchClause($node);
-		} else if ($node instanceof Node\Stmt) {
-			$this->current_scope->addInstruction($node);
 		}
 	}
 
@@ -86,7 +96,11 @@ class ScopeCollector extends NodeVisitorAbstract {
 			$this->current_class = null;
 		} else if ($node instanceof Node\FunctionLike) {
 			// go back to main scope when we leave a function
-			$this->function_scopes[] = $this->current_scope;
+			if ($node instanceof Node\Stmt\Function_) {
+				$this->function_scopes[$node->name] = $this->current_scope;
+			} else if ($node instanceof Node\Stmt\ClassMethod) {
+				$this->method_scopes[strtolower($this->current_class->name)][$node->name] = $this->current_scope;
+			}
 			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			//a scope inside a try catch can never be a function scope, so add to non-function scopes
@@ -117,6 +131,13 @@ class ScopeCollector extends NodeVisitorAbstract {
 	}
 
 	/**
+	 * return Scope[][]
+	 */
+	public function getMethodScopes() {
+		return $this->method_scopes;
+	}
+
+	/**
 	 * @return Scope[]
 	 */
 	public function getNonFunctionScopes() {
@@ -127,6 +148,25 @@ class ScopeCollector extends NodeVisitorAbstract {
 	 * @return Scope[]
 	 */
 	public function getAllScopes() {
-		return array_merge(array($this->main_scope), $this->function_scopes, $this->non_function_scopes);
+		$method_scopes = array();
+		foreach ($this->method_scopes as $class => $methods) {
+			foreach ($methods as $method_name => $method_scope) {
+				$method_scopes[] = $method_scope;
+			}
+		}
+
+		return array_merge(array($this->main_scope), array_values($this->function_scopes), $method_scopes, $this->non_function_scopes);
+	}
+
+	/**
+	 * @param Scope $scope
+	 * @param array $nodes
+	 */
+	private function addInstructionsToScope(Scope $scope, array $nodes) {
+		foreach ($nodes as $stmt) {
+			if ($stmt instanceof Node\Stmt\TryCatch === false) {
+				$scope->addInstruction($stmt);
+			}
+		}
 	}
 }
