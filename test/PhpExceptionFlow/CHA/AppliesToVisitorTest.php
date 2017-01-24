@@ -24,7 +24,7 @@ class AppliesToVisitorTest extends \PHPUnit_Framework_TestCase {
 			->with($this->equalTo($method_mock))
 			->willReturn(new Set(array("a")));
 
-		$method_mock->expects($this->exactly(2))
+		$method_mock->expects($this->once())
 			->method("getName")
 			->willReturn("m");
 
