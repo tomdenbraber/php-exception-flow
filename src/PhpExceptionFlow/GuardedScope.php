@@ -86,6 +86,7 @@ class GuardedScope {
 
 	/**
 	 * Determines for each catch clause which exception types are caught
+	 * @param State $state
 	 */
 	public function determineCaughtExceptionTypes(State $state) {
 		$already_caught = array();
@@ -123,7 +124,15 @@ class GuardedScope {
 	}
 
 
-	public function determineUncaughtExceptions(State $state) {
+	/**
+	 * @param State $state
+	 * @param bool $determine_caught; if determineCaughtExceptions was not called before, set this to true
+	 */
+	public function determineUncaughtExceptions(State $state, $determine_caught = true) {
+		if ($determine_caught === true) {
+			$this->determineCaughtExceptionTypes($state);
+		}
+
 		$resolves = $state->classResolves;
 		$exceptions_to_be_caught = $this->inclosed_scope->getEncounters();
 		$uncaught = array();

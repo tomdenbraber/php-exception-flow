@@ -16,6 +16,9 @@ class Scope {
 	/** @var GuardedScope $enclosing_guarded_scope */
 	private $enclosing_guarded_scope;
 
+	/** @var \SplObjectStorage */
+	private $call_exception_map;
+
 	/** @var Type[] $propagates */
 	private $propagates;
 	/** @var Type[] $generates */
@@ -46,6 +49,8 @@ class Scope {
 		foreach ($guarded_scopes as $guarded_scope) {
 			$this->addGuardedScope($guarded_scope);
 		}
+
+		$this->call_exception_map = new \SplObjectStorage;
 
 		$this->propagates = array();
 		$this->generates = array();
@@ -109,6 +114,17 @@ class Scope {
 		return $this->enclosing_guarded_scope !== null;
 	}
 
+	/**
+	 * @param Node $call
+	 * @param array $exception_types
+	 */
+	public function injectExceptionsFromCall(Node $call, array $exception_types) {
+		if ($this->call_exception_map->contains($call) === true) {
+			$old_types = $this->call_exception_map[$call];
+			$exception_types = array_unique(array_merge($old_types, $exception_types));
+		}
+		$this->call_exception_map[$call] = $exception_types;
+	}
 
 	/**
 	 * TODO: THE SETS DETERMINATION IS MAYBE BETTER DONE IN A SEPARATE CLASS.
@@ -133,7 +149,10 @@ class Scope {
 	 * This happens when this scope calls another scope, and the other scope encounters an Exception
 	 */
 	private function determinePropagates() {
-
+		foreach ($this->call_exception_map as $func_call) {
+			$this->propagates = array_merge($this->propagates, $this->call_exception_map[$func_call]);
+		}
+		$this->propagates = array_unique($this->propagates);
 	}
 
 	/**
@@ -167,8 +186,11 @@ class Scope {
 	 * encounters is the set of raises, propagates, generates, uncaught.
 	 * @return Type[]
 	 */
-	public function getEncounters() {
-		return array_merge($this->raises, $this->propagates, $this->generates, $this->uncaught);
+	public function getEncounters($determine_first = false) {
+		if ($determine_first === true) {
+			$this->determineEncounters();
+		}
+		return array_unique(array_merge($this->raises, $this->propagates, $this->generates, $this->uncaught));
 	}
 
 }
