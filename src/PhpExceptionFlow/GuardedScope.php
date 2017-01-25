@@ -91,15 +91,9 @@ class GuardedScope {
 	public function determineCaughtExceptionTypes(State $state) {
 		$already_caught = array();
 		foreach ($this->catch_clauses as $catch_clause) {
-			if ($this->caught_exceptions->contains($catch_clause) === false) {
-				$this->caught_exceptions[$catch_clause] = array();
-			}
-
 			$exc_types = $this->determineCaughtExceptionTypesForCatch($catch_clause, $state);
-			$caught_by_clause = $this->caught_exceptions[$catch_clause];
-			$caught_by_clause = array_merge($caught_by_clause, array_diff($exc_types, $already_caught));
+			$caught_by_clause = array_diff($exc_types, $already_caught);
 			$this->caught_exceptions[$catch_clause] = $caught_by_clause;
-
 			$already_caught = array_merge($exc_types, $already_caught);
 		}
 	}

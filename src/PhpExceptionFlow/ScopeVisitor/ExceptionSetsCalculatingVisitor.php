@@ -19,7 +19,6 @@ class ExceptionSetsCalculatingVisitor extends AbstractScopeVisitor {
 	}
 
 	public function leaveGuardedScope(GuardedScope $guarded_scope) {
-		$guarded_scope->determineCaughtExceptionTypes($this->state);
-		$guarded_scope->determineUncaughtExceptions($this->state);
+		$guarded_scope->determineUncaughtExceptions($this->state, true);
 	}
 }
