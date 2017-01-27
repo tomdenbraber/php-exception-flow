@@ -27,6 +27,7 @@ class CallToScopeResolver {
 	/**
 	 * @param Node $func_call
 	 * @return null|Scope
+	 * @throws \UnexpectedValueException
 	 * @throws \LogicException
 	 */
 	public function resolve(Node $func_call) {
@@ -49,6 +50,7 @@ class CallToScopeResolver {
 	/**
 	 * @param Node\Expr\FuncCall $call
 	 * @throws \LogicException
+	 * @throws \UnexpectedValueException
 	 * @return Scope|null
 	 */
 	private function resolveFuncCall(Node\Expr\FuncCall $call) {
@@ -59,13 +61,15 @@ class CallToScopeResolver {
 			} else {
 				throw new \LogicException(sprintf("Function %s() could not be found!", $func_name));
 			}
+		} else {
+			throw new \UnexpectedValueException(sprintf("Cannot resolve function call; function expression has type %s", $call->name->getAttribute("type", Type::unknown())));
 		}
-		return null;
 	}
 
 	/**
 	 * @param Node\Expr\MethodCall $call
 	 * @throws \LogicException
+ 	 * @throws \UnexpectedValueException
 	 * @return Scope|null
 	 */
 	private function resolveMethodCall(Node\Expr\MethodCall $call) {
@@ -86,18 +90,20 @@ class CallToScopeResolver {
 			} else {
 				throw new \LogicException(sprintf("Method %s->%s() could not be found in applies to set", $class, $call->name));
 			}
+		} else {
+			throw new \UnexpectedValueException(sprintf("Cannot resolve method call; var has type %s, method-name is %s", $type, $call->name));
 		}
-		return null;
 	}
 
 	/**
 	 * @param Node\Expr\StaticCall $call
 	 * @throws \LogicException
+	 * @throws \UnexpectedValueException
  	 * @return Scope|null
 	 */
 	private function resolveStaticCall(Node\Expr\StaticCall $call) {
 		if ($call->class instanceof Node\Name) {
-			$class = implode("\\", $call->class->parts);
+			$class = strtolower(implode("\\", $call->class->parts));
 			if (is_string($call->name) === true && isset($this->applies_to[$class][$call->name]) === true) {
 				/** @var Method $called_method */
 				$called_method = $this->applies_to[$class][$call->name];
@@ -111,7 +117,8 @@ class CallToScopeResolver {
 			} else {
 				throw new \LogicException(sprintf("Method %s::%s() could not be found in applies to set", $class, $call->name));
 			}
+		} else {
+			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
 		}
-		return null;
 	}
 }
