@@ -1,6 +1,7 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\FlowCalculator;
 
+use PhpExceptionFlow\Scope;
 use PHPTypes\Type;
 
 interface ExceptionSetCalculatorInterface {
@@ -9,6 +10,12 @@ interface ExceptionSetCalculatorInterface {
 	 * @return string
 	 */
 	public function getType();
+
+	/**
+	 * @param Scope $scope
+	 * @return void;
+	 */
+	public function determineForScope(Scope $scope);
 
 	/**
 	 * @param Scope $scope
