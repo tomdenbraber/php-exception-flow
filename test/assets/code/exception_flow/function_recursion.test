@@ -1,0 +1,13 @@
+<?php
+function a($throw = false) {
+    if ($throw) {
+        throw new Exception();
+    } else {
+        a(!$throw);
+    }
+}
+-----
+{main}:
+    encounters: []
+a:
+    encounters: [Exception]
