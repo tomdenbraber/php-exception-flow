@@ -25,7 +25,7 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 	 * @throws \UnexpectedValueException
 	 */
 	public function getCalculator($type) {
-		if (isset($this->calculators[$type])) {
+		if (isset($this->calculators[$type]) === true) {
 			return $this->calculators[$type];
 		} else {
 			throw new \UnexpectedValueException(sprintf("No calculator registered for type %s", $type));
@@ -41,7 +41,11 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 		}
 	}
 
-
+	/**
+	 * @param Scope $scope
+	 * @return array
+	 * @throws \UnexpectedValueException
+	 */
 	public function getForScope(Scope $scope) {
 		$exception_set = [];
 		foreach ($this->calculators as $calculator) {
