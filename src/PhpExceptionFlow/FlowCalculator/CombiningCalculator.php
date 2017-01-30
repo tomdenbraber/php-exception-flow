@@ -34,7 +34,7 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 		foreach ($this->calculators as $calculator) {
 			$exception_set = array_merge($calculator->getForScope($scope), $exception_set);
 		}
-		return array_unique($exception_set);
+		return array_values(array_unique($exception_set));
 	 }
 
 	 public function getType() {
