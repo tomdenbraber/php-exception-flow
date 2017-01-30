@@ -20,6 +20,19 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 	}
 
 	/**
+	 * @param string $type
+	 * @return ExceptionSetCalculatorInterface
+	 * @throws \UnexpectedValueException
+	 */
+	public function getCalculator($type) {
+		if (isset($this->calculators[$type])) {
+			return $this->calculators[$type];
+		} else {
+			throw new \UnexpectedValueException(sprintf("No calculator registered for type %s", $type));
+		}
+	}
+
+	/**
 	 * @param Scope $scope
 	 */
 	public function determineForScope(Scope $scope) {
@@ -35,7 +48,7 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 			$exception_set = array_merge($calculator->getForScope($scope), $exception_set);
 		}
 		return array_values(array_unique($exception_set));
-	 }
+	}
 
 	 public function getType() {
 		return "combined";
