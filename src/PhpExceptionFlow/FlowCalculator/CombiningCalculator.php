@@ -3,7 +3,7 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\Scope;
 
-class EncountersCalculator implements ExceptionSetCalculatorInterface {
+class CombiningCalculator implements ExceptionSetCalculatorInterface {
 
 	/** @var ExceptionSetCalculatorInterface[] */
 	private $calculators = [];
