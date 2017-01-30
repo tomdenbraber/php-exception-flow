@@ -31,7 +31,7 @@ class RaisesCalculator implements ExceptionSetCalculatorInterface {
 		$throw_nodes = $this->ast_throws_collector->getThrows();
 		$throw_types = [];
 		foreach ($throw_nodes as $throw) {
-			$throw_types = $throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
+			$throw_types[] = $throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
 		}
 		$this->scopes[$scope] = $throw_types;
 	}
