@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow\ScopeVisitor;
 
+use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
+use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
 use PhpExceptionFlow\GuardedScope;
 use PhpExceptionFlow\Scope;
 
@@ -8,6 +10,17 @@ class PrintingVisitor extends AbstractScopeVisitor {
 	private $indent = "";
 	private $current_top_level_scope = "";
 	private $result = "";
+
+	/** @var  CombiningCalculator $encounters_calculator */
+	private $encounters_calculator;
+	/** @var UncaughtCalculator $uncaught_calculator */
+	private $uncaught_calculator;
+
+
+	public function __construct(CombiningCalculator $encounters_calculator) {
+		$this->encounters_calculator = $encounters_calculator;
+		$this->uncaught_calculator = $encounters_calculator->getCalculator("uncaught");
+	}
 
 	public function beforeTraverse(array $scopes) {
 		$this->result = "";
@@ -19,7 +32,9 @@ class PrintingVisitor extends AbstractScopeVisitor {
 			$this->result .= $this->indent . $this->current_top_level_scope . ":\n";
 		}
 
-		$this->result .= $this->indent . "\t" . "encounters: [" . implode(", ",$scope->getEncounters()) . "]\n";
+		$encounters = $this->encounters_calculator->getForScope($scope);
+
+		$this->result .= $this->indent . "\t" . "encounters: [" . implode(", ", $encounters) . "]\n";
 		$this->indent .= "\t";
 	}
 
@@ -33,9 +48,9 @@ class PrintingVisitor extends AbstractScopeVisitor {
 
 	public function leaveGuardedScope(GuardedScope $guarded_scope) {
 		foreach ($guarded_scope->getCatchClauses() as $i => $catch_clause) {
-			$this->result .= $this->indent . "catch#" . $i . " catches: [" . implode(", ",$guarded_scope->getCaughtExceptionsForClause($catch_clause)) . "]\n";
+			$this->result .= $this->indent . "catch#" . $i . " catches: [" . implode(", ",$this->uncaught_calculator->getCaughtExceptions($catch_clause)) . "]\n";
 		}
-		$this->result .= $this->indent . "uncaught: [" . implode(", ",$guarded_scope->getUncaught()) . "]\n";
+		$this->result .= $this->indent . "uncaught: [" . implode(", ", $this->uncaught_calculator->getForGuardedScope($guarded_scope)) . "]\n";
 	}
 
 	public function getResult() {
