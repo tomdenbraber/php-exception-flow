@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\ScopeVisitor;
 
-use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
+use PhpExceptionFlow\FlowCalculator\MutableCombiningCalculator;
 use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
 use PhpExceptionFlow\GuardedScope;
 use PhpExceptionFlow\Scope;
@@ -11,13 +11,13 @@ class PrintingVisitor extends AbstractScopeVisitor {
 	private $current_top_level_scope = "";
 	private $result = "";
 
-	/** @var  CombiningCalculator $encounters_calculator */
+	/** @var  MutableCombiningCalculator $encounters_calculator */
 	private $encounters_calculator;
 	/** @var UncaughtCalculator $uncaught_calculator */
 	private $uncaught_calculator;
 
 
-	public function __construct(CombiningCalculator $encounters_calculator) {
+	public function __construct(MutableCombiningCalculator $encounters_calculator) {
 		$this->encounters_calculator = $encounters_calculator;
 		$this->uncaught_calculator = $encounters_calculator->getCalculator("uncaught");
 	}

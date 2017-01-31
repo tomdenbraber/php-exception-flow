@@ -23,12 +23,4 @@ interface FlowCalculatorInterface {
 	 * @throws \UnexpectedValueException when a scope is given for which this calculator has no data
 	 */
 	public function getForScope(Scope $scope);
-
-	/**
-	 * Returns whether the last determineForScope call changed the exceptions encountered for the given scope
-	 * @param Scope $scope
-	 * @param bool $reset = true; if reset is true, the next call scopeHasChanged w/o first calling determineForScope will return false.
-	 * @return boolean
-	 */
-	public function scopeHasChanged(Scope $scope, $reset = true);
 }

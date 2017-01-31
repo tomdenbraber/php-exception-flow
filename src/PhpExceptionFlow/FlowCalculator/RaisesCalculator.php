@@ -8,6 +8,8 @@ use PhpParser\NodeTraverser;
 use PHPTypes\Type;
 
 class RaisesCalculator extends AbstractFlowCalculator {
+	/** @var  */
+
 	/** @var NodeTraverser $ast_traverser */
 	private $ast_traverser;
 	/** @var ThrowsCollector $ast_throws_collector */
@@ -31,21 +33,8 @@ class RaisesCalculator extends AbstractFlowCalculator {
 		foreach ($throw_nodes as $throw) {
 			$throw_types[] = $throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
 		}
-		$this->setScopeHasChanged($scope, $throw_types);
 
 		$this->scopes[$scope] = $throw_types;
-	}
-
-	/**
-	 * @param Scope $scope
-	 * @throws \UnexpectedValueException
-	 * @return Type[]
-	 */
-	public function getForScope(Scope $scope) {
-		if ($this->scopes->contains($scope) === false) {
-			throw new \UnexpectedValueException(sprintf("Scope with name %s could not be found in this set.", $scope->getName()));
-		}
-		return $this->scopes[$scope];
 	}
 
 	public function getType() {

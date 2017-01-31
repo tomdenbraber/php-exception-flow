@@ -7,7 +7,7 @@ use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpParser\Node\Stmt\Catch_;
 use PHPTypes\Type;
 
-class UncaughtCalculator extends AbstractFlowCalculator {
+class UncaughtCalculator extends AbstractMutableFlowCalculator {
 
 	/** @var Type[][]|\SplObjectStorage */
 	private $guarded_scopes;
@@ -21,10 +21,10 @@ class UncaughtCalculator extends AbstractFlowCalculator {
 	/** @var CaughtExceptionTypesCalculator $catch_clause_type_resolver */
 	private $catch_clause_type_resolver;
 
-	/** @var CombiningCalculator */
+	/** @var MutableCombiningCalculator */
 	private $encounters_calculator;
 
-	public function __construct(CaughtExceptionTypesCalculator $catch_clause_type_resolver, CombiningCalculator $encounters_calculator) {
+	public function __construct(CaughtExceptionTypesCalculator $catch_clause_type_resolver, MutableCombiningCalculator $encounters_calculator) {
 		parent::__construct();
 
 		$this->guarded_scopes = new \SplObjectStorage;
