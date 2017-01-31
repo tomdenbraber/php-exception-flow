@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\ScopeVisitor;
 
-use PhpExceptionFlow\FlowCalculator\ExceptionSetCalculatorInterface;
+use PhpExceptionFlow\FlowCalculator\FlowCalculatorInterface;
 use PhpExceptionFlow\Scope;
 
 class CalculatorWrappingVisitorTest extends \PHPUnit_Framework_TestCase {
@@ -9,7 +9,7 @@ class CalculatorWrappingVisitorTest extends \PHPUnit_Framework_TestCase {
 	private $calculator_mock;
 
 	public function setUp() {
-		$this->calculator_mock = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$this->calculator_mock = $this->createMock(FlowCalculatorInterface::class);
 		$this->calculator_mock->method("getType")->willReturn("But in the end, it doesn't even matter");
 	}
 

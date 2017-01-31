@@ -21,8 +21,8 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testAddTwoSameTypeCalculatorsRaisesException() {
-		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
-		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
+		$calc_mock_2 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("kaas");
 		$calc_mock_2->method("getType")
@@ -37,7 +37,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	public function testReturnsOutputOfCalculatorWithOneCalculator() {
 		$scope_mock = $this->createMock(Scope::class);
 
-		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("kaas");
 
@@ -58,11 +58,11 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	public function testReturnsCombinedOutputOfCalculatorsWithMultipleCalculator() {
 		$scope_mock = $this->createMock(Scope::class);
 
-		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("cheese");
 
-		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_2 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_2->method("getType")
 			->willReturn("fromage");
 
@@ -95,7 +95,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	public function testScopeHasChangedWhenWrappedCalculatorsSaySo() {
 		$scope_mock = $this->createMock(Scope::class);
 
-		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("cheese");
 		$calc_mock_1->expects($this->once())
@@ -103,7 +103,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 			->with($scope_mock, false)
 			->willReturn(false);
 
-		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_2 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_2->method("getType")
 			->willReturn("fromage");
 		$calc_mock_2->expects($this->once())
@@ -119,7 +119,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	public function testScopeHasNotChangedWhenWrappedCalculatorsReturnFalse() {
 		$scope_mock = $this->createMock(Scope::class);
 
-		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("cheese");
 		$calc_mock_1->expects($this->once())
@@ -127,7 +127,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 			->with($scope_mock, false)
 			->willReturn(false);
 
-		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_2 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_2->method("getType")
 			->willReturn("fromage");
 		$calc_mock_2->expects($this->once())

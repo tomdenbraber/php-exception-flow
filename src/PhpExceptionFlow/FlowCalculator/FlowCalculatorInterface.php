@@ -4,7 +4,7 @@ namespace PhpExceptionFlow\FlowCalculator;
 use PhpExceptionFlow\Scope;
 use PHPTypes\Type;
 
-interface ExceptionSetCalculatorInterface {
+interface FlowCalculatorInterface {
 	/**
 	 * Returns the exception type that this calculator will return
 	 * @return string

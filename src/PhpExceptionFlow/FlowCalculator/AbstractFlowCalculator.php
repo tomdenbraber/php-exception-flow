@@ -4,7 +4,7 @@ namespace PhpExceptionFlow\FlowCalculator;
 use PhpExceptionFlow\Scope;
 use PHPTypes\Type;
 
-abstract class AbstractFlowCalculator implements ExceptionSetCalculatorInterface {
+abstract class AbstractFlowCalculator implements FlowCalculatorInterface {
 	/** @var \SplObjectStorage $has_changed */
 	private $has_changed;
 	/** @var \SplObjectStorage|Type[][] $scopes */

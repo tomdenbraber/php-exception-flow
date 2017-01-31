@@ -3,16 +3,16 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\Scope;
 
-class CombiningCalculator implements ExceptionSetCalculatorInterface {
+class CombiningCalculator implements FlowCalculatorInterface {
 
-	/** @var ExceptionSetCalculatorInterface[] */
+	/** @var FlowCalculatorInterface[] */
 	private $calculators = [];
 
 	/**
-	 * @param ExceptionSetCalculatorInterface $exception_set_calculator
+	 * @param FlowCalculatorInterface $exception_set_calculator
 	 * @throws \LogicException when two of the same type exceptionset calculators are given
 	 */
-	public function addCalculator(ExceptionSetCalculatorInterface $exception_set_calculator) {
+	public function addCalculator(FlowCalculatorInterface $exception_set_calculator) {
 		if (isset($this->calculators[$exception_set_calculator->getType()]) === true) {
 			throw new \LogicException(sprintf("Cannot add the same calculator (type %s) to the encounterscalculator.", $exception_set_calculator->getType()));
 		}
@@ -21,7 +21,7 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 
 	/**
 	 * @param string $type
-	 * @return ExceptionSetCalculatorInterface
+	 * @return FlowCalculatorInterface
 	 * @throws \UnexpectedValueException
 	 */
 	public function getCalculator($type) {
