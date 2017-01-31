@@ -3,14 +3,11 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
 use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\ScopeVisitor\AbstractScopeVisitor;
 use PhpParser\NodeTraverser;
 use PHPTypes\Type;
 
-class RaisesCalculator implements ExceptionSetCalculatorInterface {
-
-	/** @var Type[][]|\SplObjectStorage */
-	private $scopes;
-
+class RaisesCalculator extends AbstractFlowCalculator {
 	/** @var NodeTraverser $ast_traverser */
 	private $ast_traverser;
 	/** @var ThrowsCollector $ast_throws_collector */
@@ -18,7 +15,8 @@ class RaisesCalculator implements ExceptionSetCalculatorInterface {
 
 
 	public function __construct(NodeTraverser $ast_traverser, ThrowsCollector $ast_throws_collector) {
-		$this->scopes = new \SplObjectStorage;
+		parent::__construct();
+
 		$this->ast_traverser = $ast_traverser;
 		$this->ast_throws_collector = $ast_throws_collector;
 
@@ -33,6 +31,8 @@ class RaisesCalculator implements ExceptionSetCalculatorInterface {
 		foreach ($throw_nodes as $throw) {
 			$throw_types[] = $throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
 		}
+		$this->setScopeHasChanged($scope, $throw_types);
+
 		$this->scopes[$scope] = $throw_types;
 	}
 

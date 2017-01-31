@@ -54,7 +54,20 @@ class CombiningCalculator implements ExceptionSetCalculatorInterface {
 		return array_values(array_unique($exception_set));
 	}
 
-	 public function getType() {
+	/**
+	 * @param Scope $scope
+	 * @param bool $reset
+	 * @return bool
+	 */
+	public function scopeHasChanged(Scope $scope, $reset = true) {
+		$changed = false;
+		foreach ($this->calculators as $calculator) {
+			$changed = $changed || $calculator->scopeHasChanged($scope, $reset);
+		}
+		return $changed;
+	}
+
+	public function getType() {
 		return "combined";
-	 }
+	}
 }

@@ -7,10 +7,8 @@ use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpParser\Node\Stmt\Catch_;
 use PHPTypes\Type;
 
-class UncaughtCalculator implements ExceptionSetCalculatorInterface {
+class UncaughtCalculator extends AbstractFlowCalculator {
 
-	/** @var Type[][]|\SplObjectStorage */
-	private $scopes;
 	/** @var Type[][]|\SplObjectStorage */
 	private $guarded_scopes;
 
@@ -27,7 +25,8 @@ class UncaughtCalculator implements ExceptionSetCalculatorInterface {
 	private $encounters_calculator;
 
 	public function __construct(CaughtExceptionTypesCalculator $catch_clause_type_resolver, CombiningCalculator $encounters_calculator) {
-		$this->scopes = new \SplObjectStorage;
+		parent::__construct();
+
 		$this->guarded_scopes = new \SplObjectStorage;
 		$this->catch_clause_catches = new \SplObjectStorage;
 		$this->catch_clause_type_resolver = $catch_clause_type_resolver;
@@ -51,7 +50,9 @@ class UncaughtCalculator implements ExceptionSetCalculatorInterface {
 			$this->guarded_scopes[$guarded_scope] = $uncaught;
 		}
 
-		$this->scopes[$scope] = array_values(array_unique($uncaught));
+		$uncaught_set = array_values(array_unique($uncaught));
+		$this->setScopeHasChanged($scope, $uncaught_set);
+		$this->scopes[$scope] = $uncaught_set;
 	}
 
 	public function getCaughtExceptions(Catch_ $catch_clause) {

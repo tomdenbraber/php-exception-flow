@@ -91,4 +91,52 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 		sort($types);
 		$this->assertEquals(array("a", "b", "c"), $types);
 	}
+
+	public function testScopeHasChangedWhenWrappedCalculatorsSaySo() {
+		$scope_mock = $this->createMock(Scope::class);
+
+		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1->method("getType")
+			->willReturn("cheese");
+		$calc_mock_1->expects($this->once())
+			->method("scopeHasChanged")
+			->with($scope_mock, false)
+			->willReturn(false);
+
+		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_2->method("getType")
+			->willReturn("fromage");
+		$calc_mock_2->expects($this->once())
+			->method("scopeHasChanged")
+			->with($scope_mock, false)
+			->willReturn(true);
+
+		$this->combining_calculator->addCalculator($calc_mock_1);
+		$this->combining_calculator->addCalculator($calc_mock_2);
+		$this->assertTrue($this->combining_calculator->scopeHasChanged($scope_mock, false));
+	}
+
+	public function testScopeHasNotChangedWhenWrappedCalculatorsReturnFalse() {
+		$scope_mock = $this->createMock(Scope::class);
+
+		$calc_mock_1 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_1->method("getType")
+			->willReturn("cheese");
+		$calc_mock_1->expects($this->once())
+			->method("scopeHasChanged")
+			->with($scope_mock, false)
+			->willReturn(false);
+
+		$calc_mock_2 = $this->createMock(ExceptionSetCalculatorInterface::class);
+		$calc_mock_2->method("getType")
+			->willReturn("fromage");
+		$calc_mock_2->expects($this->once())
+			->method("scopeHasChanged")
+			->with($scope_mock, false)
+			->willReturn(false);
+
+		$this->combining_calculator->addCalculator($calc_mock_1);
+		$this->combining_calculator->addCalculator($calc_mock_2);
+		$this->assertFalse($this->combining_calculator->scopeHasChanged($scope_mock, false));
+	}
 }
