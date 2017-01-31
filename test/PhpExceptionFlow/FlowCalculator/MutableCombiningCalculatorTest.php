@@ -12,7 +12,7 @@ class MutableCombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetType() {
-		$this->assertEquals("combined", $this->combining_calculator->getType());
+		$this->assertEquals("mutual combined", $this->combining_calculator->getType());
 	}
 
 	public function testWithoutCalculatorsReturnsNoTypes() {
