@@ -3,13 +3,10 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
 use PhpExceptionFlow\Scope;
-use PhpExceptionFlow\ScopeVisitor\AbstractScopeVisitor;
 use PhpParser\NodeTraverser;
 use PHPTypes\Type;
 
 class RaisesCalculator extends AbstractFlowCalculator {
-	/** @var  */
-
 	/** @var NodeTraverser $ast_traverser */
 	private $ast_traverser;
 	/** @var ThrowsCollector $ast_throws_collector */
