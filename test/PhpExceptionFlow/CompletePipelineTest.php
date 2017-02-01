@@ -3,10 +3,7 @@ namespace PhpExceptionFlow;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
-use PhpExceptionFlow\FlowCalculator\ImmutableCombiningCalculator;
-use PhpExceptionFlow\FlowCalculator\MutableCombiningCalculator;
 use PhpExceptionFlow\FlowCalculator\RaisesCalculator;
-use PhpExceptionFlow\FlowCalculator\AbstractTraversingCalculator;
 use PhpExceptionFlow\FlowCalculator\TraversingCalculator;
 use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
 use PhpExceptionFlow\ScopeVisitor\CalculatorWrappingVisitor;
@@ -36,7 +33,7 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 		$state = PipelineTestHelper::calculateState($script);
 		$ast_nodes_collector = PipelineTestHelper::linkingCfgPass($script);
 		$scopes = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast);
-		
+
 		$catch_clause_type_resolver = new CaughtExceptionTypesCalculator($state);
 		$this->traverser->addVisitor($catch_clause_type_resolver);
 		$this->traverser->traverse($scopes);
