@@ -18,17 +18,23 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 	 */
 	private $catch_clause_catches;
 
+	/**
+	 * @var \SplObjectStorage $catch_clause_potentially_catches
+	 */
+	private $catch_clause_potentially_catches;
+
 	/** @var CaughtExceptionTypesCalculator $catch_clause_type_resolver */
 	private $catch_clause_type_resolver;
 
-	/** @var MutableCombiningCalculator */
+	/** @var CombiningCalculator */
 	private $encounters_calculator;
 
-	public function __construct(CaughtExceptionTypesCalculator $catch_clause_type_resolver, MutableCombiningCalculator $encounters_calculator) {
+	public function __construct(CaughtExceptionTypesCalculator $catch_clause_type_resolver, CombiningCalculator $encounters_calculator) {
 		parent::__construct();
 
 		$this->guarded_scopes = new \SplObjectStorage;
 		$this->catch_clause_catches = new \SplObjectStorage;
+		$this->catch_clause_potentially_catches = new \SplObjectStorage;
 		$this->catch_clause_type_resolver = $catch_clause_type_resolver;
 		$this->encounters_calculator = $encounters_calculator;
 	}
@@ -37,10 +43,16 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 		$guarded_scopes = $scope->getGuardedScopes();
 		$uncaught = array();
 		foreach ($guarded_scopes as $guarded_scope) {
-			$inclosed_encounters = $this->encounters_calculator->getForScope($guarded_scope->getInclosedScope());
+			try {
+				$inclosed_encounters = $this->encounters_calculator->getForScope($guarded_scope->getInclosedScope());
+			} catch (\UnexpectedValueException $exception) {
+				$inclosed_encounters = [];
+			}
+
 			$catch_clauses = $guarded_scope->getCatchClauses();
 			foreach ($catch_clauses as $catch_clause) {
 				$potentially_caught_types = $this->catch_clause_type_resolver->getCaughtTypesForClause($catch_clause);
+				$this->catch_clause_potentially_catches[$catch_clause] = $potentially_caught_types;
 				$actually_caught_types = array_intersect($inclosed_encounters, $potentially_caught_types);
 				$this->catch_clause_catches[$catch_clause] = array_values($actually_caught_types);
 				$inclosed_encounters = array_diff($inclosed_encounters, $actually_caught_types); //remove exceptions that are caught
@@ -60,6 +72,13 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 			throw new \UnexpectedValueException("Given catch clause could not be found in this set.");
 		}
 		return $this->catch_clause_catches[$catch_clause];
+	}
+
+	public function getPotentiallyCaughtTypes(Catch_ $catch_clause) {
+		if ($this->catch_clause_potentially_catches->contains($catch_clause) === false) {
+			throw new \UnexpectedValueException("Given catch clause could not be found in this set.");
+		}
+		return $this->catch_clause_potentially_catches[$catch_clause];
 	}
 
 	/**
