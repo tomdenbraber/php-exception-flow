@@ -8,10 +8,10 @@ try {
 {main}:
 	encounters: []
 	try
-		encounters: [InvalidArgumentException]
+		encounters: [invalidargumentexception]
 		try
-			encounters: [InvalidArgumentException]
-		catch#0 catches: [domainexception]
-		uncaught: [InvalidArgumentException]
-	catch#0 catches: [invalidargumentexception]
+			encounters: [invalidargumentexception]
+		catch#0 catches: [], could catch: [domainexception]
+		uncaught: [invalidargumentexception]
+	catch#0 catches: [invalidargumentexception], could catch: [invalidargumentexception]
 	uncaught: []

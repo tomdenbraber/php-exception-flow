@@ -48,4 +48,13 @@ class CallCollector extends NodeVisitorAbstract {
 	public function getStaticCalls() {
 		return $this->static_calls;
 	}
+
+	/**
+	 * empties all the sets of collected calls
+	 */
+	public function reset() {
+		$this->func_calls = new \SplObjectStorage;
+		$this->method_calls = new \SplObjectStorage;
+		$this->static_calls = new \SplObjectStorage;
+	}
 }

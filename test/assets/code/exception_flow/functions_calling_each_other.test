@@ -1,19 +1,19 @@
 <?php
 function a($throw = false) {
-    if ($throw) {
-        throw new Exception();
-    } else {
-        b(!$throw);
-    }
+	if ($throw) {
+		throw new Exception();
+	} else {
+		b(!$throw);
+	}
 }
 function b($throw) {
-    a($throw);
+	a($throw);
 }
 
 -----
 {main}:
-    encounters: []
+	encounters: []
 a:
-    encounters: [Exception]
+	encounters: [exception]
 b:
-    encounters: [Exception]
+	encounters: [exception]

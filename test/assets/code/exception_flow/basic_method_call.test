@@ -13,6 +13,6 @@ class E {
 {main}:
 	encounters: []
 A::m:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]
 E::k:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]

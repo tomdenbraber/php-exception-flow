@@ -2,6 +2,11 @@
 namespace PhpExceptionFlow;
 
 use PhpExceptionFlow\AstVisitor;
+use PhpExceptionFlow\CHA\AppliesToCalculator;
+use PhpExceptionFlow\CHA\AppliesToVisitor;
+use PhpExceptionFlow\CHA\MethodComparator;
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
+use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpParser;
 use PHPCfg;
 use PHPTypes;
@@ -60,7 +65,7 @@ class PipelineTestHelper {
 	 * @param PHPTypes\State $state
 	 * @param PHPCfg\Visitor\AstNodeToCfgNodesCollector $ast_nodes_collector
 	 * @param PhpParser\Node[] $ast
-	 * @return Scope[]
+	 * @return AstVisitor\ScopeCollector
 	 */
 	public static function calculateScopes(PHPTypes\State $state, PHPCfg\Visitor\AstNodeToCfgNodesCollector $ast_nodes_collector, array $ast) {
 		// now do a walk over the AST to collect the scopes
@@ -70,6 +75,23 @@ class PipelineTestHelper {
 		$ast_traverser->addVisitor($scope_collector);
 		$ast_traverser->traverse($ast);
 
-		return $scope_collector->getTopLevelScopes();
+		return $scope_collector;
+	}
+
+	public static function calculateAppliesTo($ast, $state) {
+		$partial_order = new PartialOrder(new MethodComparator($state->classResolves));
+		$method_collecting_visitor = new AstVisitor\MethodCollectingVisitor($partial_order);
+
+		$node_traverser = new PhpParser\NodeTraverser();
+		$node_traverser->addVisitor($method_collecting_visitor);
+		$node_traverser->traverse($ast);
+
+		$applies_to_calculator = new AppliesToCalculator($partial_order, $state->classResolvedBy);
+		$applies_to_visitor = new AppliesToVisitor($applies_to_calculator);
+		$partial_order_traverser = new TopDownBreadthFirstTraverser();
+		$partial_order_traverser->addVisitor($applies_to_visitor);
+		$partial_order_traverser->traverse($partial_order);
+
+		return $applies_to_visitor->getClassToMethodMap();
 	}
 }

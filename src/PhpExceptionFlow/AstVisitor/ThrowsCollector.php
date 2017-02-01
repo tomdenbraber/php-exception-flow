@@ -30,7 +30,7 @@ class ThrowsCollector extends NodeVisitorAbstract {
 
 	public function enterNode(Node $node) {
 		if ($node instanceof Node\Stmt\Throw_) {
-			$throws[] = $node;
+			$this->throws[] = $node;
 		}
 	}
 

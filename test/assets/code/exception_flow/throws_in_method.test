@@ -8,4 +8,4 @@ class A {
 {main}:
 	encounters: []
 A::a_method:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]

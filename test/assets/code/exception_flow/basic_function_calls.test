@@ -9,6 +9,6 @@ function b() {
 {main}:
 	encounters: []
 a:
-	encounters: [Exception]
+	encounters: [exception]
 b:
-	encounters: [Exception]
+	encounters: [exception]

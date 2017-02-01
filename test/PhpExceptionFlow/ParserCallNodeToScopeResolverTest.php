@@ -10,7 +10,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
 use PHPTypes\Type;
 
-class CallToScopeResolverTest extends \PHPUnit_Framework_TestCase {
+class ParserCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 
 	private $method_a_m;
 	private $method_c_m;
@@ -27,7 +27,7 @@ class CallToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 	private $function_scopes;
 	private $method_scopes;
 
-	/** @var CallToScopeResolver $resolver */
+	/** @var ParserCallNodeToScopeResolver $resolver */
 	private $resolver;
 
 	/**
@@ -92,7 +92,7 @@ class CallToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 				"k" => $this->scope_f_k,
 			]
 		);
-		$this->resolver = new CallToScopeResolver($this->method_scopes, $this->function_scopes, $this->applies_to);
+		$this->resolver = new ParserCallNodeToScopeResolver($this->method_scopes, $this->function_scopes, $this->applies_to);
 	}
 
 	public function testThrowsLogicExceptionOnWrongNodeType() {
@@ -206,8 +206,8 @@ class CallToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 	 * @return Method
 	 */
 	private function buildScopeMock($name) {
-		$method_mock = $this->createMock(Scope::class);
-		$method_mock->method('getName')->willReturn($name);
-		return $method_mock;
+		$scope_mock = $this->createMock(Scope::class);
+		$scope_mock->method('getName')->willReturn($name);
+		return $scope_mock;
 	}
 }
