@@ -4,15 +4,13 @@ namespace PhpExceptionFlow\FlowCalculator;
 use PhpExceptionFlow\Scope;
 use PHPTypes\Type;
 
-abstract class AbstractMutableFlowCalculator implements MutableFlowCalculatorInterface {
+abstract class AbstractMutableFlowCalculator extends AbstractFlowCalculator {
 	/** @var \SplObjectStorage $has_changed */
 	private $has_changed;
-	/** @var \SplObjectStorage|Type[][] $scopes */
-	protected $scopes;
 
 	public function __construct() {
+		parent::__construct();
 		$this->has_changed = new \SplObjectStorage;
-		$this->scopes = new \SplObjectStorage;
 	}
 
 	/**
