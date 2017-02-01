@@ -3,7 +3,7 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\Scope;
 
-abstract class AbstractCombiningCalculator implements CombiningCalculatorInterface {
+class CombiningCalculator implements CombiningCalculatorInterface {
 	/** @var FlowCalculatorInterface[] $calculators */
 	protected $calculators = [];
 
@@ -16,8 +16,18 @@ abstract class AbstractCombiningCalculator implements CombiningCalculatorInterfa
 		if (isset($this->calculators[$type]) === true) {
 			return $this->calculators[$type];
 		} else {
-			throw new \UnexpectedValueException(sprintf("No calculator registered for type %s", $type));
+			foreach ($this->calculators as $calculator) {
+				if ($calculator instanceof CombiningCalculatorInterface) {
+					try {
+						$correct_type_calc = $calculator->getCalculator($type);
+						return $correct_type_calc;
+					} catch (\UnexpectedValueException $e) {
+						//silently failing is not a problem, maybe we can find the calculator with given type in a wrapped calculator
+					}
+				}
+			}
 		}
+		throw new \UnexpectedValueException(sprintf("No calculator registered for type %s", $type));
 	}
 
 	/**
@@ -29,6 +39,13 @@ abstract class AbstractCombiningCalculator implements CombiningCalculatorInterfa
 			throw new \LogicException(sprintf("Cannot add the same calculator (type %s) to the encounterscalculator.", $exception_set_calculator->getType()));
 		}
 		$this->calculators[$exception_set_calculator->getType()] = $exception_set_calculator;
+	}
+
+	/**
+	 * @return FlowCalculatorInterface[]
+	 */
+	public function getWrappedCalculators() {
+		return $this->calculators;
 	}
 
 	/**
@@ -48,9 +65,35 @@ abstract class AbstractCombiningCalculator implements CombiningCalculatorInterfa
 	public function getForScope(Scope $scope) {
 		$exception_set = [];
 		foreach ($this->calculators as $calculator) {
-			$exception_set = array_merge($calculator->getForScope($scope), $exception_set);
+			try {
+				$calculators_exc = $calculator->getForScope($scope);
+			} catch (\UnexpectedValueException $exception) {
+				$calculators_exc = [];
+			}
+			$exception_set = array_merge($calculators_exc, $exception_set);
 		}
 		return array_values(array_unique($exception_set));
+	}
+
+	/**
+	 * @param Scope $scope
+	 * @param bool $reset
+	 * @return bool
+	 */
+	public function scopeHasChanged(Scope $scope, $reset = true) {
+		$changed = false;
+		foreach ($this->calculators as $calculator) {
+			$changed = $changed || $calculator->scopeHasChanged($scope, $reset);
+		}
+		return $changed;
+	}
+
+	public function getType() {
+		$wrapped_types = [];
+		foreach ($this->calculators as $type => $_) {
+			$wrapped_types[] = $type;
+		}
+		return count($wrapped_types) === 0 ? "combined" : "combined " . implode(",", $wrapped_types);
 	}
 
 }
