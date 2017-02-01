@@ -16,9 +16,6 @@ class EncountersCalculator {
 	/** @var Scope[]|\SplObjectStorage */
 	private $queued_scopes;
 
-	/** ScopeTraverserInterface $immutable_calculating_traverser */
-	private $immutable_calculating_traverser;
-
 	public function __construct(FlowCalculatorInterface $mutable_flow_calc, FlowCalculatorInterface $immutable_flow_calculator) {
 		$this->mutable_flow_calculator = $mutable_flow_calc;
 		$this->immutable_flow_calculator = $immutable_flow_calculator;
