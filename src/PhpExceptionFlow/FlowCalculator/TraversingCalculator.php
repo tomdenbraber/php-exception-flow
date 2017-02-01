@@ -3,21 +3,26 @@ namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\Scope;
 use PhpExceptionFlow\ScopeTraverserInterface;
+use PhpExceptionFlow\ScopeVisitor\CalculatorWrappingVisitor;
 
-class TraversingCalculator implements WrappingCalculatorInterface {
+class TraversingCalculator implements TraversingCalculatorInterface {
 
 	/** @var ScopeTraverserInterface $traverser */
 	private $traverser;
+	/** @var CalculatorWrappingVisitor $visitor */
+	private $visitor;
 	/** @var FlowCalculatorInterface $wrapped_calculator */
 	protected $wrapped_calculator;
 
 	/**
 	 * TraversingCalculator constructor.
 	 * @param ScopeTraverserInterface $traverser
+	 * @param CalculatorWrappingVisitor $visitor
 	 * @param FlowCalculatorInterface $wrapped_calculator; this calculator has to be wrapped by a CalculatorWrappingVisitor which is inserted into the given ScopeTraverser
 	 */
-	public function __construct(ScopeTraverserInterface $traverser, FlowCalculatorInterface $wrapped_calculator = null) {
+	public function __construct(ScopeTraverserInterface $traverser, CalculatorWrappingVisitor $visitor, FlowCalculatorInterface $wrapped_calculator = null) {
 		$this->traverser = $traverser;
+		$this->visitor = $visitor;
 		if ($wrapped_calculator !== null) {
 			$this->wrapped_calculator = $wrapped_calculator;
 		}
@@ -56,6 +61,13 @@ class TraversingCalculator implements WrappingCalculatorInterface {
 
 	public function getType() {
 		return sprintf("traversing %s", $this->wrapped_calculator->getType());
+	}
+
+	/**
+	 * @return Scope[]
+	 */
+	public function getScopesChangedDuringLastTraverse() {
+		return $this->visitor->getChangedDuringLastTraverse();
 	}
 
 }

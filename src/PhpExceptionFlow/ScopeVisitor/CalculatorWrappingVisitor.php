@@ -14,6 +14,9 @@ class CalculatorWrappingVisitor extends AbstractScopeVisitor {
 	const CALCULATE_ON_LEAVE = 2;
 	const CALCULATE_ON_ENTER_AND_LEAVE = 3;
 
+	/** @var Scope[] */
+	private $changed_in_last_traverse = [];
+
 	/**
 	 * CalculatorWrappingVisitor constructor.
 	 * @param FlowCalculatorInterface $calculator
@@ -31,15 +34,33 @@ class CalculatorWrappingVisitor extends AbstractScopeVisitor {
 		return $this->flow_calculator;
 	}
 
+	public function beforeTraverse(array $scopes) {
+		$this->changed_in_last_traverse = [];
+	}
+
 	public function enterScope(Scope $scope) {
 		if ($this->operating_mode === self::CALCULATE_ON_ENTER || $this->operating_mode === self::CALCULATE_ON_ENTER_AND_LEAVE) {
-			$this->flow_calculator->determineForScope($scope);
+			$this->runCalculator($scope);
 		}
 	}
 
 	public function leaveScope(Scope $scope) {
 		if ($this->operating_mode === self::CALCULATE_ON_LEAVE || $this->operating_mode === self::CALCULATE_ON_ENTER_AND_LEAVE) {
-			$this->flow_calculator->determineForScope($scope);
+			$this->runCalculator($scope);
+		}
+	}
+
+	/**
+	 * @return Scope[]
+	 */
+	public function getChangedDuringLastTraverse() {
+		return $this->changed_in_last_traverse;
+	}
+
+	private function runCalculator(Scope $scope) {
+		$this->flow_calculator->determineForScope($scope);
+		if ($this->flow_calculator->scopeHasChanged($scope) === true) {
+			$this->changed_in_last_traverse[] = $scope;
 		}
 	}
 
