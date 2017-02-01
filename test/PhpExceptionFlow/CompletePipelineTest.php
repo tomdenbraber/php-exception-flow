@@ -1,12 +1,21 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\AstVisitor\CallCollector;
+use PhpExceptionFlow\AstVisitor\MethodCollectingVisitor;
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
+use PhpExceptionFlow\CHA\AppliesToCalculator;
+use PhpExceptionFlow\CHA\AppliesToVisitor;
+use PhpExceptionFlow\CHA\MethodComparator;
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
+use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
+use PhpExceptionFlow\FlowCalculator\PropagatesCalculator;
 use PhpExceptionFlow\FlowCalculator\RaisesCalculator;
 use PhpExceptionFlow\FlowCalculator\TraversingCalculator;
 use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
 use PhpExceptionFlow\ScopeVisitor\CalculatorWrappingVisitor;
+use PhpExceptionFlow\ScopeVisitor\CallToScopeLinkingVisitor;
 use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpExceptionFlow\ScopeVisitor\PrintingVisitor;
 use PhpParser;
@@ -32,10 +41,19 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 		$script = PipelineTestHelper::simplifyingCfgPass($php_parser, $ast);
 		$state = PipelineTestHelper::calculateState($script);
 		$ast_nodes_collector = PipelineTestHelper::linkingCfgPass($script);
-		$scopes = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast);
+		$scope_collector = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast);
+		$applies_to = PipelineTestHelper::calculateAppliesTo($ast, $state);
+
+		$scopes = $scope_collector->getTopLevelScopes();
+
+		$call_resolver = new ParserCallNodeToScopeResolver($scope_collector->getMethodScopes(), $scope_collector->getFunctionScopes(), $applies_to);
+
+		$call_to_scope_linker = new CallToScopeLinkingVisitor(new PhpParser\NodeTraverser(), new CallCollector(), $call_resolver);
+
 
 		$catch_clause_type_resolver = new CaughtExceptionTypesCalculator($state);
 		$this->traverser->addVisitor($catch_clause_type_resolver);
+		$this->traverser->addVisitor($call_to_scope_linker);
 		$this->traverser->traverse($scopes);
 		$this->traverser->removeVisitor($catch_clause_type_resolver);
 
@@ -58,8 +76,11 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 		$uncaught_scope_traverser->addVisitor($uncaught_wrapping_visitor);
 		$traversing_uncaught_calculator = new TraversingCalculator($uncaught_scope_traverser, $uncaught_calculator);
 
+		$propagates_calculator = new PropagatesCalculator($call_to_scope_linker->getCallerCallsCalleeScopes(), $combining);
+
 
 		$combining_mutable->addCalculator($traversing_uncaught_calculator);
+		$combining_mutable->addCalculator($propagates_calculator);
 		$combining_immutable->addCalculator($traversing_raises_calculator);
 
 		$combining->addCalculator($combining_immutable);
