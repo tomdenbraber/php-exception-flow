@@ -44,12 +44,8 @@ class ScopeCollector extends NodeVisitorAbstract {
 	}
 
 	public function beforeTraverse(array $nodes) {
-		//add all top level nodes that are not declarations to the main scope
-		foreach ($nodes as $node) {
-			if (($node instanceof Node\Stmt\ClassLike) === false && ($node instanceof Node\FunctionLike) === false) {
-				$this->main_scope->addInstruction($node);
-			}
-		}
+		//add all top level nodes that are not declarations/try-catches to the main scope
+		$this->addInstructionsToScope($this->main_scope, $nodes);
 	}
 
 	public function enterNode(Node $node) {
@@ -174,7 +170,9 @@ class ScopeCollector extends NodeVisitorAbstract {
 	 */
 	private function addInstructionsToScope(Scope $scope, array $nodes) {
 		foreach ($nodes as $stmt) {
-			if ($stmt instanceof Node\Stmt\TryCatch === false) {
+			if (($stmt instanceof Node\Stmt\ClassLike) === false &&
+				($stmt instanceof Node\FunctionLike) === false &&
+				($stmt instanceof Node\Stmt\TryCatch) === false) {
 				$scope->addInstruction($stmt);
 			}
 		}
