@@ -2,4 +2,4 @@
 throw new Exception();
 -----
 {main}:
-	encounters: [Exception]
+	encounters: [exception]

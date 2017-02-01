@@ -14,8 +14,8 @@ some_fn($e);
 
 -----
 {main}:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]
 some_fn:
 	encounters: []
 E::k:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]

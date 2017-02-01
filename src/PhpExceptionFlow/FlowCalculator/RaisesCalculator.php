@@ -28,7 +28,7 @@ class RaisesCalculator extends AbstractFlowCalculator {
 		$throw_nodes = $this->ast_throws_collector->getThrows();
 		$throw_types = [];
 		foreach ($throw_nodes as $throw) {
-			$throw_types[] = $throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN));
+			$throw_types[] = $this->lowerType($throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN)));
 		}
 
 		$this->scopes[$scope] = $throw_types;
@@ -36,5 +36,13 @@ class RaisesCalculator extends AbstractFlowCalculator {
 
 	public function getType() {
 		return "raises";
+	}
+
+	private function lowerType(Type $type) {
+		$subtypes = [];
+		if ($type->hasSubtypes() === true) {
+			$subtypes = array_map(array($this, 'lowerType'), $type->subTypes);
+		}
+		return new Type($type->type, $subtypes, strtolower($type->userType));
 	}
 }

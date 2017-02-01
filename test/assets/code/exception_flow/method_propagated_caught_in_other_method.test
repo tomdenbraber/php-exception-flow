@@ -17,8 +17,8 @@ class E {
 A::m:
 	encounters: []
 	try
-		encounters: [BadMethodCallException]
+		encounters: [badmethodcallexception]
 	catch#0 catches: [badmethodcallexception]
 	uncaught: []
 E::k:
-	encounters: [BadMethodCallException]
+	encounters: [badmethodcallexception]

@@ -6,6 +6,6 @@ try {
 {main}:
 	encounters: []
 	try
-		encounters: [InvalidArgumentException]
+		encounters: [invalidargumentexception]
 	catch#0 catches: [invalidargumentexception]
 	uncaught: []

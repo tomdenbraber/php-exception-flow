@@ -6,6 +6,7 @@ use PhpExceptionFlow\Scope;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\NodeTraverser;
+use PHPTypes\Type;
 
 class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 
@@ -16,10 +17,18 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 	/** @var ThrowsCollector $ast_throws_collector */
 	private $ast_throws_collector;
 
+	/** @var Type $xyz_type */
+	private $xyz_type;
+	/** @var Type $abc_type */
+	private $abc_type;
+
 	public function setUp() {
 		$this->ast_traverser = $this->createMock(NodeTraverser::class);
 		$this->ast_throws_collector = $this->createMock(ThrowsCollector::class);
 		$this->raises_calculator = new RaisesCalculator($this->ast_traverser, $this->ast_throws_collector);
+
+		$this->xyz_type = $this->createType("xyz");
+		$this->abc_type = $this->createType("abc");
 	}
 
 	public function testGetTypeReturnsRaises() {
@@ -58,14 +67,14 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$throw_stmt1_mock->expr->expects($this->once())
 			->method("getAttribute")
 			->with($this->equalTo("type"), $this->anything())
-			->willReturn("xyz");
+			->willReturn($this->xyz_type);
 
 		$throw_stmt2_mock = $this->createMock(Throw_::class);
 		$throw_stmt2_mock->expr = $this->createMock(Expr::class);
 		$throw_stmt2_mock->expr->expects($this->once())
 			->method("getAttribute")
 			->with($this->equalTo("type"), $this->anything())
-			->willReturn("abc");
+			->willReturn($this->abc_type);
 
 
 		$this->ast_throws_collector->expects($this->exactly(1))
@@ -74,7 +83,7 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 			->willReturn(array($throw_stmt1_mock, $throw_stmt2_mock));
 
 		$this->raises_calculator->determineForScope($scope_mock);
-		$this->assertEquals(array("xyz", "abc"), $this->raises_calculator->getForScope($scope_mock));
+		$this->assertEquals(array($this->xyz_type, $this->abc_type), $this->raises_calculator->getForScope($scope_mock));
 	}
 
 	public function testWithMultipleAndThrowsReturnsCorrectExceptions() {
@@ -93,14 +102,14 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$throw_stmt1_mock->expr->expects($this->once())
 			->method("getAttribute")
 			->with($this->equalTo("type"), $this->anything())
-			->willReturn("xyz");
+			->willReturn($this->xyz_type);
 
 		$throw_stmt2_mock = $this->createMock(Throw_::class);
 		$throw_stmt2_mock->expr = $this->createMock(Expr::class);
 		$throw_stmt2_mock->expr->expects($this->once())
 			->method("getAttribute")
 			->with($this->equalTo("type"), $this->anything())
-			->willReturn("abc");
+			->willReturn($this->abc_type);
 
 
 		$this->ast_throws_collector->expects($this->exactly(2))
@@ -110,7 +119,15 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->raises_calculator->determineForScope($scope_1_mock);
 		$this->raises_calculator->determineForScope($scope_2_mock);
 
-		$this->assertEquals(array("xyz"), $this->raises_calculator->getForScope($scope_1_mock));
-		$this->assertEquals(array("abc"), $this->raises_calculator->getForScope($scope_2_mock));
+		$this->assertEquals(array($this->xyz_type), $this->raises_calculator->getForScope($scope_1_mock));
+		$this->assertEquals(array($this->abc_type), $this->raises_calculator->getForScope($scope_2_mock));
+	}
+
+	/**
+	 * @param string $userType
+	 * @return Type
+	 */
+	private function createType($userType) {
+		return new Type(Type::TYPE_OBJECT, array(), $userType);
 	}
 }

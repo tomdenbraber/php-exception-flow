@@ -10,4 +10,4 @@ function a($throw = false) {
 {main}:
 	encounters: []
 a:
-	encounters: [Exception]
+	encounters: [exception]

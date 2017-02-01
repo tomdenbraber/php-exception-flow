@@ -4,8 +4,8 @@ try {
 } catch (DomainException $de) {}
 -----
 {main}:
-	encounters: [InvalidArgumentException]
+	encounters: [invalidargumentexception]
 	try
-		encounters: [InvalidArgumentException]
+		encounters: [invalidargumentexception]
 	catch#0 catches: [domainexception]
-	uncaught: [InvalidArgumentException]
+	uncaught: [invalidargumentexception]
