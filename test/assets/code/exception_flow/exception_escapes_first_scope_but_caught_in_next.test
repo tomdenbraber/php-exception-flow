@@ -1,0 +1,17 @@
+<?php
+try {
+	try {
+		throw new \InvalidArgumentException();
+	} catch (DomainException $de) {}
+} catch (\InvalidArgumentException $le) {}
+-----
+{main}:
+	encounters: []
+	try
+		encounters: [invalidargumentexception]
+		try
+			encounters: [invalidargumentexception]
+		catch#0 catches: [], could catch: [domainexception]
+		uncaught: [invalidargumentexception]
+	catch#0 catches: [invalidargumentexception], could catch: [invalidargumentexception]
+	uncaught: []

@@ -1,0 +1,18 @@
+<?php
+class A {
+	public function m(E $e) {
+		$e->k();
+	}
+}
+class E {
+	public function k() {
+		throw new BadMethodCallException();
+	}
+}
+-----
+{main}:
+	encounters: []
+A::m:
+	encounters: [badmethodcallexception]
+E::k:
+	encounters: [badmethodcallexception]

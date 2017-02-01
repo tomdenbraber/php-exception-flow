@@ -6,4 +6,4 @@ function a() {
 {main}:
 	encounters: []
 a:
-	encounters: [InvalidArgumentException]
+	encounters: [invalidargumentexception]
