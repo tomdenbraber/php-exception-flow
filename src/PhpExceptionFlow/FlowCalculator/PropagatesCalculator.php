@@ -28,6 +28,7 @@ class PropagatesCalculator extends AbstractMutableFlowCalculator {
 			}
 			$imported_exceptions = array_values(array_unique($imported_exceptions));
 		}
+		$this->setScopeHasChanged($scope, $imported_exceptions);
 		$this->scopes[$scope] = $imported_exceptions;
 	}
 
