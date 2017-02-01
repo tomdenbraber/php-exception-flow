@@ -4,7 +4,7 @@ namespace PhpExceptionFlow\FlowCalculator;
 use PhpExceptionFlow\Scope;
 use PHPTypes\Type;
 
-abstract class AbstractFlowCalculator implements  FlowCalculatorInterface {
+abstract class AbstractFlowCalculator implements FlowCalculatorInterface {
 	/** @var \SplObjectStorage|Type[][] $scopes */
 	protected $scopes;
 
@@ -22,5 +22,9 @@ abstract class AbstractFlowCalculator implements  FlowCalculatorInterface {
 			throw new \UnexpectedValueException(sprintf("Scope with name %s could not be found in this set.", $scope->getName()));
 		}
 		return $this->scopes[$scope];
+	}
+
+	public function scopeHasChanged(Scope $scope, $reset = true) {
+		return false; // not all calculators have to detect change, so return false by default
 	}
 }
