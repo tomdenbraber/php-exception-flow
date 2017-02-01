@@ -12,12 +12,12 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 	private $uncaught_calculator;
 	/** @var CaughtExceptionTypesCalculator $catch_clause_type_resolver */
 	private $catch_clause_type_resolver;
-	/** @var MutableCombiningCalculator $encounters_calculator */
+	/** @var CombiningCalculator $encounters_calculator */
 	private $encounters_calculator;
 
 	public function setUp() {
 		$this->catch_clause_type_resolver = $this->createMock(CaughtExceptionTypesCalculator::class);
-		$this->encounters_calculator = $this->createMock(MutableCombiningCalculator::class);
+		$this->encounters_calculator = $this->createMock(CombiningCalculator::class);
 		$this->uncaught_calculator = new UncaughtCalculator($this->catch_clause_type_resolver, $this->encounters_calculator);
 	}
 
