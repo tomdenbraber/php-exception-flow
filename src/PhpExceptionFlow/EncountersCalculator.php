@@ -36,10 +36,7 @@ class EncountersCalculator {
 			$this->addToWorklist($scope);
 		}
 
-		print "get here\n";
-
 		while (false !== ($scope = $this->fetchFromWorklist())) {
-			print $scope->getName() . "\n";
 			$this->mutable_flow_calculator->determineForScope($scope);
 			if ($this->mutable_flow_calculator->scopeHasChanged($scope) === true) {
 				$this->addAffectedScopesToWorklist($scope);
@@ -73,7 +70,6 @@ class EncountersCalculator {
 		if (count($this->worklist) > 0) {
 			$scope = array_shift($this->worklist);
 			$this->queued_scopes->detach($scope);
-			print "dequeued!\n";
 			return $scope;
 		} else {
 			return false;
