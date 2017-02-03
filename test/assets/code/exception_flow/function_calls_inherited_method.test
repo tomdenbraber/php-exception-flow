@@ -1,0 +1,51 @@
+<?php
+class A {
+	public function k() {
+		throw new BadMethodCallException();
+	}
+}
+
+class B extends A {
+	public function k() {} //does not throw
+}
+
+class C extends B {} //inherits B->k which does not throw
+
+class E { //does not extend, but defines method k as well
+	public function k() {
+		throw new LogicException();
+	}
+}
+
+function a(A $a) {
+	$a->k();
+}
+
+function b(B $b) {
+	$b->k();
+}
+
+function c(C $c) {
+	$c->k();
+}
+
+function e(E $e) {
+	$e->k();
+}
+-----
+{main}:
+	encounters: []
+a:
+	encounters: [badmethodcallexception]
+b:
+	encounters: []
+c:
+	encounters: []
+e:
+	encounters: [logicexception]
+A::k:
+	encounters: [badmethodcallexception]
+B::k:
+	encounters: []
+E::k:
+	encounters: [logicexception]
