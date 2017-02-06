@@ -1,13 +1,3 @@
-<?php
-function a() {
-	b();
-	throw new BadFunctionCallException();
-}
-function b() {
-	a();
-	throw new RuntimeException();
-}
------
 {main}:
 	encounters: []
 a:

@@ -6,8 +6,3 @@ function a($throw = false) {
 		a(!$throw);
 	}
 }
------
-{main}:
-	encounters: []
-a:
-	encounters: [exception]

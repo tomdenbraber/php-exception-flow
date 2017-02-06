@@ -1,0 +1,5 @@
+<?php
+try {
+
+} catch (\BadMethodCallException $bm) {
+} catch (\BadFunctionCallException $bf) {}

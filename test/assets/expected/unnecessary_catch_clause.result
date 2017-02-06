@@ -1,9 +1,3 @@
-<?php
-try {
-
-} catch (\BadFunctionCallException $bf) {
-} catch (\BadMethodCallException $bm) {}
------
 {main}:
 	encounters: []
 	try

@@ -32,20 +32,3 @@ function c(C $c) {
 function e(E $e) {
 	$e->k();
 }
------
-{main}:
-	encounters: []
-a:
-	encounters: [badmethodcallexception]
-b:
-	encounters: []
-c:
-	encounters: []
-e:
-	encounters: [logicexception]
-A::k:
-	encounters: [badmethodcallexception]
-B::k:
-	encounters: []
-E::k:
-	encounters: [logicexception]

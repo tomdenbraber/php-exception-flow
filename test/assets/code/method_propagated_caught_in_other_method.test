@@ -1,0 +1,13 @@
+<?php
+class A {
+	public function m(E $e) {
+		try {
+			$e->k();
+		} catch (BadMethodCallException $e) {}
+	}
+}
+class E {
+	public function k() {
+		throw new BadMethodCallException();
+	}
+}

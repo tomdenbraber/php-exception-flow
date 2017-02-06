@@ -4,8 +4,3 @@ class A {
 		throw new BadMethodCallException();
 	}
 }
------
-{main}:
-	encounters: []
-A::a_method:
-	encounters: [badmethodcallexception]

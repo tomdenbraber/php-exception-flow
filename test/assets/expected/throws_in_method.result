@@ -1,0 +1,4 @@
+{main}:
+	encounters: []
+A::a_method:
+	encounters: [badmethodcallexception]

@@ -12,10 +12,3 @@ function some_fn ($e) {
 $e = new E();
 some_fn($e);
 
------
-{main}:
-	encounters: [badmethodcallexception]
-some_fn:
-	encounters: []
-E::k:
-	encounters: [badmethodcallexception]

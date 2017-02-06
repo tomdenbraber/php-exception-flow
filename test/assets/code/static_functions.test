@@ -5,8 +5,3 @@ class A {
 	}
 }
 A::m();
------
-{main}:
-	encounters: [logicexception]
-A::m:
-	encounters: [logicexception]

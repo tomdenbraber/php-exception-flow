@@ -10,10 +10,3 @@ function b($throw) {
 	a($throw);
 }
 
------
-{main}:
-	encounters: []
-a:
-	encounters: [exception]
-b:
-	encounters: [exception]

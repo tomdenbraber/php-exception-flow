@@ -1,0 +1,6 @@
+{main}:
+	encounters: [badmethodcallexception]
+some_fn:
+	encounters: []
+E::k:
+	encounters: [badmethodcallexception]
