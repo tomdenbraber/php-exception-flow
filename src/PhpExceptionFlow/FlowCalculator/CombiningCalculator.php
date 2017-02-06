@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class CombiningCalculator implements CombiningCalculatorInterface {
 	/** @var FlowCalculatorInterface[] $calculators */

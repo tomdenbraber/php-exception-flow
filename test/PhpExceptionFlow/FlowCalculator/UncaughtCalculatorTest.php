@@ -2,9 +2,9 @@
 
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\GuardedScope;
-use PhpExceptionFlow\Scope;
-use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
+use PhpExceptionFlow\Scope\GuardedScope;
+use PhpExceptionFlow\Scope\Scope;
+use PhpExceptionFlow\Scope\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpParser\Node\Stmt\Catch_;
 
 class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {

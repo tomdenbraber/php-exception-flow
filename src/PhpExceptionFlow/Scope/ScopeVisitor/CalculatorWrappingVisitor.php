@@ -1,8 +1,8 @@
 <?php
-namespace PhpExceptionFlow\ScopeVisitor;
+namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
 use PhpExceptionFlow\FlowCalculator\FlowCalculatorInterface;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class CalculatorWrappingVisitor extends AbstractScopeVisitor {
 	/** @var FlowCalculatorInterface */

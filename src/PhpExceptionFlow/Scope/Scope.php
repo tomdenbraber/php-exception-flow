@@ -1,10 +1,7 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\Scope;
 
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Throw_;
-use PHPTypes\Type;
-
 
 class Scope {
 	/** @var string $name */

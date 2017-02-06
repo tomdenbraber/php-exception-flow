@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	/** @var CombiningCalculator $combining_calculator */

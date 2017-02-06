@@ -1,7 +1,7 @@
 <?php
-namespace PhpExceptionFlow\ScopeVisitor;
+namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
-use PhpExceptionFlow\GuardedScope;
+use PhpExceptionFlow\Scope\GuardedScope;
 use PhpParser\Node\Stmt\Catch_;
 use PHPTypes\State;
 use PHPTypes\Type;

@@ -1,8 +1,8 @@
 <?php
 namespace PhpExceptionFlow\AstVisitor;
 
-use PhpExceptionFlow\GuardedScope;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\GuardedScope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 use PHPTypes\State;

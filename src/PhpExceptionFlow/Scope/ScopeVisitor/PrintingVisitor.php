@@ -1,10 +1,10 @@
 <?php
-namespace PhpExceptionFlow\ScopeVisitor;
+namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
 use PhpExceptionFlow\FlowCalculator\CombiningCalculatorInterface;
 use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
-use PhpExceptionFlow\GuardedScope;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\GuardedScope;
+use PhpExceptionFlow\Scope\Scope;
 
 class PrintingVisitor extends AbstractScopeVisitor {
 	private $indent = "";

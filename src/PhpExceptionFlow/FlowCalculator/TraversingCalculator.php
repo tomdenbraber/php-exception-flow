@@ -1,9 +1,9 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
-use PhpExceptionFlow\ScopeTraverserInterface;
-use PhpExceptionFlow\ScopeVisitor\CalculatorWrappingVisitor;
+use PhpExceptionFlow\Scope\Scope;
+use PhpExceptionFlow\Scope\ScopeTraverserInterface;
+use PhpExceptionFlow\Scope\ScopeVisitor\CalculatorWrappingVisitor;
 
 class TraversingCalculator implements TraversingCalculatorInterface {
 

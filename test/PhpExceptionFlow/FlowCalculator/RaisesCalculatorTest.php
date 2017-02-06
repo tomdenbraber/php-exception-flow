@@ -2,7 +2,7 @@
 namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\NodeTraverser;

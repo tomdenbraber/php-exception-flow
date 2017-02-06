@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 use PHPTypes\Type;
 
 interface FlowCalculatorInterface {

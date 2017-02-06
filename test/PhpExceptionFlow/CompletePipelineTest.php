@@ -9,10 +9,11 @@ use PhpExceptionFlow\FlowCalculator\PropagatesCalculator;
 use PhpExceptionFlow\FlowCalculator\RaisesCalculator;
 use PhpExceptionFlow\FlowCalculator\TraversingCalculator;
 use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
-use PhpExceptionFlow\ScopeVisitor\CalculatorWrappingVisitor;
-use PhpExceptionFlow\ScopeVisitor\CallToScopeLinkingVisitor;
-use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
-use PhpExceptionFlow\ScopeVisitor\PrintingVisitor;
+use PhpExceptionFlow\Scope\ScopeVisitor\CalculatorWrappingVisitor;
+use PhpExceptionFlow\Scope\ScopeVisitor\CallToScopeLinkingVisitor;
+use PhpExceptionFlow\Scope\ScopeVisitor\CaughtExceptionTypesCalculator;
+use PhpExceptionFlow\Scope\ScopeVisitor\PrintingVisitor;
+use PhpExceptionFlow\Scope\ScopeTraverser;
 use PhpParser;
 
 

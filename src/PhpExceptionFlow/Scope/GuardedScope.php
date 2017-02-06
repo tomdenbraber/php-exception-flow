@@ -1,9 +1,8 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\Scope;
 
 use PhpParser\Node\Stmt\Catch_;
 use PHPTypes\Type;
-use PHPTypes\State;
 
 class GuardedScope {
 	/** @var $enclosing_scope Scope: the scope that encloses this guarded scope */

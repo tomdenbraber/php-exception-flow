@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class PropagatesCalculatorTest extends \PHPUnit_Framework_TestCase {
 

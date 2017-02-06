@@ -4,6 +4,7 @@ namespace PhpExceptionFlow;
 use PhpExceptionFlow\FlowCalculator\FlowCalculatorInterface;
 use PhpExceptionFlow\FlowCalculator\TraversingCalculatorInterface;
 use PhpExceptionFlow\FlowCalculator\WrappingCalculatorInterface;
+use PhpExceptionFlow\Scope\Scope;
 
 //todo improve naming.
 class EncountersCalculator {

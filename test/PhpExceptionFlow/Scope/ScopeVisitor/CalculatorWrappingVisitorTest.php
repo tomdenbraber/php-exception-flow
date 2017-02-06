@@ -1,8 +1,8 @@
 <?php
-namespace PhpExceptionFlow\ScopeVisitor;
+namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
 use PhpExceptionFlow\FlowCalculator\FlowCalculatorInterface;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class CalculatorWrappingVisitorTest extends \PHPUnit_Framework_TestCase {
 	/** @var $calculator_mock \PHPUnit_Framework_MockObject_MockObject */

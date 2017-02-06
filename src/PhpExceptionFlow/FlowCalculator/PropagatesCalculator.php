@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 
 class PropagatesCalculator extends AbstractMutableFlowCalculator {
 	/** @var \SplObjectStorage|Scope[][]  */
