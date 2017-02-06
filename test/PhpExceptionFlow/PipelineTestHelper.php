@@ -2,9 +2,9 @@
 namespace PhpExceptionFlow;
 
 use PhpExceptionFlow\AstVisitor;
-use PhpExceptionFlow\CHA\AppliesToCalculator;
-use PhpExceptionFlow\CHA\AppliesToVisitor;
-use PhpExceptionFlow\CHA\MethodComparator;
+use PhpExceptionFlow\CallGraphConstruction\AppliesToCalculator;
+use PhpExceptionFlow\CallGraphConstruction\AppliesToVisitor;
+use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
 use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpParser;

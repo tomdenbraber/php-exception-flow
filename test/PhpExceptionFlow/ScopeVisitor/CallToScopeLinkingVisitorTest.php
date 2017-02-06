@@ -2,7 +2,7 @@
 namespace PhpExceptionFlow\ScopeVisitor;
 
 use PhpExceptionFlow\AstVisitor\CallCollector;
-use PhpExceptionFlow\CallResolverInterface;
+use PhpExceptionFlow\CallGraphConstruction\CallResolverInterface;
 use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;

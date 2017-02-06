@@ -1,8 +1,8 @@
 <?php
-namespace PhpExceptionFlow\Test\CHA;
+namespace PhpExceptionFlow\Test\CallGraphConstruction;
 
-use PhpExceptionFlow\CHA\MethodComparator;
-use PhpExceptionFlow\CHA\Method;
+use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
+use PhpExceptionFlow\CallGraphConstruction\Method;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
 

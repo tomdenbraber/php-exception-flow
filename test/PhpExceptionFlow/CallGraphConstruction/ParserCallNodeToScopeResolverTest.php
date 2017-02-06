@@ -1,8 +1,7 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\CallGraphConstruction;
 
-use PHPCfg\Op\Expr;
-use PhpExceptionFlow\CHA\Method;
+use PhpExceptionFlow\Scope;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;

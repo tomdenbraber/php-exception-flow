@@ -1,7 +1,7 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\CallGraphConstruction;
 
-use PhpExceptionFlow\CHA\Method;
+use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 use PHPTypes\Type;
 

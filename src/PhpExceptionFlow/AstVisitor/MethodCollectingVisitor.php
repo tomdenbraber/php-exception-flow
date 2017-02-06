@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\AstVisitor;
 
-use PhpExceptionFlow\CHA\Method;
+use PhpExceptionFlow\CallGraphConstruction\Method;
 use PhpExceptionFlow\Collection\PartialOrderInterface;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;

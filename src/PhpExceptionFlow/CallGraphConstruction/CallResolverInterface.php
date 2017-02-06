@@ -1,6 +1,7 @@
 <?php
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\CallGraphConstruction;
 
+use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 
 interface CallResolverInterface {

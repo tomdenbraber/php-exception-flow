@@ -1,5 +1,5 @@
 <?php
-namespace PhpExceptionFlow\CHA;
+namespace PhpExceptionFlow\CallGraphConstruction;
 
 use PhpExceptionFlow\Collection\SetInterface;
 
