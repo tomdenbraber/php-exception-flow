@@ -2,7 +2,7 @@
 namespace PhpExceptionFlow\ScopeVisitor;
 
 use PhpExceptionFlow\AstVisitor\CallCollector;
-use PhpExceptionFlow\ParserCallNodeToScopeResolver;
+use PhpExceptionFlow\CallResolverInterface;
 use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -12,7 +12,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 	private $node_traverser_mock;
 	/** @var CallCollector */
 	private $call_collector_mock;
-	/** @var ParserCallNodeToScopeResolver */
+	/** @var CallResolverInterface */
 	private $call_resolver_mock;
 
 	/** @var CallToScopeLinkingVisitor */
@@ -21,7 +21,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 	public function setUp() {
 		$this->node_traverser_mock = $this->createMock(NodeTraverser::class);
 		$this->call_collector_mock = $this->createMock(CallCollector::class);
-		$this->call_resolver_mock = $this->createMock(ParserCallNodeToScopeResolver::class);
+		$this->call_resolver_mock = $this->createMock(CallResolverInterface::class);
 
 		$this->visitor = new CallToScopeLinkingVisitor($this->node_traverser_mock, $this->call_collector_mock, $this->call_resolver_mock);
 	}

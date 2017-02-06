@@ -2,7 +2,7 @@
 namespace PhpExceptionFlow\ScopeVisitor;
 
 use PhpExceptionFlow\AstVisitor\CallCollector;
-use PhpExceptionFlow\ParserCallNodeToScopeResolver;
+use PhpExceptionFlow\CallResolverInterface;
 use PhpExceptionFlow\Scope;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -17,7 +17,7 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 	private $scope_calls_scopes;
 	/**@var \SplObjectStorage|Scope[][] */
 	private $scope_called_by_scopes;
-	/** @var ParserCallNodeToScopeResolver $call_resolver*/
+	/** @var CallResolverInterface $call_resolver*/
 	private $call_resolver;
 	/** @var CallCollector $call_collector */
 	private $call_collector;
@@ -25,7 +25,7 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 	/** @var \SplObjectStorage|Node[][] */
 	private $unresolved_calls;
 
-	public function __construct(NodeTraverser $ast_traverser, CallCollector $call_collector, ParserCallNodeToScopeResolver $call_resolver) {
+	public function __construct(NodeTraverser $ast_traverser, CallCollector $call_collector, CallResolverInterface $call_resolver) {
 		$this->call_resolver = $call_resolver;
 
 		$this->scope_calls_scopes = new \SplObjectStorage;

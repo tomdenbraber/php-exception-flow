@@ -5,7 +5,7 @@ use PhpExceptionFlow\CHA\Method;
 use PhpParser\Node;
 use PHPTypes\Type;
 
-class ParserCallNodeToScopeResolver {
+class ParserCallNodeToScopeResolver implements CallResolverInterface {
 	/** @var array $method_scopes */
 	private $method_scopes;
 	/** @var array $function_scopes */
