@@ -71,7 +71,9 @@ class ScopeCollector extends NodeVisitorAbstract {
 			}
 
 			$this->current_scope = new Scope($name);
-			$this->addInstructionsToScope($this->current_scope, $node->getStmts());
+			if (is_array($node->getStmts()) === true) { //when method is abstract/defined in interface, it getStmts may return null
+				$this->addInstructionsToScope($this->current_scope, $node->getStmts());
+			}
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing_scope = $this->current_scope;
 			$inclosed_scope = new Scope(md5(random_bytes(64)));
