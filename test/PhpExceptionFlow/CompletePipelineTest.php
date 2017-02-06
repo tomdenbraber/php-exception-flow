@@ -2,14 +2,8 @@
 namespace PhpExceptionFlow;
 
 use PhpExceptionFlow\AstVisitor\CallCollector;
-use PhpExceptionFlow\AstVisitor\MethodCollectingVisitor;
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
-use PhpExceptionFlow\CallGraphConstruction\AppliesToCalculator;
-use PhpExceptionFlow\CallGraphConstruction\AppliesToVisitor;
-use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CallGraphConstruction\ParserCallNodeToScopeResolver;
-use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
-use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
 use PhpExceptionFlow\FlowCalculator\PropagatesCalculator;
 use PhpExceptionFlow\FlowCalculator\RaisesCalculator;
