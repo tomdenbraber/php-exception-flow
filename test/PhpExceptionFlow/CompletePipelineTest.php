@@ -1,9 +1,11 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\AstBridge\Parser\WrappedParser;
 use PhpExceptionFlow\AstVisitor\CallCollector;
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
 use PhpExceptionFlow\CallGraphConstruction\ParserCallNodeToScopeResolver;
+use PhpExceptionFlow\CfgBridge\SystemFactory;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
 use PhpExceptionFlow\FlowCalculator\PropagatesCalculator;
 use PhpExceptionFlow\FlowCalculator\RaisesCalculator;
@@ -30,15 +32,18 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	/** @dataProvider provideTestSetsCalculation */
-	public function testSetsCalculation($code, $expected_output) {
+	public function testSetsCalculation($filename, $expected_output) {
 		$php_parser = (new PhpParser\ParserFactory)->create(PhpParser\ParserFactory::PREFER_PHP7);
+		$wrapped_parser = new WrappedParser($php_parser);
 
-		$ast = PipelineTestHelper::getAst($php_parser, $code);
-		$script = PipelineTestHelper::simplifyingCfgPass($php_parser, $ast);
-		$state = PipelineTestHelper::calculateState($script);
-		$ast_nodes_collector = PipelineTestHelper::linkingCfgPass($script);
-		$scope_collector = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast);
-		$applies_to = PipelineTestHelper::calculateAppliesTo($ast, $state);
+		$system_fact = new SystemFactory($php_parser);
+
+		$ast_system = PipelineTestHelper::getAstSystem($wrapped_parser, $filename);
+		$cfg_system = PipelineTestHelper::simplifyingCfgPass($system_fact, $ast_system);
+		$state = PipelineTestHelper::calculateState($cfg_system);
+		$ast_nodes_collector = PipelineTestHelper::linkingCfgPass($cfg_system);
+		$scope_collector = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast_system);
+		$applies_to = PipelineTestHelper::calculateAppliesTo($ast_system, $state);
 
 		$scopes = $scope_collector->getTopLevelScopes();
 
@@ -100,7 +105,8 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	public function provideTestSetsCalculation() {
-		$dir = __DIR__ . '/../assets/code/exception_flow';
+		$dir = __DIR__ . '/../assets/code';
+		$res_dir = __DIR__ . '/../assets/expected';
 		$iter = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($dir), \RecursiveIteratorIterator::LEAVES_ONLY);
 
@@ -109,8 +115,8 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 				continue;
 			}
 
-			$contents = file_get_contents($file);
-			yield $file->getBasename() => explode('-----', $contents);
+			$expected_outcome = file_get_contents($res_dir . "/" . basename($file, ".test") . ".result");
+			yield $file->getBasename() => array($file->getPathname(), $expected_outcome);
 		}
 	}
 
