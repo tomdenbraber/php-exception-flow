@@ -1,0 +1,10 @@
+{main}:
+	encounters: []
+use_a:
+	encounters: [runtimeexception, logicexception]
+A::m:
+	encounters: []
+B::m:
+	encounters: [runtimeexception]
+C::m:
+	encounters: [logicexception]
