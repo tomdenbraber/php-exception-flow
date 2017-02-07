@@ -27,6 +27,7 @@ class ScopeCollector extends NodeVisitorAbstract {
 	/** @var GuardedScope current_guarded_scope */
 	private $current_guarded_scope;
 
+	private $current_namespace = "";
 
 	/** @var Node\Stmt\ClassLike */
 	private $current_class;
@@ -49,7 +50,9 @@ class ScopeCollector extends NodeVisitorAbstract {
 	}
 
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\ClassLike) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->current_namespace = strtolower(implode("\\", $node->name->parts));
+		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = $node;
 		} else if ($node instanceof Node\FunctionLike) {
 			$name = "";
@@ -95,9 +98,10 @@ class ScopeCollector extends NodeVisitorAbstract {
 		} else if ($node instanceof Node\FunctionLike) {
 			// go back to main scope when we leave a function
 			if ($node instanceof Node\Stmt\Function_) {
-				$this->function_scopes[$node->name] = $this->current_scope;
+				$this->function_scopes[strtolower($node->name)] = $this->current_scope;
 			} else if ($node instanceof Node\Stmt\ClassMethod) {
-				$this->method_scopes[strtolower($this->current_class->name)][$node->name] = $this->current_scope;
+				$cls_name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($this->current_class->name) : strtolower($this->current_class->name);
+				$this->method_scopes[$cls_name][strtolower($node->name)] = $this->current_scope;
 			}
 			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {

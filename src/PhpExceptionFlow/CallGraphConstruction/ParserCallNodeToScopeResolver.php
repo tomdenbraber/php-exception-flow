@@ -1,7 +1,7 @@
 <?php
 namespace PhpExceptionFlow\CallGraphConstruction;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PHPTypes\Type;
 
@@ -49,7 +49,6 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 
 	/**
 	 * @param Node\Expr\FuncCall $call
-	 * @throws \LogicException
 	 * @throws \UnexpectedValueException
 	 * @return Scope|null
 	 */
@@ -59,7 +58,7 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 			if (isset($this->function_scopes[$func_name]) === true) {
 				return $this->function_scopes[$func_name];
 			} else {
-				throw new \LogicException(sprintf("Function %s() could not be found!", $func_name));
+				throw new \UnexpectedValueException(sprintf("Function %s() could not be found!", $func_name));
 			}
 		} else {
 			throw new \UnexpectedValueException(sprintf("Cannot resolve function call; function expression has type %s", $call->name->getAttribute("type", Type::unknown())));
@@ -68,7 +67,6 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 
 	/**
 	 * @param Node\Expr\MethodCall $call
-	 * @throws \LogicException
  	 * @throws \UnexpectedValueException
 	 * @return Scope|null
 	 */
@@ -80,24 +78,23 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 			if (is_string($call->name) === true && isset($this->applies_to[$class][$call->name]) === true) {
 				/** @var Method $called_method */
 				$called_method = $this->applies_to[$class][$call->name];
-				$called_method_name = $called_method->getName();
+				$called_method_name = strtolower($called_method->getName());
 				$called_method_class = strtolower($called_method->getClass());
 				if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
 					return $this->method_scopes[$called_method_class][$called_method_name];
 				} else {
-					throw new \LogicException(sprintf("Method %s->%s() could not be found in method scopes", $class, $call->name));
+					throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in method scopes", $class, $call->name));
 				}
 			} else {
-				throw new \LogicException(sprintf("Method %s->%s() could not be found in applies to set", $class, $call->name));
+				throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in applies to set (%d) ", $class, $call->name, $call->getLine()));
 			}
 		} else {
-			throw new \UnexpectedValueException(sprintf("Cannot resolve method call; var has type %s, method-name is %s", $type, $call->name));
+			throw new \UnexpectedValueException(sprintf("Cannot resolve method call; var %s has type %s, method-name is %s (%d)", $call->var->getType(), $type, $call->name, $call->getLine()));
 		}
 	}
 
 	/**
 	 * @param Node\Expr\StaticCall $call
-	 * @throws \LogicException
 	 * @throws \UnexpectedValueException
  	 * @return Scope|null
 	 */
@@ -107,15 +104,15 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 			if (is_string($call->name) === true && isset($this->applies_to[$class][$call->name]) === true) {
 				/** @var Method $called_method */
 				$called_method = $this->applies_to[$class][$call->name];
-				$called_method_name = $called_method->getName();
+				$called_method_name = strtolower($called_method->getName());
 				$called_method_class = strtolower($called_method->getClass());
 				if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
 					return $this->method_scopes[$called_method_class][$called_method_name];
 				} else {
-					throw new \LogicException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
+					throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
 				}
 			} else {
-				throw new \LogicException(sprintf("Method %s::%s() could not be found in applies to set", $class, $call->name));
+				throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set", $class, $call->name));
 			}
 		} else {
 			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
