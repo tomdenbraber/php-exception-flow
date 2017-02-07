@@ -33,7 +33,6 @@ class PrintingVisitor extends AbstractScopeVisitor {
 		}
 
 		$encounters = $this->encounters_calculator->getForScope($scope);
-		print $scope->getName() . " - [" . implode(", ", $encounters) . "]\n";
 		$this->result .= $this->indent . "\t" . "encounters: [" . implode(", ", $encounters) . "]\n";
 		$this->indent .= "\t";
 	}
