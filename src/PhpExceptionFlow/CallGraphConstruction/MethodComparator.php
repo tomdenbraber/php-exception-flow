@@ -12,13 +12,19 @@ class MethodComparator implements ComparatorInterface {
 		$this->class_resolves = $class_resolves;
 	}
 
+	/**
+	 * @param Method $element1
+	 * @param Method $element2
+	 * @return int
+	 * @throws \LogicException
+	 */
 	public function compare($element1, $element2) {
 		if (($element1 instanceof Method && $element2 instanceof Method) === false) {
 			throw new \LogicException("Please provide methods to the methodcomparator");
 		}
 		/**
-		 * @var $element1 Method
-		 * @var $element2 Method
+		 * @var Method $element1
+		 * @var Method $element2
 		 */
 		if ($element1->getName() !== $element2->getName()) {
 			return PartialOrderInterface::NOT_COMPARABLE;
