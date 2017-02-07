@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow\AstVisitor;
 
+use PhpExceptionFlow\Scope\Collector\CallableScopeCollector;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
@@ -12,7 +13,7 @@ use PHPTypes\State;
  * This class Visits the AST and collects all Scopes and GuardedScopes it encounters.
  * @package PhpExceptionFlow\Visitor
  */
-class ScopeCollector extends NodeVisitorAbstract {
+class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollector {
 	/** @var Scope $main_scope */
 	private $main_scope;
 	/** @var Scope[] $function_scopes, indexed by name */
