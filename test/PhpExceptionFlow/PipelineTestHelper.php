@@ -7,6 +7,7 @@ use PhpExceptionFlow\AstBridge\SystemTraverser;
 use PhpExceptionFlow\AstVisitor;
 use PhpExceptionFlow\CallGraphConstruction\AppliesToCalculator;
 use PhpExceptionFlow\CallGraphConstruction\AppliesToVisitor;
+use PhpExceptionFlow\CallGraphConstruction\ChaMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CfgBridge\SystemFactoryInterface;
 use PhpExceptionFlow\CfgBridge\System as CfgSystem;
@@ -113,12 +114,7 @@ class PipelineTestHelper {
 		$ast_system_traverser->addVisitor($method_collecting_visitor);
 		$ast_system_traverser->traverse($ast_system);
 
-		$applies_to_calculator = new AppliesToCalculator($partial_order, $state->classResolvedBy);
-		$applies_to_visitor = new AppliesToVisitor($applies_to_calculator);
-		$partial_order_traverser = new TopDownBreadthFirstTraverser();
-		$partial_order_traverser->addVisitor($applies_to_visitor);
-		$partial_order_traverser->traverse($partial_order);
-
-		return $applies_to_visitor->getClassToMethodMap();
+		$cha_method_resolver = new ChaMethodResolver($state->classResolvedBy);
+		return $cha_method_resolver->fromPartialOrder($partial_order);
 	}
 }
