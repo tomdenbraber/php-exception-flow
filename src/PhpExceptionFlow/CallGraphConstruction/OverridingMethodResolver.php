@@ -5,10 +5,10 @@ use PhpExceptionFlow\Collection\PartialOrderInterface;
 
 /**
  * Class ContractMethodResolver
- * this class can be used to build a map from methods defined in interfaces/abstract classes to actual implementations
- * of that method with regards to the class hierarchy.
+ * this class can be used to build a map from methods defined in interfaces/abstract classes/classes to implementation
+ * of that method further down in the class hierarchy.
  */
-class ContractMethodResolver implements MethodCallToMethodResolverInterface {
+class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
 	/**
 	 * @param PartialOrderInterface $partial_order
@@ -20,13 +20,11 @@ class ContractMethodResolver implements MethodCallToMethodResolverInterface {
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
-			if ($method->isImplemented() === false) {
-				$applicable_methods[strtolower($method->getClass())][strtolower($method->getName())] = $this->resolve($method, $partial_order);
-				// queue all children, they might be unimplemented too
-				foreach ($partial_order->getChildren($method) as $child) {
-					if (in_array($child, $queue, true) === false) {
-						$queue[] = $child;
-					}
+			$applicable_methods[strtolower($method->getClass())][strtolower($method->getName())] = $this->resolve($method, $partial_order);
+			// queue all children, they might be unimplemented too
+			foreach ($partial_order->getChildren($method) as $child) {
+				if (in_array($child, $queue, true) === false) {
+					$queue[] = $child;
 				}
 			}
 		}
