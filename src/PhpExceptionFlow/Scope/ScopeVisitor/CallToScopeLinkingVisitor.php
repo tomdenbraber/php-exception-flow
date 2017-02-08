@@ -44,9 +44,11 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 		$resolved = [];
 		foreach ($calls as $call) {
 			try {
-				$resolved_call = $this->call_resolver->resolve($call);
-				if (in_array($resolved_call, $resolved, true) === false) {
-					$resolved[] = $resolved_call;
+				$resolved_to_methods = $this->call_resolver->resolve($call);
+				foreach ($resolved_to_methods as $resolved_to_method) {
+					if (in_array($resolved_to_method, $resolved, true) === false) {
+						$resolved[] = $resolved_to_method;
+					}
 				}
 			} catch (\UnexpectedValueException $exception) {
 				$unresolved[] = $call;

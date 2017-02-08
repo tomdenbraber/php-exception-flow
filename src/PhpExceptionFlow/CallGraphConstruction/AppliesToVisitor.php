@@ -25,9 +25,12 @@ class AppliesToVisitor implements PartialOrderVisitorInterface {
 
 		foreach ($method_applies_to as $class) {
 			if (isset($this->class_to_method_map[$class]) === false) {
-				$this->class_to_method_map[$class] = [];
+				$this->class_to_method_map[$class] = [
+					$method->getName() => [$method]
+				];
+			} else {
+				$this->class_to_method_map[$class][$method->getName()][] = $method;
 			}
-			$this->class_to_method_map[$class][$method->getName()] = $method;
 		}
 	}
 

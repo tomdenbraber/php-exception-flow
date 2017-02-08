@@ -85,7 +85,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->call_resolver_mock->expects($this->once())
 			->method("resolve")
 			->with($fn_call_mock)
-			->willReturn($callee_scope);
+			->willReturn([$callee_scope]);
 
 		$this->visitor->enterScope($scope);
 
@@ -125,7 +125,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->call_resolver_mock->expects($this->once())
 			->method("resolve")
 			->with($method_call_mock)
-			->willReturn($scope);
+			->willReturn([$scope]);
 
 		$this->visitor->enterScope($scope);
 
@@ -173,9 +173,9 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 				array($calls_scope_1_mock_again),
 				array($calls_scope_2_mock))
 			->will($this->onConsecutiveCalls(
-				$callee_scope1,
-				$callee_scope1,
-				$callee_scope2
+				[$callee_scope1],
+				[$callee_scope1],
+				[$callee_scope2]
 			));
 
 		$this->visitor->enterScope($caller_scope);

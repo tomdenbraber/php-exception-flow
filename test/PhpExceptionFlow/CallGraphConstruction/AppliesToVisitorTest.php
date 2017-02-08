@@ -68,9 +68,9 @@ class AppliesToVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertArrayHasKey("m", $class_to_method_map["b"]);
 		$this->assertArrayHasKey("m", $class_to_method_map["c"]);
 		$this->assertArrayHasKey("m", $class_to_method_map["d"]);
-		$this->assertEquals($method_mock_a_m, $class_to_method_map["a"]["m"]);
-		$this->assertEquals($method_mock_a_m, $class_to_method_map["c"]["m"]);
-		$this->assertEquals($method_mock_a_m, $class_to_method_map["d"]["m"]);
-		$this->assertEquals($method_mock_b_m, $class_to_method_map["b"]["m"]);
+		$this->assertEquals([$method_mock_a_m], $class_to_method_map["a"]["m"]);
+		$this->assertEquals([$method_mock_a_m], $class_to_method_map["c"]["m"]);
+		$this->assertEquals([$method_mock_a_m], $class_to_method_map["d"]["m"]);
+		$this->assertEquals([$method_mock_b_m], $class_to_method_map["b"]["m"]);
 	}
 }
