@@ -93,18 +93,6 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 		return $this->guarded_scopes[$guarded_scope];
 	}
 
-	/**
-	 * @param Scope $scope
-	 * @throws \UnexpectedValueException
-	 * @return Type[]
-	 */
-	public function getForScope(Scope $scope) {
-		if ($this->scopes->contains($scope) === false) {
-			throw new \UnexpectedValueException(sprintf("Scope with name %s could not be found in this set.", $scope->getName()));
-		}
-		return $this->scopes[$scope];
-	}
-
 	public function getType() {
 		return "uncaught";
 	}
