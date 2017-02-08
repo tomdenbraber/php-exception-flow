@@ -1,17 +1,24 @@
-<?php
 {main}:
 	encounters: []
+use_a_m:
+	encounters: [logicexception, unexpectedvalueexception]
+use_a_n:
+	encounters: [runtimeexception, logicexception]
+use_b_m:
+	encounters: [logicexception, unexpectedvalueexception]
+use_b_n:
+	encounters: [logicexception, runtimeexception]
 A::m:
-	encounters: [logicexception]
+	encounters: []
 A::n:
-	encounters: [runtimeexception, logicexception]
-B::m
-	encounters: [logicexception]
+	encounters: []
+B::m:
+	encounters: []
 B::n:
-	encounters: [runtimeexception, logicexception]
-C::m
+	encounters: [runtimeexception]
+C::m:
 	encounters: [logicexception]
 C::n:
 	encounters: [logicexception]
-D::m
-	encounters: [logicexception]
+D::m:
+	encounters: [unexpectedvalueexception]

@@ -4,7 +4,7 @@ namespace PhpExceptionFlow;
 use PhpExceptionFlow\AstBridge\Parser\WrappedParser;
 use PhpExceptionFlow\AstVisitor\CallCollector;
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
-use PhpExceptionFlow\CallGraphConstruction\ParserCallNodeToScopeResolver;
+use PhpExceptionFlow\CallGraphConstruction\AstCallNodeToScopeResolver;
 use PhpExceptionFlow\CfgBridge\SystemFactory;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculator;
 use PhpExceptionFlow\FlowCalculator\PropagatesCalculator;
@@ -43,11 +43,11 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 		$state = PipelineTestHelper::calculateState($cfg_system);
 		$ast_nodes_collector = PipelineTestHelper::linkingCfgPass($cfg_system);
 		$scope_collector = PipelineTestHelper::calculateScopes($state, $ast_nodes_collector, $ast_system);
-		$applies_to = PipelineTestHelper::calculateAppliesTo($ast_system, $state);
+		$class_method_to_method = PipelineTestHelper::calculateMethodMap($ast_system, $state);
 
 		$scopes = $scope_collector->getTopLevelScopes();
 
-		$call_resolver = new ParserCallNodeToScopeResolver($scope_collector->getMethodScopes(), $scope_collector->getFunctionScopes(), $applies_to);
+		$call_resolver = new AstCallNodeToScopeResolver($scope_collector->getMethodScopes(), $scope_collector->getFunctionScopes(), $class_method_to_method);
 
 		$call_to_scope_linker = new CallToScopeLinkingVisitor(new PhpParser\NodeTraverser(), new CallCollector(), $call_resolver);
 
