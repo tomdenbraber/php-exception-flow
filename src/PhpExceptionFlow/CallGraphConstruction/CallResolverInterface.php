@@ -1,13 +1,13 @@
 <?php
 namespace PhpExceptionFlow\CallGraphConstruction;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 
 interface CallResolverInterface {
 	/**
 	 * @param Node $func_call
-	 * @return null|Scope
+	 * @return Scope[]
 	 * @throws \UnexpectedValueException
 	 * @throws \LogicException
 	 */

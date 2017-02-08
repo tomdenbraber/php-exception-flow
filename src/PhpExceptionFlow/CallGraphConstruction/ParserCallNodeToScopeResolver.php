@@ -6,27 +6,27 @@ use PhpParser\Node;
 use PHPTypes\Type;
 
 class ParserCallNodeToScopeResolver implements CallResolverInterface {
-	/** @var array $method_scopes */
+	/** @var Scope[][] $method_scopes */
 	private $method_scopes;
-	/** @var array $function_scopes */
+	/** @var Scope[] $function_scopes */
 	private $function_scopes;
-	/** @var array $applies_to */
-	private $applies_to;
+	/** @var Method[][][] $class_method_to_implementations */
+	private $class_method_to_implementations;
 
 	/**
 	 * @param Scope[][] $method_scopes
 	 * @param Scope[] $function_scopes
-	 * @param array $applies_to
+	 * @param array $class_method_to_method
 	 */
-	public function __construct(array $method_scopes, array $function_scopes, array $applies_to) {
+	public function __construct(array $method_scopes, array $function_scopes, array $class_method_to_method) {
 		$this->method_scopes = $method_scopes;
 		$this->function_scopes = $function_scopes;
-		$this->applies_to = $applies_to;
+		$this->class_method_to_implementations = $class_method_to_method;
 	}
 
 	/**
 	 * @param Node $func_call
-	 * @return null|Scope
+	 * @return Scope[]
 	 * @throws \UnexpectedValueException
 	 * @throws \LogicException
 	 */
@@ -34,7 +34,7 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 		switch (get_class($func_call)) {
 			case Node\Expr\FuncCall::class:
 				/** @var Node\Expr\FuncCall $func_call */
-				return $this->resolveFuncCall($func_call);
+				return [$this->resolveFuncCall($func_call)];
 			case Node\Expr\MethodCall::class:
 				/** @var Node\Expr\MethodCall $func_call */
 				return $this->resolveMethodCall($func_call);
@@ -50,7 +50,7 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 	/**
 	 * @param Node\Expr\FuncCall $call
 	 * @throws \UnexpectedValueException
-	 * @return Scope|null
+	 * @return Scope
 	 */
 	private function resolveFuncCall(Node\Expr\FuncCall $call) {
 		if ($call->name instanceof Node\Name) {
@@ -68,23 +68,26 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 	/**
 	 * @param Node\Expr\MethodCall $call
  	 * @throws \UnexpectedValueException
-	 * @return Scope|null
+	 * @return Scope[]
 	 */
 	private function resolveMethodCall(Node\Expr\MethodCall $call) {
 		/** @var Type $type */
 		$type = $call->var->getAttribute("type", Type::unknown());
 		if ($type->type === Type::TYPE_OBJECT) {
 			$class = strtolower($type->userType);
-			if (is_string($call->name) === true && isset($this->applies_to[$class][$call->name]) === true) {
-				/** @var Method $called_method */
-				$called_method = $this->applies_to[$class][$call->name];
-				$called_method_name = strtolower($called_method->getName());
-				$called_method_class = strtolower($called_method->getClass());
-				if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
-					return $this->method_scopes[$called_method_class][$called_method_name];
-				} else {
-					throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in method scopes", $class, $call->name));
+			if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
+				$method_implementations = $this->class_method_to_implementations[$class][$call->name];
+				$called_scopes = [];
+				foreach ($method_implementations as $method_implementation) {
+					$called_method_name = strtolower($method_implementation->getName());
+					$called_method_class = strtolower($method_implementation->getClass());
+					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+						$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+					} else {
+						throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in method scopes", $class, $call->name));
+					}
 				}
+				return $called_scopes;
 			} else {
 				throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 			}
@@ -96,23 +99,27 @@ class ParserCallNodeToScopeResolver implements CallResolverInterface {
 	/**
 	 * @param Node\Expr\StaticCall $call
 	 * @throws \UnexpectedValueException
- 	 * @return Scope|null
+	 * @return Scope[]
 	 */
 	private function resolveStaticCall(Node\Expr\StaticCall $call) {
 		if ($call->class instanceof Node\Name) {
 			$class = strtolower(implode("\\", $call->class->parts));
-			if (is_string($call->name) === true && isset($this->applies_to[$class][$call->name]) === true) {
-				/** @var Method $called_method */
-				$called_method = $this->applies_to[$class][$call->name];
-				$called_method_name = strtolower($called_method->getName());
-				$called_method_class = strtolower($called_method->getClass());
-				if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
-					return $this->method_scopes[$called_method_class][$called_method_name];
-				} else {
-					throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
+			if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
+				/** @var Method[] $called_methods */
+				$called_methods = $this->class_method_to_implementations[$class][$call->name];
+				$called_scopes = [];
+				foreach ($called_methods as $called_method) {
+					$called_method_name = strtolower($called_method->getName());
+					$called_method_class = strtolower($called_method->getClass());
+					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+						$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+					} else {
+						throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
+					}
 				}
+				return $called_scopes;
 			} else {
-				throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
+				throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 			}
 		} else {
 			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
