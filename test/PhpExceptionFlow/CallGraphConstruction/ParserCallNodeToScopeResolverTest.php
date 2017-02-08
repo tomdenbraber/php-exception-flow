@@ -154,7 +154,7 @@ class ParserCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 	public function testFunctionCallGetsResolvedToFunction() {
 		$func_call_m = new FuncCall(new Name("m"));
 		$resolved_to = $this->resolver->resolve($func_call_m);
-		$this->assertEquals($this->scope_fn_m, $resolved_to);
+		$this->assertEquals([$this->scope_fn_m], $resolved_to);
 	}
 
 	public function testMethodCallToMethodInImplementingClass() {
