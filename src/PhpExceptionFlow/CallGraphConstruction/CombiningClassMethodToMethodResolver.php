@@ -19,6 +19,10 @@ class CombiningClassMethodToMethodResolver implements MethodCallToMethodResolver
 			foreach ($partial_map as $class => $call_sites) {
 				foreach ($call_sites as $call_site_name => $methods) {
 					if (isset($class_method_map[$class]) === false) {
+						$class_method_map[$class] = [
+							$call_site_name => $methods
+						];
+					} else if (isset($class_method_map[$class][$call_site_name]) === false) {
 						$class_method_map[$class][$call_site_name] = $methods;
 					} else {
 						foreach ($methods as $method) {

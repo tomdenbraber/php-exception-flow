@@ -35,6 +35,48 @@ class CombiningClassMethodToMethodResolverTest extends \PHPUnit_Framework_TestCa
 		$this->assertEmpty($this->resolver->fromPartialOrder($partial_order));
 	}
 
+	public function testCombiningClassesGoesWell() {
+		$partial_order = $this->createMock(PartialOrderInterface::class);
+		$partial_order = $this->createMock(PartialOrderInterface::class);
+		$resolver_1 = $this->createMock(MethodCallToMethodResolverInterface::class);
+		$resolver_2 = $this->createMock(MethodCallToMethodResolverInterface::class);
+
+		$resolver_1->expects($this->once())
+			->method("fromPartialOrder")
+			->willReturn(
+				[
+					"a" => [
+						"m" => ["x"],
+						"n" => ["z"]
+					],
+				]
+			);
+		$resolver_2->expects($this->once())
+			->method("fromPartialOrder")
+			->willReturn(
+				[
+					"a" => [
+						"m" => ["y"],
+						"o" => ["quux"],
+					],
+				]
+			);
+
+		$this->resolver->addResolver($resolver_1);
+		$this->resolver->addResolver($resolver_2);
+
+		$this->assertEquals(
+			[
+				"a" => [
+					"m" => ["x", "y"],
+					"n" => ["z"],
+					"o" => ["quux"],
+				],
+			],
+			$this->resolver->fromPartialOrder($partial_order)
+		);
+	}
+
 	public function testOutputCombinesOutputOfWrappedResolvers() {
 		$partial_order = $this->createMock(PartialOrderInterface::class);
 		$resolver_1 = $this->createMock(MethodCallToMethodResolverInterface::class);
