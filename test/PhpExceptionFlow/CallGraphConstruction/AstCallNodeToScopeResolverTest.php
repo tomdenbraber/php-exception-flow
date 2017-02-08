@@ -9,7 +9,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
 use PHPTypes\Type;
 
-class ParserCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
+class AstCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 
 	private $method_a_m;
 	private $method_c_m;
@@ -39,7 +39,7 @@ class ParserCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 	private $function_scopes;
 	private $method_scopes;
 
-	/** @var ParserCallNodeToScopeResolver $resolver */
+	/** @var AstCallNodeToScopeResolver $resolver */
 	private $resolver;
 
 	/**
@@ -142,7 +142,7 @@ class ParserCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 				"n" => $this->scope_conc_n,
 			],
 		);
-		$this->resolver = new ParserCallNodeToScopeResolver($this->method_scopes, $this->function_scopes, $this->class_method_to_actual_implementation);
+		$this->resolver = new AstCallNodeToScopeResolver($this->method_scopes, $this->function_scopes, $this->class_method_to_actual_implementation);
 	}
 
 	public function testThrowsLogicExceptionOnWrongNodeType() {
