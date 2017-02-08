@@ -1,0 +1,17 @@
+<?php
+{main}:
+	encounters: []
+A::m:
+	encounters: [logicexception]
+A::n:
+	encounters: [runtimeexception, logicexception]
+B::m
+	encounters: [logicexception]
+B::n:
+	encounters: [runtimeexception, logicexception]
+C::m
+	encounters: [logicexception]
+C::n:
+	encounters: [logicexception]
+D::m
+	encounters: [logicexception]
