@@ -22,4 +22,8 @@ class Method {
 	public function getName() {
 		return $this->method_node->name;
 	}
+
+	public function isImplemented() {
+		return $this->method_node->isAbstract() === false && is_array($this->method_node->getStmts()) === true;
+	}
 }
