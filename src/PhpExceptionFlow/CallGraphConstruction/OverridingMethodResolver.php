@@ -20,7 +20,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
-			$applicable_methods[strtolower($method->getClass())][strtolower($method->getName())] = $this->resolve($method, $partial_order);
+			$applicable_methods[strtolower($method->getClass())][$method->getName()] = $this->resolve($method, $partial_order);
 			// queue all children, they might be unimplemented too
 			foreach ($partial_order->getChildren($method) as $child) {
 				if (in_array($child, $queue, true) === false) {
