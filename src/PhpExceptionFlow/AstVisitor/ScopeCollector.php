@@ -179,6 +179,7 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 		foreach ($nodes as $stmt) {
 			if (($stmt instanceof Node\Stmt\ClassLike) === false &&
 				($stmt instanceof Node\FunctionLike) === false &&
+				($stmt instanceof Node\Stmt\Namespace_) === false &&
 				($stmt instanceof Node\Stmt\TryCatch) === false) {
 				$scope->addInstruction($stmt);
 			}
