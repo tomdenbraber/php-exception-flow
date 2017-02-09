@@ -36,6 +36,9 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 	/** @var State $state */
 	private $state;
 
+	/** @var int indicates how many try/catch nodes still reside in the AST while they should be removed */
+	private $try_catches_to_be_removed = 0;
+
 	public function __construct(State $state) {
 		$this->main_scope = new Scope("{main}");
 		$this->current_scope = $this->main_scope;
@@ -75,9 +78,7 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 			}
 
 			$this->current_scope = new Scope($name);
-			if (is_array($node->getStmts()) === true) { //when method is abstract/defined in interface, it getStmts may return null
-				$this->addInstructionsToScope($this->current_scope, $node->getStmts());
-			}
+
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing_scope = $this->current_scope;
 			$inclosed_scope = new Scope(md5(random_bytes(64)));
@@ -94,7 +95,9 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 	}
 
 	public function leaveNode(Node $node) {
-		if ($node instanceof Node\Stmt\ClassLike) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->current_namespace = "";
+		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = null;
 		} else if ($node instanceof Node\FunctionLike) {
 			// go back to main scope when we leave a function
@@ -115,6 +118,31 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 				$this->current_guarded_scope = $this->current_scope->getEnclosingGuardedScope();
 			} else {
 				$this->current_guarded_scope = null;
+			}
+
+			$this->try_catches_to_be_removed += 1;
+		} else {
+			$this->current_scope->addInstruction($node);
+
+			/**
+			 * guarded scopes should not have their instructions inserted into normal scopes.
+			 * Therefore, remove the try/catch (and consequently, all its children) from the current node
+			 */
+			if ($this->try_catches_to_be_removed > 0) {
+				$before = $this->try_catches_to_be_removed;
+				foreach ($node->getSubNodeNames() as $sub_node_name) {
+					if (is_array($node->$sub_node_name) === true) {
+						foreach ($node->$sub_node_name as $i => $stmt) {
+							if ($stmt instanceof Node\Stmt\TryCatch === true) {
+								unset($node->$sub_node_name[$i]);
+								$this->try_catches_to_be_removed -= 1;
+							}
+						}
+					}
+				}
+				if ($before !== $this->try_catches_to_be_removed) {
+					return $node; //indicates that we have changed the node; if we do not change anything, there is no need to return it.
+				}
 			}
 		}
 	}
