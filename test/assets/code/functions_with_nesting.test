@@ -1,0 +1,16 @@
+<?php
+function a() {
+    if (5 > 4) {
+        for ($i = 0; $i < 5; $i++) {
+            try {
+                b($i);
+            } catch (UnexpectedValueException $e) {}
+        }
+    }
+}
+
+function b($i) {
+    if ($i > 3) {
+        throw new UnexpectedValueException();
+    }
+}
