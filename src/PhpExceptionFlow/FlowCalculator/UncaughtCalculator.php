@@ -43,12 +43,7 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 		$guarded_scopes = $scope->getGuardedScopes();
 		$uncaught = array();
 		foreach ($guarded_scopes as $guarded_scope) {
-			try {
-				$inclosed_encounters = $this->encounters_calculator->getForScope($guarded_scope->getInclosedScope());
-			} catch (\UnexpectedValueException $exception) {
-				$inclosed_encounters = [];
-			}
-
+			$inclosed_encounters = $this->encounters_calculator->getForScope($guarded_scope->getInclosedScope());
 			$catch_clauses = $guarded_scope->getCatchClauses();
 			foreach ($catch_clauses as $catch_clause) {
 				$potentially_caught_types = $this->catch_clause_type_resolver->getCaughtTypesForClause($catch_clause);
