@@ -1,0 +1,8 @@
+{main}:
+	encounters: []
+A::m:
+	encounters: []
+A::callM:
+	encounters: []
+B::m:
+	encounters: [badmethodcallexception]

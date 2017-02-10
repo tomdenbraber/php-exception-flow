@@ -1,0 +1,29 @@
+<?php
+class A {
+    private function m() {
+    }
+
+    public function callM() {
+        $this->m();
+    }
+}
+
+class B extends A {
+    private function m() {
+        throw new BadMethodCallException();
+    }
+
+    /*public function callM() {
+        $this->m();
+    }*/
+}
+
+
+/*class C extends B {
+    private function m() {
+    }
+
+    public function callM() {
+        $this->m();
+    }
+}*/
