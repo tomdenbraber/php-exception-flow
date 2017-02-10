@@ -15,20 +15,25 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	 * @return Method[][][]
 	 */
 	public function fromPartialOrder(PartialOrderInterface $partial_order) {
-		$applicable_methods = [];
+		$overriding_methods = [];
 		$queue = $partial_order->getMaximalElements();
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
-			$applicable_methods[strtolower($method->getClass())][$method->getName()] = $this->resolve($method, $partial_order);
+			if ($method->isPrivate() === false) {
+				$overriding_methods[strtolower($method->getClass())][$method->getName()] = $this->resolve($method, $partial_order);
+			} else {
+				$overriding_methods[strtolower($method->getClass())][$method->getName()] = [];
+			}
 			// queue all children, they might be unimplemented too
 			foreach ($partial_order->getChildren($method) as $child) {
 				if (in_array($child, $queue, true) === false) {
 					$queue[] = $child;
 				}
 			}
+
 		}
-		return $applicable_methods;
+		return $overriding_methods;
 	}
 
 	/**
@@ -39,6 +44,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	private function resolve(Method $method, PartialOrderInterface $partial_order) {
 		return array_values(array_filter($partial_order->getDescendants($method), array($this, 'methodIsImplemented')));
 	}
+
 
 	/**
 	 * @param Method $method
