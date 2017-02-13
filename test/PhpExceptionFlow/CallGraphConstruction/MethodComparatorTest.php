@@ -5,6 +5,7 @@ use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CallGraphConstruction\Method;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
+use PHPTypes\State;
 
 
 class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
@@ -44,6 +45,8 @@ class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 		],
 	];
 
+	private $state;
+
 	/** @var MethodComparator */
 	private $comparator;
 
@@ -53,7 +56,9 @@ class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 	private $method_f;
 
 	public function setUp() {
-		$this->comparator = new MethodComparator($this->resolves);
+		$this->state = $this->createMock(State::class);
+		$this->state->classResolves = $this->resolves;
+		$this->comparator = new MethodComparator($this->state);
 		$this->method_m = new ClassMethod("m");
 		$this->method_f = new ClassMethod("f");
 	}

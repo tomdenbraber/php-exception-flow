@@ -3,13 +3,14 @@ namespace PhpExceptionFlow\CallGraphConstruction;
 
 use PhpExceptionFlow\Collection\PartialOrder\ComparatorInterface;
 use PhpExceptionFlow\Collection\PartialOrderInterface;
+use PHPTypes\State;
 
 class MethodComparator implements ComparatorInterface {
-	/** @var array */
-	private $class_resolves;
+	/** @var State */
+	private $state;
 
-	public function __construct(array $class_resolves) {
-		$this->class_resolves = $class_resolves;
+	public function __construct(State $state) {
+		$this->state = $state;
 	}
 
 	/**
@@ -31,8 +32,8 @@ class MethodComparator implements ComparatorInterface {
 		} else if ($element1->getClass() === $element2->getClass()) {
 			return PartialOrderInterface::EQUAL;
 		} else {
-			$element1_class_resolves = $this->class_resolves[$element1->getClass()];
-			$element2_class_resolves = $this->class_resolves[$element2->getClass()];
+			$element1_class_resolves = $this->state->classResolves[$element1->getClass()];
+			$element2_class_resolves = $this->state->classResolves[$element2->getClass()];
 
 			if (isset($element1_class_resolves[$element2->getClass()]) === true) {
 				return PartialOrderInterface::SMALLER;

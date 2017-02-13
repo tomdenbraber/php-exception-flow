@@ -108,7 +108,7 @@ class PipelineTestHelper {
 	 * @return array
 	 */
 	public static function calculateMethodMap(AstSystem $ast_system, PHPTypes\State $state) {
-		$partial_order = new PartialOrder(new MethodComparator($state->classResolves));
+		$partial_order = new PartialOrder(new MethodComparator($state));
 		$method_collecting_visitor = new AstVisitor\MethodCollectingVisitor($partial_order);
 
 		$ast_traverser = new PhpParser\NodeTraverser();
