@@ -13,7 +13,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tomdenbraber/php-cfg",
-                "reference": "9e9e4f0effd994d999f5d8dca76f0c70c989d840"
+                "reference": "dfe08bcd0fee2e259779d8a8e418383098c08fd2"
             },
             "require": {
                 "nikic/php-parser": "^2.0",
@@ -40,7 +40,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2017-02-06 14:44:07"
+            "time": "2017-02-10 16:03:36"
         },
         {
             "name": "ircmaxell/php-types",
@@ -48,7 +48,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tomdenbraber/php-types",
-                "reference": "818e5e8a54771c3947bba77065b2a468297b42d6"
+                "reference": "f59b1c2e2c530297aa3143d083dc28c61aed2cd2"
             },
             "require": {
                 "ircmaxell/php-cfg": "dev-master",
@@ -74,7 +74,7 @@
                 }
             ],
             "description": "A PHP CFG Type Inference / Reconstruction Engine",
-            "time": "2016-07-29 11:56:49"
+            "time": "2017-02-13 07:20:04"
         },
         {
             "name": "nikic/php-parser",
@@ -721,16 +721,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "5.7.11",
+            "version": "5.7.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "a6ad2472daba76b0689042b7709f86d4f06bcaab"
+                "reference": "60ebeed87a35ea46fd7f7d8029df2d6f013ebb34"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a6ad2472daba76b0689042b7709f86d4f06bcaab",
-                "reference": "a6ad2472daba76b0689042b7709f86d4f06bcaab",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/60ebeed87a35ea46fd7f7d8029df2d6f013ebb34",
+                "reference": "60ebeed87a35ea46fd7f7d8029df2d6f013ebb34",
                 "shasum": ""
             },
             "require": {
@@ -799,7 +799,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2017-02-05 15:31:31"
+            "time": "2017-02-10 09:05:10"
         },
         {
             "name": "phpunit/phpunit-mock-objects",
