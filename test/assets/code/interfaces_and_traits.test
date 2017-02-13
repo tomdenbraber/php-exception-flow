@@ -1,0 +1,77 @@
+<?php
+interface A {
+    public function m();
+    public function n();
+}
+
+trait HasM {
+    public function m() {
+        throw new LogicException();
+    }
+}
+trait HasN {
+    public function n() {
+        throw new LogicException();
+    }
+}
+
+class UsesM implements A {
+    use HasM;
+    public function n() {
+
+    }
+}
+
+class UsesN implements A {
+    use HasN;
+
+    public function m() {
+
+    }
+}
+
+class UsesBoth implements A {
+    use HasN, HasM;
+}
+
+class UsesBothOverridesBoth implements A {
+    use HasN, HasM;
+
+    public function m() {
+
+    }
+
+    public function n() {
+
+    }
+}
+
+function use_a_m(A $a) {
+    $a->m();
+}
+
+
+function use_a_n(A $a) {
+    $a->n();
+}
+
+
+function use_hasm_m(HasM $hasM) {
+    $hasM->m();
+}
+
+function use_hasn_n(HasN $hasN) {
+    $hasN->n();
+}
+
+function uses_uses_m_calls_m(UsesM $u) {
+    $u->m();
+}
+
+function uses_uses_m_calls_n(UsesM $u) {
+    $u->n();
+}
+
+function uses_uses_both_overrides_both(UsesBothOverridesBoth $u) {
+    $u->m();
+}
