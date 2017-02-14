@@ -364,8 +364,6 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
 
-		print_r(array_keys($class_method_to_method));
-
 		$this->assertCount(3, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
 		$this->assertArrayHasKey("b", $class_method_to_method);

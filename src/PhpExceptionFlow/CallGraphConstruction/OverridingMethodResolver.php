@@ -53,7 +53,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 			foreach ($partial_order->getParents($method) as $child) {
 				$parent_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
 				$in_between_classes = array_diff(array_intersect($parent_resolved_by, $current_classlike_resolves), [$current_classlike, $child->getClass()]);
-				print sprintf("classes between %s and %s: %s\n", $current_classlike, $child->getClass(), implode(",", $in_between_classes));
 				foreach ($in_between_classes as $between_class) {
 					if (isset($class_method_map[$between_class][$method->getName()]) === true) {
 						$class_method_map[$between_class][$method->getName()] = [$method];
@@ -62,8 +61,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 					}
 				}
 			}
-
-
 
 			$covered_methods->attach($method);
 			foreach ($partial_order->getChildren($method) as $child) {
