@@ -41,6 +41,7 @@ class EncountersCalculator {
 		}
 
 		while (false !== ($scope = $this->fetchFromWorklist())) {
+			print sprintf("Fetched scope with name %s; still %d scopes on worklist\n", $scope->getName(), count($this->worklist));
 			$this->mutable_flow_calculator->determineForScope($scope);
 			foreach ($this->getChangedScopesDueToTraverse($this->mutable_flow_calculator) as $scope) {
 				$this->addAffectedScopesToWorklist($scope);
