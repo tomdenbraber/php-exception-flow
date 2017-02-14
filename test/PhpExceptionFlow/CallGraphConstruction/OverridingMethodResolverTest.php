@@ -3,13 +3,17 @@
 namespace PhpExceptionFlow\CallGraphConstruction;
 
 use PhpExceptionFlow\Collection\PartialOrderInterface;
+use PHPTypes\State;
 
 class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 	/** @var OverridingMethodResolver */
 	private $resolver;
+	/** @var State $state */
+	private $state;
 
 	public function setUp() {
-		$this->resolver = new OverridingMethodResolver();
+		$this->state = $this->createMock(State::class);
+		$this->resolver = new OverridingMethodResolver($this->state);
 	}
 
 	public function testWithEmptyOrderReturnsEmpty() {
@@ -24,6 +28,35 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$method_a_m = $this->buildMethodMock("a", "m", false, false);
 		$method_b_m = $this->buildMethodMock("b", "m", true, false);
 		$method_c_m = $this->buildMethodMock("c", "m", true, false);
+
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a",
+			],
+			"b" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"c" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+		];
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+			"b" => [
+				"b" => "b",
+				"c" => "c",
+			],
+			"c" => [
+				"c" => "c",
+			],
+		];
 
 		$partial_order = $this->createMock(PartialOrderInterface::class);
 		$partial_order->expects($this->once())
@@ -51,6 +84,18 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				[$method_b_m],
 				[$method_c_m],
 				[]
+			));
+
+		$partial_order->expects($this->exactly(3))
+			->method("getParents")
+			->withConsecutive(
+				[$method_a_m],
+				[$method_b_m],
+				[$method_c_m])
+			->will($this->onConsecutiveCalls(
+				[],
+				[$method_a_m],
+				[$method_b_m]
 			));
 
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
@@ -84,6 +129,46 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		//       /     \
 		//      c       d
 		//c inherits n, implements m. d implements both m and n
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a",
+			],
+			"b" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"c" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+			"d" => [
+				"a" => "a",
+				"b" => "b",
+				"d" => "d",
+			],
+		];
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+				"d" => "d",
+			],
+			"b" => [
+				"b" => "b",
+				"c" => "c",
+				"d" => "d",
+			],
+			"c" => [
+				"c" => "c",
+			],
+			"d" => [
+				"d" => "d",
+			],
+		];
+
+
 
 		$method_a_m = $this->buildMethodMock("a", "m", false, false);
 		$method_a_n = $this->buildMethodMock("a", "n", false, false);
@@ -120,6 +205,26 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 			));
 
 		$partial_order->expects($this->exactly(7))
+			->method("getParents")
+			->withConsecutive(
+				[$method_a_m],
+				[$method_a_n],
+				[$method_b_m],
+				[$method_b_n],
+				[$method_c_m],
+				[$method_d_m],
+				[$method_d_n])
+			->will($this->onConsecutiveCalls(
+				[],
+				[],
+				[$method_a_m],
+				[$method_a_n],
+				[$method_b_m],
+				[$method_b_m],
+				[$method_b_n]
+			));
+
+		$partial_order->expects($this->exactly(7))
 			->method("getChildren")
 			->withConsecutive(
 				[$method_a_m],
@@ -139,6 +244,12 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				[]
 			));
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
+
+		foreach ($class_method_to_method["a"]["m"] as $overriding) {
+			print $overriding->getClass() . "\n";
+		}
+
+
 
 		$this->assertCount(4, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
@@ -177,6 +288,36 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$method_a_m = $this->buildMethodMock("a", "m", true, true);
 		$method_b_m = $this->buildMethodMock("b", "m", true, false);
 		$method_c_m = $this->buildMethodMock("c", "m", true, false);
+
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a",
+			],
+			"b" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"c" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+		];
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+			"b" => [
+				"b" => "b",
+				"c" => "c",
+			],
+			"c" => [
+				"c" => "c",
+			],
+		];
+
 		$partial_order = $this->createMock(PartialOrderInterface::class);
 
 		$partial_order->expects($this->once())
@@ -196,6 +337,20 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				[]
 			));
 
+		$partial_order->expects($this->exactly(3))
+			->method("getParents")
+			->withConsecutive(
+				[$method_a_m],
+				[$method_b_m],
+				[$method_c_m]
+			)
+			->will($this->onConsecutiveCalls(
+				[],
+				[$method_b_m],
+				[$method_c_m]
+			));
+
+
 		$partial_order->expects($this->exactly(2))
 			->method("getDescendants")
 			->withConsecutive(
@@ -208,6 +363,8 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 			));
 
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
+
+		print_r(array_keys($class_method_to_method));
 
 		$this->assertCount(3, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
@@ -224,7 +381,6 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$this->assertCount(0, $class_method_to_method["c"]["m"]);
 
 		$this->assertEquals("c", $class_method_to_method["b"]["m"][0]->getClass());
-
 	}
 
 

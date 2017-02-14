@@ -2,6 +2,7 @@
 namespace PhpExceptionFlow\CallGraphConstruction;
 
 use PhpExceptionFlow\Collection\PartialOrderInterface;
+use PHPTypes\State;
 
 /**
  * Class ContractMethodResolver
@@ -10,30 +11,68 @@ use PhpExceptionFlow\Collection\PartialOrderInterface;
  */
 class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
+	/** @var State */
+	private $state;
+
+	public function __construct(State $state) {
+		$this->state = $state;
+	}
+
 	/**
 	 * @param PartialOrderInterface $partial_order
 	 * @return Method[][][]
 	 */
 	public function fromPartialOrder(PartialOrderInterface $partial_order) {
-		$overriding_methods = [];
 		$queue = $partial_order->getMaximalElements();
+		$class_method_map = [];
+		$covered_methods = new \SplObjectStorage;
+
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
+			$current_classlike = strtolower($method->getClass());
+			$current_classlike_resolves = $this->state->classResolves[$current_classlike];
+
 			if ($method->isPrivate() === false) {
-				$overriding_methods[strtolower($method->getClass())][$method->getName()] = $this->resolve($method, $partial_order);
+				$descendants = array_values(array_filter($partial_order->getDescendants($method), array(OverridingMethodResolver::class, 'methodIsImplemented')));
+
+				// an occurrence of this method can be resolved to any of its overriding classes
+				if (isset($class_method_map[strtolower($method->getClass())][$method->getName()]) === true) {
+					$class_method_map[strtolower($method->getClass())][$method->getName()] = array_merge(
+						$class_method_map[strtolower($method->getClass())][$method->getName()], $descendants
+					);
+				} else {
+					$class_method_map[strtolower($method->getClass())][$method->getName()] = $descendants;
+				}
 			} else {
-				$overriding_methods[strtolower($method->getClass())][$method->getName()] = [];
+				$class_method_map[strtolower($method->getClass())][$method->getName()] = [];
 			}
-			// queue all children, they might be unimplemented too
-			foreach ($partial_order->getChildren($method) as $child) {
-				if (in_array($child, $queue, true) === false) {
-					$queue[] = $child;
+
+			// all non-implementing parent classes of current_classlike between the next implementation up in the hierarchy
+			// and the current class can be resolved to the currently handled method
+			foreach ($partial_order->getParents($method) as $child) {
+				$parent_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
+				$in_between_classes = array_diff(array_intersect($parent_resolved_by, $current_classlike_resolves), [$current_classlike, $child->getClass()]);
+				print sprintf("classes between %s and %s: %s\n", $current_classlike, $child->getClass(), implode(",", $in_between_classes));
+				foreach ($in_between_classes as $between_class) {
+					if (isset($class_method_map[$between_class][$method->getName()]) === true) {
+						$class_method_map[$between_class][$method->getName()] = [$method];
+					} else {
+						$class_method_map[$between_class][$method->getName()][] = $method;
+					}
 				}
 			}
 
+
+
+			$covered_methods->attach($method);
+			foreach ($partial_order->getChildren($method) as $child) {
+				if ($covered_methods->contains($child) === false) {
+					$queue[] = $child;
+				}
+			}
 		}
-		return $overriding_methods;
+		return $class_method_map;
 	}
 
 	/**
@@ -50,7 +89,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	 * @param Method $method
 	 * @return bool
 	 */
-	private function methodIsImplemented(Method $method) {
+	private static function methodIsImplemented(Method $method) {
 		return $method->isImplemented();
 	}
 }
