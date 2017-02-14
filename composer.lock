@@ -13,7 +13,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tomdenbraber/php-cfg",
-                "reference": "dfe08bcd0fee2e259779d8a8e418383098c08fd2"
+                "reference": "5eaddbde12c2c2b50eeeb3636727958999bb620a"
             },
             "require": {
                 "nikic/php-parser": "^2.0",
@@ -40,7 +40,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2017-02-10 16:03:36"
+            "time": "2017-02-13 08:04:07"
         },
         {
             "name": "ircmaxell/php-types",
@@ -48,7 +48,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tomdenbraber/php-types",
-                "reference": "f59b1c2e2c530297aa3143d083dc28c61aed2cd2"
+                "reference": "b4e183fe699315cef6152e0b94d14aaca1ac49a2"
             },
             "require": {
                 "ircmaxell/php-cfg": "dev-master",
@@ -74,7 +74,7 @@
                 }
             ],
             "description": "A PHP CFG Type Inference / Reconstruction Engine",
-            "time": "2017-02-13 07:20:04"
+            "time": "2017-02-13 14:32:01"
         },
         {
             "name": "nikic/php-parser",
