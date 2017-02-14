@@ -75,3 +75,7 @@ function uses_uses_m_calls_n(UsesM $u) {
 function uses_uses_both_overrides_both(UsesBothOverridesBoth $u) {
     $u->m();
 }
+
+function use_uses_both(UsesBoth $u) {
+    $u->m();
+}

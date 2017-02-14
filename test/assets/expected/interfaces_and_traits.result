@@ -14,6 +14,8 @@ uses_uses_m_calls_n:
 	encounters: []
 uses_uses_both_overrides_both:
 	encounters: []
+use_uses_both:
+	encounters: [logicexception]
 A::m:
 	encounters: []
 A::n:
