@@ -30,4 +30,8 @@ class Method {
 	public function isPrivate() {
 		return $this->method_node->isPrivate();
 	}
+
+	public function __toString() {
+		return sprintf("%s.%s(%d) (%d)", $this->class, $this->method_node->name, count($this->method_node->params), $this->method_node->type);
+	}
 }
