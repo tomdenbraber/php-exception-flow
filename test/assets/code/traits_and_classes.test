@@ -1,0 +1,44 @@
+<?php
+trait A {
+    public function x() {
+        throw new UnexpectedValueException();
+    }
+    abstract public function m();
+}
+
+abstract class B {
+    use A;
+    public function x() {
+        throw new LogicException();
+    }
+}
+
+class C extends B {
+    public function m() {
+        $this->x();
+    }
+}
+
+class F {
+    use A;
+    public function m() {
+        $this->x();
+    }
+}
+
+function a_m(A $a) {
+    $a->m();
+}
+
+function b_m(B $b) {
+    $b->m();
+}
+
+function c_m(C $c) {
+    $c->m();
+}
+
+function f_m(F $f) {
+    $f->m();
+}
+

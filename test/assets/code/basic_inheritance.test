@@ -1,0 +1,26 @@
+<?php
+class A {
+    public function m() {
+        throw new LogicException();
+    }
+}
+
+class B extends A {}
+
+class C extends B {
+    public function m() {
+        throw new UnexpectedValueException();
+    }
+}
+
+function a_m(A $a) {
+    $a->m();
+}
+
+function b_m(B $b) {
+    $b->m();
+}
+
+function c_m(C $c) {
+    $c->m();
+}
