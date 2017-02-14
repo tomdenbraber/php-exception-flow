@@ -6,6 +6,7 @@ use PhpExceptionFlow\AstBridge\System as AstSystem;
 use PhpExceptionFlow\AstBridge\SystemTraverser;
 use PhpExceptionFlow\AstVisitor;
 use PhpExceptionFlow\CallGraphConstruction\AppliesToCalculator;
+use PhpExceptionFlow\CallGraphConstruction\AppliesToMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\AppliesToVisitor;
 use PhpExceptionFlow\CallGraphConstruction\ChaMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\CombiningClassMethodToMethodResolver;
@@ -116,12 +117,12 @@ class PipelineTestHelper {
 		$ast_system_traverser->addVisitor($method_collecting_visitor);
 		$ast_system_traverser->traverse($ast_system);
 
-		$contract_method_resolver = new OverridingMethodResolver();
-		$cha_method_resolver = new ChaMethodResolver($state->classResolvedBy);
-		$combinig_method_resolver = new CombiningClassMethodToMethodResolver();
-		$combinig_method_resolver->addResolver($contract_method_resolver);
-		$combinig_method_resolver->addResolver($cha_method_resolver);
+		$contract_method_resolver = new OverridingMethodResolver($state);
+		$cha_method_resolver = new AppliesToMethodResolver($state->classResolvedBy);
+		$combining_method_resolver = new CombiningClassMethodToMethodResolver();
+		$combining_method_resolver->addResolver($contract_method_resolver);
+		$combining_method_resolver->addResolver($cha_method_resolver);
 
-		return $combinig_method_resolver->fromPartialOrder($partial_order);
+		return $combining_method_resolver->fromPartialOrder($partial_order);
 	}
 }
