@@ -11,7 +11,7 @@ use PhpExceptionFlow\Collection\Set\Set;
  * It makes use of the 'applies-to' paradigm by Dean, Grove as described in
  * 'Optimization of Object-Oriented Programs Using Static Class Hierarchy Analysis'
  */
-class ChaMethodResolver implements MethodCallToMethodResolverInterface {
+class AppliesToMethodResolver implements MethodCallToMethodResolverInterface {
 
 	/** @var array */
 	private $class_resolved_by;
@@ -53,16 +53,22 @@ class ChaMethodResolver implements MethodCallToMethodResolverInterface {
 	 * @return array
 	 */
 	private function calculateAppliesTo(Method $method, PartialOrderInterface $partial_order) {
-		$overriding_methods = $partial_order->getChildren($method);
-		$overriding_classes_cones = new Set();
-		/** @var Method $overriding_method */
-		foreach ($overriding_methods as $overriding_method) {
-			$overriding_cone = new Set($this->class_resolved_by[$overriding_method->getClass()]);
-			$overriding_classes_cones->unionWith($overriding_cone);
+		if ($method->isImplemented() === false) {
+			return [];
+		} else if ($method->isPrivate() === true) { //only applies to itself
+			return [strtolower($method->getClass())];
+		} else {
+			$overriding_methods = $partial_order->getChildren($method);
+			$overriding_classes_cones = new Set();
+			/** @var Method $overriding_method */
+			foreach ($overriding_methods as $overriding_method) {
+				$overriding_cone = new Set($this->class_resolved_by[$overriding_method->getClass()]);
+				$overriding_classes_cones->unionWith($overriding_cone);
+			}
+			//standard initialized to the Cone of the class the method is defined in
+			$method_applies_to = new Set($this->class_resolved_by[$method->getClass()]);
+			$method_applies_to->differenceWith($overriding_classes_cones);
+			return $method_applies_to->evaluate();
 		}
-		//standard initialized to the Cone of the class the method is defined in
-		$method_applies_to = new Set($this->class_resolved_by[$method->getClass()]);
-		$method_applies_to->differenceWith($overriding_classes_cones);
-		return $method_applies_to->evaluate();
 	}
 }
