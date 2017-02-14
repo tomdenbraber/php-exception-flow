@@ -43,6 +43,12 @@ class RaisesCalculator extends AbstractFlowCalculator {
 		if ($type->hasSubtypes() === true) {
 			$subtypes = array_map(array($this, 'lowerType'), $type->subTypes);
 		}
-		return new Type($type->type, $subtypes, strtolower($type->userType));
+		if ($type->type === Type::TYPE_OBJECT) {
+			$user_type = strtolower($type->userType);
+		} else {
+			$user_type = null;
+		}
+
+		return new Type($type->type, $subtypes, $user_type);
 	}
 }
