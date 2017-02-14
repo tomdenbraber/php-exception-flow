@@ -85,10 +85,6 @@ class MethodComparator implements ComparatorInterface {
 		}
 	}
 
-	private function compareTraitMethods(Method $trait_method1, Method $trait_method2) {
-
-	}
-
 	private function invert(int $comparison_outcome) {
 		if ($comparison_outcome === PartialOrder::GREATER) {
 			return PartialOrder::SMALLER;

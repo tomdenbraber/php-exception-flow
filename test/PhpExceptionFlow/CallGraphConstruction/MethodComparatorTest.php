@@ -102,6 +102,62 @@ class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(PartialOrder::SMALLER, $this->comparator->compare($m1, $m2));
 	}
 
+	public function testClassImplementsInterfaceAndGetsMethodFromTrait() {
+		$is_interface_map = [
+			["a", true],
+			["b", false],
+			["t1", false],
+		];
+
+		$is_class_map = [
+			["a", false],
+			["b", true],
+			["t1", false],
+		];
+
+		$is_trait_map = [
+			["a", false],
+			["b", false],
+			["t1", true],
+		];
+
+		$this->state->method("isClass")->will($this->returnValueMap($is_class_map));
+		$this->state->method("isInterface")->will($this->returnValueMap($is_interface_map));
+		$this->state->method("isTrait")->will($this->returnValueMap($is_trait_map));
+
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"t1" => [
+				"t1" => "t1",
+				"b" => "b",
+			],
+			"b" => [
+				"b" => "b",
+			],
+		];
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a"
+			],
+			"t1" => [
+				"t1" => "t1"
+			],
+			"b" => [
+				"t1" => "t1",
+				"b" => "b"
+			]
+		];
+
+		$method_a_m = new Method("a", $this->method_m);
+		$method_t1_m = new Method("t1", $this->method_m);
+
+		$this->assertEquals(PartialOrder::GREATER, $this->comparator->compare($method_a_m, $method_t1_m));
+		$this->assertEquals(PartialOrder::SMALLER, $this->comparator->compare($method_t1_m, $method_a_m));
+	}
+
 	/**
 	 * builds hierarchy representing the following class hierarchy:
 	 *          a           f
@@ -117,6 +173,7 @@ class MethodComparatorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->state->classResolvedBy = [
 			"a" => [
+				"a" => "a",
 				"b" => "b",
 				"c" => "c",
 				"d" => "d",
