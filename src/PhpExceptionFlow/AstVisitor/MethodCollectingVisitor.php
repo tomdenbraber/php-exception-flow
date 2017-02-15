@@ -31,4 +31,10 @@ class MethodCollectingVisitor extends NodeVisitorAbstract {
 			}
 		}
 	}
+
+	public function leaveNode(Node $node) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->current_namespace = "";
+		}
+	}
 }
