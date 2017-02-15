@@ -26,21 +26,34 @@ if ($argc !== 2) {
 	throw new \UnexpectedValueException("Expected exactly 2 input arguments");
 }
 
+$parsed_project = basename(realpath($argv[1]));
+
+if (is_dir(__DIR__ . "/../cache/" . $parsed_project) === false) {
+	mkdir(__DIR__ . "/../cache/" . $parsed_project);
+	mkdir(__DIR__ . "/../cache/" . $parsed_project . "/ast");
+	mkdir(__DIR__ . "/../cache/" . $parsed_project . "/cfg");
+}
+
 $php_parser = (new PhpParser\ParserFactory)->create(PhpParser\ParserFactory::PREFER_PHP7);
 $wrapped_parser = new WrappedParser($php_parser);
-$caching_parser = new FileCachingParser(__DIR__ . "/../cache", $wrapped_parser);
+$caching_parser = new FileCachingParser(__DIR__ . "/../cache/" . $parsed_project . "/ast", $wrapped_parser);
 
 
 $ast_system = new AstSystem();
-$cfg_system_factory = CfgSystemFactory::createDefault();
 
 $dir = $argv[1];
 $iter = new \RecursiveIteratorIterator(
 	new \RecursiveDirectoryIterator($dir), \RecursiveIteratorIterator::LEAVES_ONLY);
 
+$skipped_files = 0;
 /** @var SplFileInfo $file */
 foreach ($iter as $file) {
 	if ($file->isFile() === false) {
+		continue;
+	}
+	//skip tests
+	if (preg_match('/[\\\\\/]test(s)?[\\\\\/]/i', $file->getRealPath(), $matches) === 1) {
+		$skipped_files += 1;
 		continue;
 	}
 	if ($file->getExtension() === "php") {
@@ -48,9 +61,10 @@ foreach ($iter as $file) {
 	}
 }
 
-
+print sprintf("skipped %d files because they were located in a folder called 'test'\n", $skipped_files);
 print "parsing done\n";
 
+$cfg_system_factory = CfgSystemFactory::createDefault();
 $cfg_system = createCfgSystem($cfg_system_factory, $ast_system);
 print "Cfg creation done\n";
 
@@ -76,7 +90,6 @@ $combining_scope_collector = new \PhpExceptionFlow\Scope\Collector\CombiningScop
 $scopes = $combining_scope_collector->getTopLevelScopes();
 
 $call_resolver = new AstCallNodeToScopeResolver($combining_scope_collector->getMethodScopes(), $combining_scope_collector->getFunctionScopes(), $class_method_to_method_map);
-print "resolved calls\n";
 
 $call_to_scope_linker = new ScopeVisitor\CallToScopeLinkingVisitor(new PhpParser\NodeTraverser(), new AstVisitor\CallCollector(), $call_resolver);
 
@@ -86,6 +99,9 @@ $scope_traverser->addVisitor($catch_clause_type_resolver);
 $scope_traverser->addVisitor($call_to_scope_linker);
 $scope_traverser->traverse($scopes);
 $scope_traverser->removeVisitor($catch_clause_type_resolver);
+
+print "resolved calls and catch clauses\n";
+
 
 $combining_mutable = new \PhpExceptionFlow\FlowCalculator\CombiningCalculator();
 $combining_immutable = new \PhpExceptionFlow\FlowCalculator\CombiningCalculator();
@@ -130,23 +146,15 @@ $scope_traverser->addVisitor($printing_visitor);
 $scope_traverser->traverse($scope_collector->getTopLevelScopes());
 $scope_traverser->removeVisitor($printing_visitor);
 
-$result_file = fopen(__DIR__ . "/../results/encounters.txt", 'w');
+
+$result_file = fopen(sprintf("%s/../results/%s_encounters.txt", __DIR__, $parsed_project), 'w');
 fwrite($result_file, $printing_visitor->getResult());
-$class_method_to_method_file  = fopen(__DIR__ . "/../results/class_method_to_method.txt", 'w');
+$class_method_to_method_file  = fopen(sprintf("%s/../results/%s_class_method_to_method.txt", __DIR__, $parsed_project), 'w');
 fwrite($class_method_to_method_file, stringifyClassMethodToMethodMap($class_method_to_method_map));
-$scope_calls_scope_file  = fopen(__DIR__ . "/../results/scope_calls_scope_file.txt", 'w');
+$scope_calls_scope_file = fopen(sprintf("%s/../results/%s_scope_calls_scope_file.txt", __DIR__, $parsed_project), 'w');
 fwrite($scope_calls_scope_file, stringifyScopeCallsScopeMap($call_to_scope_linker));
-
-
-
-
-
-
-
-
-
-
-
+$unresolved_calls_file = fopen(sprintf("%s/../results/%s_unresolved_calls_file.txt", __DIR__, $parsed_project), 'w');
+fwrite($unresolved_calls_file, stringifyUnresolvedCallsPerScope($call_to_scope_linker->getUnresolvedCalls()));
 
 
 
@@ -269,6 +277,24 @@ function stringifyScopeCallsScopeMap(ScopeVisitor\CallToScopeLinkingVisitor $cal
 	foreach ($call_map as $caller) {
 		foreach ($call_map[$caller] as $callee) {
 			$res .= sprintf("%s calls %s\n",  $caller->getName(), $callee->getName());
+		}
+	}
+	return $res;
+}
+
+function stringifyUnresolvedCallsPerScope($unresolved_calls) {
+	$prettyPrinter = new PhpParser\PrettyPrinter\Standard;
+
+	$res = "";
+	/** @var \PhpExceptionFlow\Scope\Scope $caller */
+	foreach ($unresolved_calls as $caller) {
+		if ($unresolved_calls[$caller]->count() === 0) continue;
+
+		$res .= sprintf("Scope %s has unresolved: \n", $caller->getName());
+		foreach ($unresolved_calls[$caller] as $call_node) {
+			$message = $unresolved_calls[$caller][$call_node];
+			$call_string = $prettyPrinter->prettyPrint([$call_node]);
+			$res .= sprintf("\t%s was unresolved with message '%s'\n", $call_string, $message);
 		}
 	}
 	return $res;
