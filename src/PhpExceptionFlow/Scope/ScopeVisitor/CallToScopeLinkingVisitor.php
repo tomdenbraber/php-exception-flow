@@ -40,7 +40,7 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 		$this->ast_traverser->traverse($scope->getInstructions());
 		/** @var Node[] $calls */
 		$calls = $this->collectCalls();
-		$unresolved = [];
+		$unresolved = new \SplObjectStorage;
 		$resolved = [];
 		foreach ($calls as $call) {
 			try {
@@ -51,7 +51,7 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 					}
 				}
 			} catch (\UnexpectedValueException $exception) {
-				$unresolved[] = $call;
+				$unresolved->attach($call, $exception->getMessage());
 			}
 		}
 
