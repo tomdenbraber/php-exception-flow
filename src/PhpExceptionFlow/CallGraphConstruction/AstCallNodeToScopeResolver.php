@@ -92,7 +92,7 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 				throw new \UnexpectedValueException(sprintf("Method %s->%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 			}
 		} else {
-			throw new \UnexpectedValueException(sprintf("Cannot resolve method call; var %s has type %s, method-name is %s (%d)", $call->var->getType(), $type, $call->name, $call->getLine()));
+			throw new \UnexpectedValueException(sprintf("Cannot resolve method call; var %s has type %s, method-name is %s (%d)", $call->var->getType(), $type, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 		}
 	}
 
