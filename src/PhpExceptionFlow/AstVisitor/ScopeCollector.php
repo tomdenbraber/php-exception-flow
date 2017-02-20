@@ -59,26 +59,24 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = $node;
 		} else if ($node instanceof Node\FunctionLike) {
-			$name = "";
 			switch (get_class($node)) {
 				case Node\Expr\Closure::class:
 					//todo: implement correctly, thinking of how closures behave.
-					$name = md5(random_bytes(64));
+					//currently do nothing to not interfere with 'normal' function scopes
 					break;
 				case Node\Stmt\Function_::class:
 					/** @var Node\Stmt\Function_ $node */
 					$name = $node->name;
+					$this->current_scope = new Scope($name);
 					break;
 				case Node\Stmt\ClassMethod::class:
 					/** @var Node\Stmt\ClassMethod $node */
 					$name = $this->current_class->name . "::" . $node->name;
+					$this->current_scope = new Scope($name);
 					break;
 				default:
 					throw new \LogicException("Unknown implementation of FunctionLike: " . get_class($node));
 			}
-
-			$this->current_scope = new Scope($name);
-
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing_scope = $this->current_scope;
 			$inclosed_scope = new Scope(md5(random_bytes(64)));
@@ -103,11 +101,14 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 			// go back to main scope when we leave a function
 			if ($node instanceof Node\Stmt\Function_) {
 				$this->function_scopes[strtolower($node->name)] = $this->current_scope;
+				$this->current_scope = $this->main_scope;
 			} else if ($node instanceof Node\Stmt\ClassMethod) {
 				$cls_name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($this->current_class->name) : strtolower($this->current_class->name);
 				$this->method_scopes[$cls_name][strtolower($node->name)] = $this->current_scope;
+				$this->current_scope = $this->main_scope;
+			} else if ($node instanceof Node\Expr\Closure) {
+				//todo: implement correct closure handling
 			}
-			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			//a scope inside a try catch can never be a function scope, so add to non-function scopes
 			$this->non_function_scopes[] = $this->current_scope;
