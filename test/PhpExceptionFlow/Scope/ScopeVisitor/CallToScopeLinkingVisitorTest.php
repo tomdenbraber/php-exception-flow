@@ -98,7 +98,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(1, $unresolved->count());
 		$this->assertEquals(array($callee_scope), $caller_based[$scope]);
 		$this->assertEquals(array($scope), $callee_based[$callee_scope]);
-		$this->assertEquals(array(), $unresolved[$scope]);
+		$this->assertEquals(0, $unresolved[$scope]->count());
 	}
 
 	public function testWithRecursiveMethodCall() {
@@ -138,7 +138,7 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(1, $unresolved->count());
 		$this->assertEquals(array($scope), $caller_based[$scope]);
 		$this->assertEquals(array($scope), $callee_based[$scope]);
-		$this->assertEquals(array(), $unresolved[$scope]);
+		$this->assertEquals(0, $unresolved[$scope]->count());
 	}
 
 	public function testWithMultipleCalls() {
@@ -189,7 +189,50 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(array($callee_scope1, $callee_scope2), $caller_based[$caller_scope]);
 		$this->assertEquals(array($caller_scope), $callee_based[$callee_scope1]);
 		$this->assertEquals(array($caller_scope), $callee_based[$callee_scope2]);
-		$this->assertEquals(array(), $unresolved[$caller_scope]);
+		$this->assertEquals(0, $unresolved[$caller_scope]->count());
 		$this->assertEquals(2, $callee_based->count());
+	}
+
+	public function testWithUnresolvedCall() {
+		$scope = $this->createMock(Scope::class);
+		$callee_scope = $this->createMock(Scope::class);
+
+		$scope->expects($this->once())
+			->method("getInstructions")
+			->willReturn(array());
+
+		$fn_call_mock = $this->createMock(Node::class);
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getFunctionCalls")
+			->willReturn(array(
+				$fn_call_mock
+			));
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getMethodCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getStaticCalls")
+			->willReturn(array());
+
+		$this->call_resolver_mock->expects($this->once())
+			->method("resolve")
+			->with($fn_call_mock)
+			->will($this->throwException(new \UnexpectedValueException()));
+
+		$this->visitor->enterScope($scope);
+
+		$caller_based = $this->visitor->getCallerCallsCalleeScopes();
+		$callee_based = $this->visitor->getCalleeCalledByCallerScopes();
+		$unresolved = $this->visitor->getUnresolvedCalls();
+
+		$this->assertEquals(0, $callee_based->count());
+		$this->assertEquals(1, $caller_based->count());
+		$this->assertEquals(1, $unresolved->count());
+		$this->assertEquals(array(), $caller_based[$scope]);
+		$this->assertEquals(1, $unresolved[$scope]->count());
+		$this->assertTrue($unresolved[$scope]->contains($fn_call_mock));
 	}
 }
