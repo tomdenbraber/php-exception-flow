@@ -195,7 +195,6 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 
 	public function testWithUnresolvedCall() {
 		$scope = $this->createMock(Scope::class);
-		$callee_scope = $this->createMock(Scope::class);
 
 		$scope->expects($this->once())
 			->method("getInstructions")
