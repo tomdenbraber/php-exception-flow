@@ -1,8 +1,8 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
+use PhpExceptionFlow\Exception_;
 use PhpExceptionFlow\Scope\Scope;
-use PHPTypes\Type;
 
 interface FlowCalculatorInterface {
 	/**
@@ -19,7 +19,7 @@ interface FlowCalculatorInterface {
 
 	/**
 	 * @param Scope $scope
-	 * @return Type[]
+	 * @return Exception_[]
 	 * @throws \UnexpectedValueException when a scope is given for which this calculator has no data
 	 */
 	public function getForScope(Scope $scope);
