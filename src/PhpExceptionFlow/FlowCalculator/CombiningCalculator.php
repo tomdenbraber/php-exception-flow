@@ -64,16 +64,25 @@ class CombiningCalculator implements CombiningCalculatorInterface {
 	 * @throws \UnexpectedValueException
 	 */
 	public function getForScope(Scope $scope) {
-		$exception_set = [];
+		$exc_storage = new \SplObjectStorage;
 		foreach ($this->calculators as $calculator) {
 			try {
 				$calculators_exc = $calculator->getForScope($scope);
 			} catch (\UnexpectedValueException $exception) {
 				$calculators_exc = [];
 			}
-			$exception_set = array_merge($calculators_exc, $exception_set);
+
+			foreach ($calculators_exc as $exception) {
+				if ($exc_storage->contains($exception) === false) {
+					$exc_storage->attach($exception);
+				}
+			}
 		}
-		return array_values($exception_set);
+		$exception_set = [];
+		foreach ($exc_storage as $exception) {
+			$exception_set[] = $exception;
+		}
+		return $exception_set;
 	}
 
 	/**
