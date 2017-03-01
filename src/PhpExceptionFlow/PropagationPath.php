@@ -39,7 +39,7 @@ class PropagationPath {
 	public function lastOcccurrencesOfScopesAreCallingEachother(Scope $callee, Scope $caller) {
 		return $this->scope_to_index->contains($caller) &&
 			$this->scope_to_index->contains($callee) &&
-			$this->scope_to_index[$callee] === $this->scope_to_index[$caller] + 1;
+			$this->scope_to_index[$caller] === $this->scope_to_index[$callee] + 1;
 	}
 
 	/**
@@ -48,8 +48,8 @@ class PropagationPath {
 	 * @return PropagationPath
 	 */
 	public function addCall(Scope $callee, Scope $caller) {
-		$caller_index = $this->scope_to_index[$callee];
-		$new_scope_chain = array_slice($this->scope_chain, 0, $caller_index + 1);
+		$callee_index = $this->scope_to_index[$callee];
+		$new_scope_chain = array_slice($this->scope_chain, 0, $callee_index + 1);
 		$new_scope_to_index = new \SplObjectStorage;
 
 		foreach ($new_scope_chain as $scope) {
@@ -57,7 +57,7 @@ class PropagationPath {
 		}
 
 		$new_scope_chain[] = $caller;
-		$new_scope_to_index[$caller] = $caller_index + 1;
+		$new_scope_to_index[$caller] = $callee_index + 1;
 
 		return new PropagationPath($new_scope_chain, $new_scope_to_index);
 	}
