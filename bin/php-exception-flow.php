@@ -141,7 +141,7 @@ $encounters_calc->calculateEncounters($scope_collector->getTopLevelScopes());
 print "calculation done\n";
 
 
-$printing_visitor = new ScopeVisitor\PrintingVisitor($combining, $uncaught_calculator);
+$printing_visitor = new ScopeVisitor\DetailedPrintingVisitor($raises_calculator, $uncaught_calculator, $propagates_calculator);
 $scope_traverser->addVisitor($printing_visitor);
 $scope_traverser->traverse($scope_collector->getTopLevelScopes());
 $scope_traverser->removeVisitor($printing_visitor);
