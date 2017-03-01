@@ -37,7 +37,9 @@ class PropagationPath {
 	 * @return bool
 	 */
 	public function lastOcccurrencesOfScopesAreCallingEachother(Scope $caller, Scope $callee) {
-		return $this->scope_to_index[$callee] === $this->scope_to_index[$caller] + 1;
+		return $this->scope_to_index->contains($caller) &&
+			$this->scope_to_index->contains($callee) &&
+			$this->scope_to_index[$callee] === $this->scope_to_index[$caller] + 1;
 	}
 
 	/**
