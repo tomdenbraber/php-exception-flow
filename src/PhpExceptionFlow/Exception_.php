@@ -51,15 +51,19 @@ class Exception_ {
 	}
 
 	/**
+	 * @param Scope $called_scope
 	 * @param Scope $caller_scope
-	 * @param Scope $callee_scope
 	 */
-	public function propagate(Scope $caller_scope, Scope $callee_scope) {
+	public function propagate(Scope $called_scope, Scope $caller_scope) {
 		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($caller_scope, $callee_scope) === true) {
-				$this->propagation_paths[] = $propagation_path->addCall($caller_scope, $callee_scope);
+			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($called_scope, $caller_scope) === true) {
+				$this->propagation_paths[] = $propagation_path->addCall($called_scope, $caller_scope);
 			}
 
 		}
+	}
+
+	public function __toString() {
+		return (string) $this->getType();
 	}
 }
