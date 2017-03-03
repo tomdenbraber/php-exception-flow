@@ -1,6 +1,6 @@
 {main}:
 	encounters: []
 a:
-	encounters: [runtimeexception, badfunctioncallexception]
+	encounters: [badfunctioncallexception, runtimeexception]
 b:
 	encounters: [runtimeexception, badfunctioncallexception]
