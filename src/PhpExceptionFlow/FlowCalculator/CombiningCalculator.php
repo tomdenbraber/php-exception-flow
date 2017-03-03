@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
+use PhpExceptionFlow\Exception_;
 use PhpExceptionFlow\Scope\Scope;
 
 class CombiningCalculator implements CombiningCalculatorInterface {
@@ -59,20 +60,29 @@ class CombiningCalculator implements CombiningCalculatorInterface {
 
 	/**
 	 * @param Scope $scope
-	 * @return array
+	 * @return Exception_[]
 	 * @throws \UnexpectedValueException
 	 */
 	public function getForScope(Scope $scope) {
-		$exception_set = [];
+		$exc_storage = new \SplObjectStorage;
 		foreach ($this->calculators as $calculator) {
 			try {
 				$calculators_exc = $calculator->getForScope($scope);
 			} catch (\UnexpectedValueException $exception) {
 				$calculators_exc = [];
 			}
-			$exception_set = array_merge($calculators_exc, $exception_set);
+
+			foreach ($calculators_exc as $exception) {
+				if ($exc_storage->contains($exception) === false) {
+					$exc_storage->attach($exception);
+				}
+			}
 		}
-		return array_values(array_unique($exception_set));
+		$exception_set = [];
+		foreach ($exc_storage as $exception) {
+			$exception_set[] = $exception;
+		}
+		return $exception_set;
 	}
 
 	/**

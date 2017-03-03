@@ -24,9 +24,11 @@ class PropagatesCalculator extends AbstractMutableFlowCalculator {
 			/** @var Scope $called_scope */
 			foreach ($called_scopes as $called_scope) {
 				$callee_encounters = $this->encounters_calculator->getForScope($called_scope);
-				$imported_exceptions = array_merge($imported_exceptions, $callee_encounters);
+				foreach ($callee_encounters as $exception) {
+					$exception->propagate($called_scope, $scope);
+					$imported_exceptions[] = $exception;
+				}
 			}
-			$imported_exceptions = array_values(array_unique($imported_exceptions));
 		}
 		$this->setScopeHasChanged($scope, $imported_exceptions);
 		$this->scopes[$scope] = $imported_exceptions;
