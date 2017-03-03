@@ -72,20 +72,10 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 		$combining = new CombiningCalculator();
 
 		$uncaught_calculator = new UncaughtCalculator($catch_clause_type_resolver, $combining);
-		$uncaught_scope_traverser = new ScopeTraverser();
-		$uncaught_wrapping_visitor = new CalculatorWrappingVisitor($uncaught_calculator, CalculatorWrappingVisitor::CALCULATE_ON_LEAVE);
-		$uncaught_scope_traverser->addVisitor($uncaught_wrapping_visitor);
-		$traversing_uncaught_calculator = new TraversingCalculator($uncaught_scope_traverser, $uncaught_wrapping_visitor, $uncaught_calculator);
-
 		$propagates_calculator = new PropagatesCalculator($call_to_scope_linker->getCallerCallsCalleeScopes(), $combining);
-		$propagates_scope_traverser = new ScopeTraverser();
-		$propagates_wrapping_visitor = new CalculatorWrappingVisitor($propagates_calculator, CalculatorWrappingVisitor::CALCULATE_ON_ENTER);
-		$propagates_scope_traverser->addVisitor($propagates_wrapping_visitor);
-		$traversing_propagates_calculator = new TraversingCalculator($propagates_scope_traverser, $propagates_wrapping_visitor, $propagates_calculator);
 
-
-		$combining_mutable->addCalculator($traversing_uncaught_calculator);
-		$combining_mutable->addCalculator($traversing_propagates_calculator);
+		$combining_mutable->addCalculator($uncaught_calculator);
+		$combining_mutable->addCalculator($propagates_calculator);
 		$combining_immutable->addCalculator($traversing_raises_calculator);
 
 		$combining->addCalculator($combining_immutable);
