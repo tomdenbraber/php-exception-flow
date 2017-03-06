@@ -117,20 +117,10 @@ $traversing_raises_calculator = new \PhpExceptionFlow\FlowCalculator\TraversingC
 $combining = new \PhpExceptionFlow\FlowCalculator\CombiningCalculator();
 
 $uncaught_calculator = new \PhpExceptionFlow\FlowCalculator\UncaughtCalculator($catch_clause_type_resolver, $combining);
-$uncaught_scope_traverser = new \PhpExceptionFlow\Scope\ScopeTraverser();
-$uncaught_wrapping_visitor = new ScopeVisitor\CalculatorWrappingVisitor($uncaught_calculator, ScopeVisitor\CalculatorWrappingVisitor::CALCULATE_ON_LEAVE);
-$uncaught_scope_traverser->addVisitor($uncaught_wrapping_visitor);
-$traversing_uncaught_calculator = new \PhpExceptionFlow\FlowCalculator\TraversingCalculator($uncaught_scope_traverser, $uncaught_wrapping_visitor, $uncaught_calculator);
-
 $propagates_calculator = new \PhpExceptionFlow\FlowCalculator\PropagatesCalculator($call_to_scope_linker->getCallerCallsCalleeScopes(), $combining);
-$propagates_scope_traverser = new \PhpExceptionFlow\Scope\ScopeTraverser();
-$propagates_wrapping_visitor = new ScopeVisitor\CalculatorWrappingVisitor($propagates_calculator, ScopeVisitor\CalculatorWrappingVisitor::CALCULATE_ON_ENTER);
-$propagates_scope_traverser->addVisitor($propagates_wrapping_visitor);
-$traversing_propagates_calculator = new \PhpExceptionFlow\FlowCalculator\TraversingCalculator($propagates_scope_traverser, $propagates_wrapping_visitor, $propagates_calculator);
 
-
-$combining_mutable->addCalculator($traversing_uncaught_calculator);
-$combining_mutable->addCalculator($traversing_propagates_calculator);
+$combining_mutable->addCalculator($uncaught_calculator);
+$combining_mutable->addCalculator($propagates_calculator);
 $combining_immutable->addCalculator($traversing_raises_calculator);
 
 $combining->addCalculator($combining_immutable);
