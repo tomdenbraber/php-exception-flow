@@ -24,11 +24,66 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEmpty($this->resolver->fromPartialOrder($partial_order));
 	}
 
-	public function testUnimplementedMethodsMapsToAllImplementingMethods() {
-		$method_a_m = $this->buildMethodMock("a", "m", false, false);
-		$method_b_m = $this->buildMethodMock("b", "m", true, false);
-		$method_c_m = $this->buildMethodMock("c", "m", true, false);
+	public function testMethodResolvesToItself() {
+		$public_a_m = $this->buildMethodMock("a", "m", true, false);
+		$private_a_n = $this->buildMethodMock("a", "n", true, true);
 
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a"
+			],
+		];
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a"
+			],
+		];
+
+
+		$partial_order = $this->createMock(PartialOrderInterface::class);
+		$partial_order->expects($this->once())
+			->method("getMaximalElements")
+			->willReturn(array($public_a_m, $private_a_n));
+
+		$partial_order->method('getChildren')
+			->willReturn(array());
+		$partial_order->method('getDescendants')
+			->willReturn(array());
+		$partial_order->method('getParents')
+			->willReturn(array());
+		$partial_order->method('getAncestors')
+			->willReturn(array());
+
+		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
+		$this->assertCount(1, $class_method_to_method);
+		$this->assertArrayHasKey("a", $class_method_to_method);
+		$this->assertCount(2, $class_method_to_method["a"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
+		$this->assertArrayHasKey("n", $class_method_to_method["a"]);
+		$this->assertCount(1, $class_method_to_method["a"]["m"]);
+		$this->assertCount(1, $class_method_to_method["a"]["n"]);
+		$this->assertEquals("a", $class_method_to_method["a"]["m"][0]->getClass());
+		$this->assertEquals("a", $class_method_to_method["a"]["n"][0]->getClass());
+	}
+
+	public function testUnimplementedResolvesToAllImplementingClassesImplementations() {
+		$public_a_m = $this->buildMethodMock("a", "m", false, false);
+		$public_b_m = $this->buildMethodMock("b", "m", true, false);
+		$public_c_m = $this->buildMethodMock("c", "m", true, false);
+
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+				"c" => "c",
+			],
+			"b" => [
+				"b" => "b",
+			],
+			"c" => [
+				"c" => "c",
+			],
+		];
 		$this->state->classResolves = [
 			"a" => [
 				"a" => "a",
@@ -39,21 +94,6 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 			],
 			"c" => [
 				"a" => "a",
-				"b" => "b",
-				"c" => "c",
-			],
-		];
-		$this->state->classResolvedBy = [
-			"a" => [
-				"a" => "a",
-				"b" => "b",
-				"c" => "c",
-			],
-			"b" => [
-				"b" => "b",
-				"c" => "c",
-			],
-			"c" => [
 				"c" => "c",
 			],
 		];
@@ -61,49 +101,69 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$partial_order = $this->createMock(PartialOrderInterface::class);
 		$partial_order->expects($this->once())
 			->method("getMaximalElements")
-			->willReturn(array($method_a_m));
+			->willReturn(array($public_a_m));
 
-		$partial_order->expects($this->exactly(3))
-			->method("getDescendants")
+		$partial_order->method('getChildren')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_b_m])
+				[$public_a_m],
+				[$public_a_m],
+				[$public_b_m],
+				[$public_b_m],
+				[$public_c_m],
+				[$public_c_m]
+			)
 			->will($this->onConsecutiveCalls(
-				[$method_b_m, $method_c_m],
-				[$method_c_m],
+				[$public_b_m, $public_c_m],
+				[$public_b_m, $public_c_m],
+				[],
+				[],
+				[],
+				[],
 				[]
 			));
 
-		$partial_order->expects($this->exactly(3))
-			->method("getChildren")
+		$partial_order->method('getDescendants')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_b_m],
-				[$method_c_m])
+				[$public_a_m],
+				[$public_b_m],
+				[$public_c_m]
+			)
 			->will($this->onConsecutiveCalls(
-				[$method_b_m],
-				[$method_c_m],
+				[$public_b_m, $public_c_m],
+				[],
 				[]
 			));
 
-		$partial_order->expects($this->exactly(3))
-			->method("getParents")
+		$partial_order->method('getParents')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_b_m],
-				[$method_c_m])
+				[$public_a_m],
+				[$public_b_m],
+				[$public_c_m]
+			)
 			->will($this->onConsecutiveCalls(
 				[],
-				[$method_a_m],
-				[$method_b_m]
+				[$public_a_m],
+				[$public_a_m]
+			));
+
+		$partial_order->method('getAncestors')
+			->withConsecutive(
+				[$public_a_m],
+				[$public_b_m],
+				[$public_c_m]
+			)
+			->will($this->onConsecutiveCalls(
+				[],
+				[$public_a_m],
+				[$public_a_m]
 			));
 
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
-
 		$this->assertCount(3, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
 		$this->assertArrayHasKey("b", $class_method_to_method);
 		$this->assertArrayHasKey("c", $class_method_to_method);
+
 		$this->assertCount(1, $class_method_to_method["a"]);
 		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
 		$this->assertCount(1, $class_method_to_method["b"]);
@@ -112,23 +172,35 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$this->assertArrayHasKey("m", $class_method_to_method["c"]);
 
 		$this->assertCount(2, $class_method_to_method["a"]["m"]);
-		$this->assertCount(1, $class_method_to_method["b"]["m"]);
-		$this->assertCount(0, $class_method_to_method["c"]["m"]); // c->m has no overriding classes
-
 		$this->assertEquals("b", $class_method_to_method["a"]["m"][0]->getClass());
 		$this->assertEquals("c", $class_method_to_method["a"]["m"][1]->getClass());
 
-		$this->assertEquals("c", $class_method_to_method["b"]["m"][0]->getClass());
+		$this->assertCount(1, $class_method_to_method["b"]["m"]);
+		$this->assertEquals("b", $class_method_to_method["b"]["m"][0]->getClass());
+
+		$this->assertCount(1, $class_method_to_method["c"]["m"]);
+		$this->assertEquals("c", $class_method_to_method["c"]["m"][0]->getClass());
 	}
 
-	public function testUnimplementedMethodResolveToImplementedInComplexerHierarchy() {
-		// hierarchy:
-		//          a (interface)
-		//          |
-		//          b (abstract, but implements n)
-		//       /     \
-		//      c       d
-		//c inherits n, implements m. d implements both m and n
+	public function testInterfaceMethodCanBeResolvedToTraitIfUsedInClass() {
+		$public_a_m = $this->buildMethodMock("a", "m", false, false);
+		$public_trait_t1_m = $this->buildMethodMock("trait_t1", "m", true, false);
+
+		// b implements a and uses trait_t1
+
+		$this->state->classResolvedBy = [
+			"a" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"b" => [
+				"b" => "b",
+			],
+			"trait_t1" => [
+				"trait_t1" => "trait_t1",
+				"b" => "b",
+			],
+		];
 		$this->state->classResolves = [
 			"a" => [
 				"a" => "a",
@@ -136,173 +208,89 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 			"b" => [
 				"a" => "a",
 				"b" => "b",
+				"trait_t1" => "trait_t1",
 			],
-			"c" => [
-				"a" => "a",
-				"b" => "b",
-				"c" => "c",
-			],
-			"d" => [
-				"a" => "a",
-				"b" => "b",
-				"d" => "d",
+			"trait_t1" => [
+				"trait_t1" => "trait_t1",
 			],
 		];
-		$this->state->classResolvedBy = [
-			"a" => [
-				"a" => "a",
-				"b" => "b",
-				"c" => "c",
-				"d" => "d",
-			],
-			"b" => [
-				"b" => "b",
-				"c" => "c",
-				"d" => "d",
-			],
-			"c" => [
-				"c" => "c",
-			],
-			"d" => [
-				"d" => "d",
-			],
-		];
-
-
-
-		$method_a_m = $this->buildMethodMock("a", "m", false, false);
-		$method_a_n = $this->buildMethodMock("a", "n", false, false);
-		$method_b_m = $this->buildMethodMock("b", "m", false, false);
-		$method_b_n = $this->buildMethodMock("b", "n", true, false);
-		$method_c_m = $this->buildMethodMock("c", "m", true, false);
-		$method_d_m = $this->buildMethodMock("d", "m", true, false);
-		$method_d_n = $this->buildMethodMock("d", "n", true, false);
 
 		$partial_order = $this->createMock(PartialOrderInterface::class);
 		$partial_order->expects($this->once())
 			->method("getMaximalElements")
-			->willReturn(array($method_a_m, $method_a_n));
+			->willReturn(array($public_a_m));
 
-		$partial_order->expects($this->exactly(7))
-			->method("getDescendants")
+		$partial_order->method('getChildren')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_a_n],
-				[$method_b_m],
-				[$method_b_n],
-				[$method_c_m],
-				[$method_d_m],
-				[$method_d_n]
+				[$public_a_m],
+				[$public_a_m],
+				[$public_trait_t1_m],
+				[$public_trait_t1_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$method_b_m, $method_c_m, $method_d_m],
-				[$method_b_n, $method_d_n],
-				[$method_c_m, $method_d_m],
-				[$method_d_n],
-				[],
+				[$public_trait_t1_m],
+				[$public_trait_t1_m],
 				[],
 				[]
 			));
 
-		$partial_order->expects($this->exactly(7))
-			->method("getParents")
+		$partial_order->method('getDescendants')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_a_n],
-				[$method_b_m],
-				[$method_b_n],
-				[$method_c_m],
-				[$method_d_m],
-				[$method_d_n])
+				[$public_a_m],
+				[$public_trait_t1_m]
+			)
 			->will($this->onConsecutiveCalls(
-				[],
-				[],
-				[$method_a_m],
-				[$method_a_n],
-				[$method_b_m],
-				[$method_b_m],
-				[$method_b_n]
-			));
-
-		$partial_order->expects($this->exactly(7))
-			->method("getChildren")
-			->withConsecutive(
-				[$method_a_m],
-				[$method_a_n],
-				[$method_b_m],
-				[$method_b_n],
-				[$method_c_m],
-				[$method_d_m],
-				[$method_d_n])
-			->will($this->onConsecutiveCalls(
-				[$method_b_m],
-				[$method_b_n],
-				[$method_c_m, $method_d_m],
-				[$method_d_n],
-				[],
-				[],
+				[$public_trait_t1_m],
 				[]
 			));
+
+		$partial_order->method('getParents')
+			->withConsecutive(
+				[$public_a_m],
+				[$public_trait_t1_m]
+			)
+			->will($this->onConsecutiveCalls(
+				[],
+				[$public_a_m]
+			));
+
+		$partial_order->method('getAncestors')
+			->withConsecutive(
+				[$public_a_m],
+				[$public_trait_t1_m]
+			)
+			->will($this->onConsecutiveCalls(
+				[],
+				[$public_a_m]
+			));
+
 		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
-
-		foreach ($class_method_to_method["a"]["m"] as $overriding) {
-			print $overriding->getClass() . "\n";
-		}
-
-
-
-		$this->assertCount(4, $class_method_to_method);
+		$this->assertCount(3, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
 		$this->assertArrayHasKey("b", $class_method_to_method);
-		$this->assertArrayHasKey("c", $class_method_to_method);
-		$this->assertArrayHasKey("d", $class_method_to_method);
-		$this->assertCount(2, $class_method_to_method["a"]);
-		$this->assertCount(2, $class_method_to_method["b"]);
-		$this->assertCount(1, $class_method_to_method["c"]);
-		$this->assertCount(2, $class_method_to_method["d"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
-		$this->assertArrayHasKey("n", $class_method_to_method["a"]);
-		$this->assertCount(2, $class_method_to_method["a"]["m"]);
-		$this->assertCount(2, $class_method_to_method["a"]["n"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["b"]);
-		$this->assertArrayHasKey("n", $class_method_to_method["b"]);
-		$this->assertCount(2, $class_method_to_method["b"]["m"]);
-		$this->assertCount(1, $class_method_to_method["b"]["n"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["c"]);
-		$this->assertCount(0, $class_method_to_method["c"]["m"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["d"]);
-		$this->assertArrayHasKey("n", $class_method_to_method["d"]);
-		$this->assertCount(0, $class_method_to_method["d"]["m"]);
-		$this->assertCount(0, $class_method_to_method["d"]["n"]);
+		$this->assertArrayHasKey("trait_t1", $class_method_to_method);
 
-		$this->assertEquals("c", $class_method_to_method["a"]["m"][0]->getClass());
-		$this->assertEquals("d", $class_method_to_method["a"]["m"][1]->getClass());
-		$this->assertEquals("b", $class_method_to_method["a"]["n"][0]->getClass());
-		$this->assertEquals("d", $class_method_to_method["a"]["n"][1]->getClass());
-		$this->assertEquals("c", $class_method_to_method["b"]["m"][0]->getClass());
-		$this->assertEquals("d", $class_method_to_method["b"]["m"][1]->getClass());
-		$this->assertEquals("d", $class_method_to_method["b"]["n"][0]->getClass());
+		$this->assertCount(1, $class_method_to_method["a"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
+		$this->assertCount(1, $class_method_to_method["b"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["b"]);
+		$this->assertCount(1, $class_method_to_method["trait_t1"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["trait_t1"]);
+
+		$this->assertCount(1, $class_method_to_method["a"]["m"]);
+		$this->assertEquals("trait_t1", $class_method_to_method["a"]["m"][0]->getClass());
+
+		$this->assertCount(1, $class_method_to_method["b"]["m"]);
+		$this->assertEquals("trait_t1", $class_method_to_method["b"]["m"][0]->getClass());
+
+		$this->assertCount(1, $class_method_to_method["c"]["m"]);
+		$this->assertEquals("trait_t1", $class_method_to_method["trait_t1"]["m"][0]->getClass());
 	}
 
-	public function testPrivateMethodsAreNotOverridden() {
-		$method_a_m = $this->buildMethodMock("a", "m", true, true);
-		$method_b_m = $this->buildMethodMock("b", "m", true, false);
-		$method_c_m = $this->buildMethodMock("c", "m", true, false);
+	public function testClassWithoutImplementationCanResolveToParentAndToSubClasses() {
+		$public_a_m = $this->buildMethodMock("a", "m", true, false);
+		$public_c_m = $this->buildMethodMock("c", "m", true, false);
 
-		$this->state->classResolves = [
-			"a" => [
-				"a" => "a",
-			],
-			"b" => [
-				"a" => "a",
-				"b" => "b",
-			],
-			"c" => [
-				"a" => "a",
-				"b" => "b",
-				"c" => "c",
-			],
-		];
 		$this->state->classResolvedBy = [
 			"a" => [
 				"a" => "a",
@@ -317,68 +305,94 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				"c" => "c",
 			],
 		];
+		$this->state->classResolves = [
+			"a" => [
+				"a" => "a",
+			],
+			"b" => [
+				"a" => "a",
+				"b" => "b",
+			],
+			"c" => [
+				"a" => "a",
+				"b" => "c",
+				"c" => "c",
+			],
+		];
 
 		$partial_order = $this->createMock(PartialOrderInterface::class);
-
 		$partial_order->expects($this->once())
 			->method("getMaximalElements")
-			->willReturn(array($method_a_m));
+			->willReturn(array($public_a_m));
 
-		$partial_order->expects($this->exactly(3))
-			->method("getChildren")
+		$partial_order->method('getChildren')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_b_m],
-				[$method_c_m]
+				[$public_a_m],
+				[$public_a_m],
+				[$public_c_m],
+				[$public_c_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$method_b_m],
-				[$method_c_m],
+				[$public_c_m],
+				[$public_c_m],
+				[],
 				[]
 			));
 
-		$partial_order->expects($this->exactly(3))
-			->method("getParents")
+		$partial_order->method('getDescendants')
 			->withConsecutive(
-				[$method_a_m],
-				[$method_b_m],
-				[$method_c_m]
+				[$public_a_m],
+				[$public_c_m]
+			)
+			->will($this->onConsecutiveCalls(
+				[$public_c_m],
+				[]
+			));
+
+		$partial_order->method('getParents')
+			->withConsecutive(
+				[$public_a_m],
+				[$public_c_m]
 			)
 			->will($this->onConsecutiveCalls(
 				[],
-				[$method_b_m],
-				[$method_c_m]
+				[$public_a_m]
 			));
 
-
-		$partial_order->expects($this->exactly(2))
-			->method("getDescendants")
+		$partial_order->method('getAncestors')
 			->withConsecutive(
-				[$method_b_m],
-				[$method_c_m]
+				[$public_a_m],
+				[$public_c_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$method_c_m],
-				[]
+				[],
+				[$public_a_m]
 			));
 
-		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
 
+		$class_method_to_method = $this->resolver->fromPartialOrder($partial_order);
 		$this->assertCount(3, $class_method_to_method);
 		$this->assertArrayHasKey("a", $class_method_to_method);
 		$this->assertArrayHasKey("b", $class_method_to_method);
 		$this->assertArrayHasKey("c", $class_method_to_method);
-		$this->assertCount(1, $class_method_to_method["a"]);
-		$this->assertCount(1, $class_method_to_method["b"]);
-		$this->assertCount(1, $class_method_to_method["c"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["b"]);
-		$this->assertArrayHasKey("m", $class_method_to_method["c"]);
-		$this->assertCount(0, $class_method_to_method["a"]["m"]);
-		$this->assertCount(1, $class_method_to_method["b"]["m"]);
-		$this->assertCount(0, $class_method_to_method["c"]["m"]);
 
-		$this->assertEquals("c", $class_method_to_method["b"]["m"][0]->getClass());
+		$this->assertCount(1, $class_method_to_method["a"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["a"]);
+		$this->assertCount(1, $class_method_to_method["b"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["b"]);
+		$this->assertCount(1, $class_method_to_method["b"]);
+		$this->assertArrayHasKey("m", $class_method_to_method["b"]);
+
+		$this->assertCount(2, $class_method_to_method["a"]["m"]);
+		$this->assertEquals("c", $class_method_to_method["a"]["m"][0]->getClass());
+		$this->assertEquals("a", $class_method_to_method["a"]["m"][1]->getClass());
+
+		$this->assertCount(2, $class_method_to_method["b"]["m"]);
+		$this->assertEquals("a", $class_method_to_method["b"]["m"][0]->getClass());
+		$this->assertEquals("c", $class_method_to_method["b"]["m"][1]->getClass());
+
+		$this->assertCount(1, $class_method_to_method["c"]["m"]);
+		$this->assertEquals("c", $class_method_to_method["c"]["m"][0]->getClass());
 	}
 
 
