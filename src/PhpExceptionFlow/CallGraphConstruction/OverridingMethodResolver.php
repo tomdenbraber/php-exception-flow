@@ -31,33 +31,49 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 			/** @var Method $method */
 			$method = array_shift($queue);
 			$current_classlike = strtolower($method->getClass());
+			$current_method_name = $method->getName();
 			$current_classlike_resolves = $this->state->classResolves[$current_classlike];
 
+			print sprintf("Now handling method %s->%s\n", $current_classlike, $current_method_name);
+
+			//a method can be resolved by all subclasses that implement it, if it is not private
 			if ($method->isPrivate() === false) {
+				// an occurrence of this method can be resolved to any of its overriding classes
 				$descendants = array_values(array_filter($partial_order->getDescendants($method), array(OverridingMethodResolver::class, 'methodIsImplemented')));
 
-				// an occurrence of this method can be resolved to any of its overriding classes
-				if (isset($class_method_map[strtolower($method->getClass())][$method->getName()]) === true) {
-					$class_method_map[strtolower($method->getClass())][$method->getName()] = array_merge(
-						$class_method_map[strtolower($method->getClass())][$method->getName()], $descendants
-					);
+				if (isset($class_method_map[$current_classlike][$current_method_name]) === true) {
+					$class_method_map[$current_classlike][$current_method_name] = array_merge($class_method_map[$current_classlike][$current_method_name], $descendants);
 				} else {
-					$class_method_map[strtolower($method->getClass())][$method->getName()] = $descendants;
+					$class_method_map[$current_classlike][$current_method_name] = $descendants;
 				}
-			} else {
-				$class_method_map[strtolower($method->getClass())][$method->getName()] = [];
 			}
 
-			// all non-implementing parent classes of current_classlike between the next implementation up in the hierarchy
-			// and the current class can be resolved to the currently handled method
-			foreach ($partial_order->getParents($method) as $child) {
-				$parent_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
-				$in_between_classes = array_diff(array_intersect($parent_resolved_by, $current_classlike_resolves), [$current_classlike, $child->getClass()]);
-				foreach ($in_between_classes as $between_class) {
-					if (isset($class_method_map[$between_class][$method->getName()]) === true) {
-						$class_method_map[$between_class][$method->getName()] = [$method];
+			if ($method->isImplemented() === true) {
+				//this method also applies to all subclasses that do not implement it
+				/** @var Method[] $overriding_methods */
+				$overriding_methods = $partial_order->getChildren($method);
+
+				$method_applies_to_subclasses = $this->state->classResolvedBy[$current_classlike];
+				print $current_classlike . ": \n";
+				print_r($method_applies_to_subclasses);
+
+				foreach ($overriding_methods as $overriding_method) {
+					//get the classes between the current class and the overriding method class:
+					$overriding_class_resolved_by = $this->state->classResolvedBy[strtolower($overriding_method->getClass())];
+					$method_applies_to_subclasses = array_diff($method_applies_to_subclasses, $overriding_class_resolved_by);
+					print "after removing class " . $overriding_method->getClass() . "\n";
+					print_r($method_applies_to_subclasses);
+					print_r($this->state->classResolvedBy[$current_classlike]);
+				}
+
+				//print_r($method_applies_to_subclasses);
+
+
+				foreach ($method_applies_to_subclasses as $applies_to_subclass) {
+					if (isset($class_method_map[$applies_to_subclass][$current_method_name]) === true) {
+						$class_method_map[$applies_to_subclass][$current_method_name][] = $method;
 					} else {
-						$class_method_map[$between_class][$method->getName()][] = $method;
+						$class_method_map[$applies_to_subclass][$current_method_name] = [$method];
 					}
 				}
 			}
@@ -69,6 +85,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				}
 			}
 		}
+
 		return $class_method_map;
 	}
 

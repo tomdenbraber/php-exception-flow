@@ -106,14 +106,12 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$partial_order->method('getChildren')
 			->withConsecutive(
 				[$public_a_m],
-				[$public_a_m],
 				[$public_b_m],
 				[$public_b_m],
 				[$public_c_m],
 				[$public_c_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$public_b_m, $public_c_m],
 				[$public_b_m, $public_c_m],
 				[],
 				[],
@@ -223,12 +221,10 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 		$partial_order->method('getChildren')
 			->withConsecutive(
 				[$public_a_m],
-				[$public_a_m],
 				[$public_trait_t1_m],
 				[$public_trait_t1_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$public_trait_t1_m],
 				[$public_trait_t1_m],
 				[],
 				[]
