@@ -74,16 +74,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
 	/**
 	 * @param Method $method
-	 * @param PartialOrderInterface $partial_order
-	 * @return Method[]
-	 */
-	private function resolve(Method $method, PartialOrderInterface $partial_order) {
-		return array_values(array_filter($partial_order->getDescendants($method), array($this, 'methodIsImplemented')));
-	}
-
-
-	/**
-	 * @param Method $method
 	 * @return bool
 	 */
 	private static function methodIsImplemented(Method $method) {
