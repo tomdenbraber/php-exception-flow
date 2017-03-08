@@ -238,16 +238,14 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 			->method("getMaximalElements")
 			->willReturn(array($public_a_m));
 
-		$partial_order->expects($this->exactly(4))
+		$partial_order->expects($this->exactly(3))
 			->method('getChildren')
 			->withConsecutive(
-				[$public_a_m],
 				[$public_a_m],
 				[$public_trait_t1_m],
 				[$public_trait_t1_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[$public_trait_t1_m],
 				[$public_trait_t1_m],
 				[],
 				[]

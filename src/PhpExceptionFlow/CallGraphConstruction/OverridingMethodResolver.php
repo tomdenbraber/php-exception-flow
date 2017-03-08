@@ -33,7 +33,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
-			$current_classlike = strtolower($method->getClass());
 
 			//rules:
 			// 1. a method that is implemented always resolves itself
@@ -44,50 +43,14 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
 			//R1:
 			if ($method->isImplemented() === true) {
-				$this->addToClassMethodMap($method, $method->getClass());
-			}
-
-			/** @var Method[] $child_methods */
-			$child_methods = $partial_order->getChildren($method);
-
-			//R3
-			//gather all subclasses between this class and the end of the hierarchy/the next class implementing this method
-			if ($method->isPrivate() === false) {
-				$subclasses_not_implementing = $this->state->classResolvedBy[$current_classlike];
-				unset($subclasses_not_implementing[$current_classlike]);
-				foreach ($child_methods as $child) {
-					$child_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
-					$subclasses_not_implementing = array_diff($subclasses_not_implementing, $child_resolved_by);
-				}
-				foreach ($subclasses_not_implementing as $subclass) {
-					print sprintf("R3: covering %s, adding method %s.%s\n", $subclass, $method->getClass(), $method->getName());
-					$this->addToClassMethodMap($method, $subclass);
-				}
-			}
-
-			//R2, R4: reasoned from the current method upwards; add this method to all classes in
-			// between the current class and the highest implementing class in the hierarchy
-			if ($method->isPrivate() === false && $method->isImplemented() === true) {
-				$ancestors = $partial_order->getAncestors($method);
-				$current_classlike_resolves = $this->state->classResolves[$current_classlike];
-				unset($current_classlike_resolves[$current_classlike]);
-				$current_classlike_resolves = array_keys($current_classlike_resolves);
-				$super_classes = [];
-				foreach ($ancestors as $ancestor) {
-					$ancestor_resolved_by = array_keys($this->state->classResolvedBy[strtolower($ancestor->getClass())]);
-					$path_to_ancestor = array_intersect($ancestor_resolved_by, $current_classlike_resolves);
-					if (empty($path_to_ancestor) === true) {
-						//no path discovered from $method to $ancestor via the class resolves shizzle. probably a trait.
-						//because there is a relation in the partial order, just add the ancestor to the super classes
-						$path_to_ancestor[] = strtolower($ancestor->getClass());
-					}
-					$super_classes = array_merge($super_classes, $path_to_ancestor);
-				}
-
-				$super_classes = array_unique($super_classes);
-				foreach ($super_classes as $super_class) {
-					print sprintf("R2, R4: covering %s, adding method %s.%s\n", $super_class, $method->getClass(), $method->getName());
-					$this->addToClassMethodMap($method, $super_class);
+				$this->resolveSelf($method);
+				if ($method->isPrivate() === false) {
+					// R3: adds this method to all classes which are between this implementation and the next implementation down in the hierarchy
+					// (this is the applies-to calculation)
+					$this->resolveInheritedMethod($method, $partial_order);
+					// R2, R4 reasoned from the current method upwards; add this method to all classes in
+					// between the current class and the highest implementing class in the hierarchy
+					$this->resolveMethodsSubsitutionPrinciple($method, $partial_order);
 				}
 			}
 
@@ -118,6 +81,63 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 			} else {
 				$this->class_method_map[$class][$method->getName()][] = $method;
 			}
+		}
+	}
+
+	private function resolveSelf(Method $method) {
+		$this->addToClassMethodMap($method, $method->getClass());
+	}
+
+	/**
+	 * @param Method $method
+	 * @param PartialOrderInterface $partial_order
+	 */
+	private function resolveInheritedMethod(Method $method, PartialOrderInterface $partial_order) {
+		/** @var Method[] $child_methods */
+		$child_methods = $partial_order->getChildren($method);
+		$current_classlike = strtolower($method->getClass());
+
+		$subclasses_not_implementing = $this->state->classResolvedBy[$current_classlike];
+		unset($subclasses_not_implementing[$current_classlike]);
+		foreach ($child_methods as $child) {
+			$child_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
+			$subclasses_not_implementing = array_diff($subclasses_not_implementing, $child_resolved_by);
+		}
+
+		foreach ($subclasses_not_implementing as $subclass) {
+			print sprintf("R3: covering %s, adding method %s.%s\n", $subclass, $method->getClass(), $method->getName());
+			$this->addToClassMethodMap($method, $subclass);
+		}
+	}
+
+	/**
+	 * @param Method $method
+	 * @param PartialOrderInterface $partial_order
+	 */
+	private function resolveMethodsSubsitutionPrinciple(Method $method, PartialOrderInterface $partial_order) {
+		/** @var Method[] $ancestors */
+		$ancestors = $partial_order->getAncestors($method);
+		$current_classlike = strtolower($method->getClass());
+
+		$current_classlike_resolves = $this->state->classResolves[$current_classlike];
+		unset($current_classlike_resolves[$current_classlike]);
+		$current_classlike_resolves = array_keys($current_classlike_resolves);
+		$super_classes = [];
+		foreach ($ancestors as $ancestor) {
+			$ancestor_resolved_by = array_keys($this->state->classResolvedBy[strtolower($ancestor->getClass())]);
+			$path_to_ancestor = array_intersect($ancestor_resolved_by, $current_classlike_resolves);
+			if (empty($path_to_ancestor) === true) {
+				//no path discovered from $method to $ancestor via the class resolves shizzle. probably a trait.
+				//because there is a relation in the partial order, just add the ancestor to the super classes
+				$path_to_ancestor[] = strtolower($ancestor->getClass());
+			}
+			$super_classes = array_merge($super_classes, $path_to_ancestor);
+		}
+
+		$super_classes = array_unique($super_classes);
+		foreach ($super_classes as $super_class) {
+			print sprintf("R2, R4: covering %s, adding method %s.%s\n", $super_class, $method->getClass(), $method->getName());
+			$this->addToClassMethodMap($method, $super_class);
 		}
 	}
 }
