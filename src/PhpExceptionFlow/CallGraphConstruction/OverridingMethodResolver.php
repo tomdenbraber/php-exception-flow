@@ -14,6 +14,9 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	/** @var State */
 	private $state;
 
+	/** @var Method[][][] */
+	private $class_method_map;
+
 	public function __construct(State $state) {
 		$this->state = $state;
 	}
@@ -23,8 +26,8 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	 * @return Method[][][]
 	 */
 	public function fromPartialOrder(PartialOrderInterface $partial_order) {
+		$this->class_method_map = [];
 		$queue = $partial_order->getMaximalElements();
-		$class_method_map = [];
 		$covered_methods = new \SplObjectStorage;
 
 		while (empty($queue) === false) {
@@ -41,7 +44,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
 			//R1:
 			if ($method->isImplemented() === true) {
-				$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $method->getClass());
+				$this->addToClassMethodMap($method, $method->getClass());
 			}
 
 			/** @var Method[] $child_methods */
@@ -58,7 +61,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				}
 				foreach ($subclasses_not_implementing as $subclass) {
 					print sprintf("R3: covering %s, adding method %s.%s\n", $subclass, $method->getClass(), $method->getName());
-					$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $subclass);
+					$this->addToClassMethodMap($method, $subclass);
 				}
 			}
 
@@ -84,7 +87,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				$super_classes = array_unique($super_classes);
 				foreach ($super_classes as $super_class) {
 					print sprintf("R2, R4: covering %s, adding method %s.%s\n", $super_class, $method->getClass(), $method->getName());
-					$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $super_class);
+					$this->addToClassMethodMap($method, $super_class);
 				}
 			}
 
@@ -96,22 +99,25 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 			}
 		}
 
-		return $class_method_map;
+		return $this->class_method_map;
 	}
 
-	private function addToClassMethodMap($class_method_map, Method $method, $class) {
+	/**
+	 * @param Method $method
+	 * @param string $class
+	 */
+	private function addToClassMethodMap(Method $method, string $class) {
 		$class = strtolower($class);
-		if (isset($class_method_map[$class]) === false) {
-			$class_method_map[$class] = [
+		if (isset($this->class_method_map[$class]) === false) {
+			$this->class_method_map[$class] = [
 				$method->getName() => [$method],
 			];
 		} else {
-			if (isset($class_method_map[$class][$method->getName()]) === false) {
-				$class_method_map[$class][$method->getName()] = [$method];
+			if (isset($this->class_method_map[$class][$method->getName()]) === false) {
+				$this->class_method_map[$class][$method->getName()] = [$method];
 			} else {
-				$class_method_map[$class][$method->getName()][] = $method;
+				$this->class_method_map[$class][$method->getName()][] = $method;
 			}
 		}
-		return $class_method_map;
 	}
 }
