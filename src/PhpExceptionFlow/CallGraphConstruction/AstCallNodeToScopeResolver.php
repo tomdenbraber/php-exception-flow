@@ -42,6 +42,9 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 				/** @var Node\Expr\StaticCall $func_call */
 				return $this->resolveStaticCall($func_call);
 				break;
+			case Node\Expr\New_::class:
+				/** @var Node\Expr\New_ $func_call */
+				return $this->resolveConstructorCall($func_call);
 			default:
 				throw new \LogicException("This type of node cannot be handled: " . get_class($func_call));
 		}
@@ -123,6 +126,35 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 			}
 		} else {
 			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
+		}
+	}
+
+	private function resolveConstructorCall(Node\Expr\New_ $call) {
+		if ($call->class instanceof Node\Name) {
+			$class = strtolower(implode("\\", $call->class->parts));
+			$constructor_name = '__construct';
+			if (isset($this->class_method_to_implementations[$class]) === true && isset($this->class_method_to_implementations[$class][$constructor_name]) === true) {
+				/** @var Method[] $called_methods */
+				$called_methods = $this->class_method_to_implementations[$class][$constructor_name];
+				$called_scopes = [];
+				foreach ($called_methods as $called_method) {
+					$called_method_name = strtolower($called_method->getName());
+					$called_method_class = strtolower($called_method->getClass());
+					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+						$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+					} else {
+						print sprintf("Method %s::__construct() could not be found in method scopes\n", $class);
+						throw new \UnexpectedValueException(sprintf("Method %s::__construct() could not be found in method scopes", $class));
+					}
+				}
+				return $called_scopes;
+			} else {
+				print sprintf("Method %s::__construct() could not be found in applies to set (%d)\n", $class, $call->getLine());
+				throw new \UnexpectedValueException(sprintf("Method %s::__construct() could not be found in applies to set (%d)", $class, $call->getLine()));
+			}
+		} else {
+			print sprintf("Cannot resolve constructor call; class expression has type %s\n", $call->class->getAttribute("type", Type::unknown()));
+			throw new \UnexpectedValueException(sprintf("Cannot resolve constructor call; class expression has type %s", $call->class->getAttribute("type", Type::unknown())));
 		}
 	}
 }
