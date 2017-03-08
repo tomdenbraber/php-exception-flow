@@ -237,12 +237,7 @@ function calculateClassMethodToMethodMap(AstSystem $ast_system, PHPTypes\State $
 	print "Created partial order with methods\n";
 
 	$contract_method_resolver = new OverridingMethodResolver($state);
-	$cha_method_resolver = new AppliesToMethodResolver($state->classResolvedBy);
-	$combining_method_resolver = new CombiningClassMethodToMethodResolver();
-	$combining_method_resolver->addResolver($contract_method_resolver);
-	$combining_method_resolver->addResolver($cha_method_resolver);
-
-	return $combining_method_resolver->fromPartialOrder($partial_order);
+	return $contract_method_resolver->fromPartialOrder($partial_order);
 }
 
 function stringifyClassMethodToMethodMap(array $map) {
