@@ -7,7 +7,7 @@ use_a_n:
 use_b_m:
 	encounters: [logicexception, unexpectedvalueexception]
 use_b_n:
-	encounters: [logicexception, runtimeexception]
+	encounters: [runtimeexception, logicexception]
 A::m:
 	encounters: []
 A::n:
