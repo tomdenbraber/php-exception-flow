@@ -23,36 +23,14 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 	 * @return Method[][][]
 	 */
 	public function fromPartialOrder(PartialOrderInterface $partial_order) {
-		$maximal_elements = $partial_order->getMaximalElements();
-		$queue = $maximal_elements;
+		$queue = $partial_order->getMaximalElements();
 		$class_method_map = [];
 		$covered_methods = new \SplObjectStorage;
-
-
-
-		/*$list = $partial_order->getMaximalElements();
-		$visualize = function (Method $m) {
-			return sprintf("%s.%s", $m->getClass(), $m->getName());
-		};
-
-		while(empty($list) === false) {
-			$element = array_shift($list);
-			print sprintf("%s => [%s]\n", $visualize->call($this, $element), implode(", ", array_map($visualize, $partial_order->getChildren($element))));
-			foreach ($partial_order->getChildren($element) as $child) {
-				$list[] = $child;
-			}
-		}*/
-
-
-
 
 		while (empty($queue) === false) {
 			/** @var Method $method */
 			$method = array_shift($queue);
 			$current_classlike = strtolower($method->getClass());
-			$current_method_name = $method->getName();
-
-			print sprintf("handling method %s.%s\n", $current_classlike, $current_method_name);
 
 			//rules:
 			// 1. a method that is implemented always resolves itself
@@ -66,6 +44,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $method->getClass());
 			}
 
+			/** @var Method[] $child_methods */
 			$child_methods = $partial_order->getChildren($method);
 
 			//R3
@@ -77,7 +56,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 					$child_resolved_by = $this->state->classResolvedBy[strtolower($child->getClass())];
 					$subclasses_not_implementing = array_diff($subclasses_not_implementing, $child_resolved_by);
 				}
-
 				foreach ($subclasses_not_implementing as $subclass) {
 					print sprintf("R3: covering %s, adding method %s.%s\n", $subclass, $method->getClass(), $method->getName());
 					$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $subclass);
@@ -86,7 +64,7 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 
 			//R2, R4: reasoned from the current method upwards; add this method to all classes in
 			// between the current class and the highest implementing class in the hierarchy
-			if ($method->isPrivate() === false) {
+			if ($method->isPrivate() === false && $method->isImplemented() === true) {
 				$ancestors = $partial_order->getAncestors($method);
 				$current_classlike_resolves = $this->state->classResolves[$current_classlike];
 				unset($current_classlike_resolves[$current_classlike]);
@@ -95,7 +73,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				foreach ($ancestors as $ancestor) {
 					$ancestor_resolved_by = array_keys($this->state->classResolvedBy[strtolower($ancestor->getClass())]);
 					$path_to_ancestor = array_intersect($ancestor_resolved_by, $current_classlike_resolves);
-
 					if (empty($path_to_ancestor) === true) {
 						//no path discovered from $method to $ancestor via the class resolves shizzle. probably a trait.
 						//because there is a relation in the partial order, just add the ancestor to the super classes
@@ -105,19 +82,11 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 				}
 
 				$super_classes = array_unique($super_classes);
-
-
 				foreach ($super_classes as $super_class) {
 					print sprintf("R2, R4: covering %s, adding method %s.%s\n", $super_class, $method->getClass(), $method->getName());
 					$class_method_map = $this->addToClassMethodMap($class_method_map, $method, $super_class);
 				}
 			}
-
-
-
-
-
-
 
 			$covered_methods->attach($method);
 			foreach ($partial_order->getChildren($method) as $child) {
@@ -128,14 +97,6 @@ class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
 		}
 
 		return $class_method_map;
-	}
-
-	/**
-	 * @param Method $method
-	 * @return bool
-	 */
-	private static function methodIsImplemented(Method $method) {
-		return $method->isImplemented();
 	}
 
 	private function addToClassMethodMap($class_method_map, Method $method, $class) {

@@ -164,15 +164,13 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				[]
 			));
 
-		$partial_order->expects($this->exactly(3))
+		$partial_order->expects($this->exactly(2))
 			->method('getAncestors')
 			->withConsecutive(
-				[$public_a_m],
 				[$public_b_m],
 				[$public_c_m]
 			)
 			->will($this->onConsecutiveCalls(
-				[],
 				[$public_a_m],
 				[$public_a_m]
 			));
@@ -255,13 +253,11 @@ class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
 				[]
 			));
 
-		$partial_order->expects($this->exactly(2))
+		$partial_order->expects($this->exactly(1))
 			->method('getAncestors')
 			->withConsecutive(
-				[$public_a_m],
 				[$public_trait_t1_m])
 			->will($this->onConsecutiveCalls(
-				[],
 				[$public_a_m]
 			));
 
