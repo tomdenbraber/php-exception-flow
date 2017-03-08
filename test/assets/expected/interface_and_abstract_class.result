@@ -1,0 +1,24 @@
+{main}:
+	encounters: []
+use_a_m:
+	encounters: [logicexception, unexpectedvalueexception]
+use_a_n:
+	encounters: [runtimeexception, logicexception]
+use_b_m:
+	encounters: [logicexception, unexpectedvalueexception]
+use_b_n:
+	encounters: [runtimeexception, logicexception]
+A::m:
+	encounters: []
+A::n:
+	encounters: []
+B::m:
+	encounters: []
+B::n:
+	encounters: [runtimeexception]
+C::m:
+	encounters: [logicexception]
+C::n:
+	encounters: [logicexception]
+D::m:
+	encounters: [unexpectedvalueexception]

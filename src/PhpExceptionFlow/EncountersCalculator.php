@@ -4,6 +4,7 @@ namespace PhpExceptionFlow;
 use PhpExceptionFlow\FlowCalculator\FlowCalculatorInterface;
 use PhpExceptionFlow\FlowCalculator\TraversingCalculatorInterface;
 use PhpExceptionFlow\FlowCalculator\WrappingCalculatorInterface;
+use PhpExceptionFlow\Scope\Scope;
 
 //todo improve naming.
 class EncountersCalculator {
@@ -36,12 +37,18 @@ class EncountersCalculator {
 	public function calculateEncounters(array $scopes) {
 		foreach ($scopes as $scope) {
 			$this->immutable_flow_calculator->determineForScope($scope);
+			// add this scope and all its nested scopes to the worklist, so that we can start analysing
+			// the propagates and uncaughts.
 			$this->addToWorklist($scope);
+			foreach ($this->getNestedScopes($scope) as $nested_scope) {
+				$this->addToWorklist($nested_scope);
+			}
 		}
 
 		while (false !== ($scope = $this->fetchFromWorklist())) {
+			print sprintf("Fetched scope with name %s; still %d scopes on worklist\n", $scope->getName(), count($this->worklist));
 			$this->mutable_flow_calculator->determineForScope($scope);
-			foreach ($this->getChangedScopesDueToTraverse($this->mutable_flow_calculator) as $scope) {
+			if ($this->mutable_flow_calculator->scopeHasChanged($scope) === true) {
 				$this->addAffectedScopesToWorklist($scope);
 			}
 		}
@@ -88,21 +95,17 @@ class EncountersCalculator {
 	}
 
 	/**
-	 * Will recursively find all TraverserCalculatorInterface wrapped by the given $calculator, and return the result
-	 * of merging their changed scopes
-	 * @param FlowCalculatorInterface $calculator
-	 * @return Scope[]
+	 * Collects all scopes that are nested by the given scope (via GuardedScopes)
+	 * @param Scope $scope
+	 * @return array
 	 */
-	private function getChangedScopesDueToTraverse(FlowCalculatorInterface $calculator) {
-		$changed = [];
-		if ($calculator instanceof TraversingCalculatorInterface) {
-			$changed = $calculator->getScopesChangedDuringLastTraverse();
-		} else if ($calculator instanceof WrappingCalculatorInterface) {
-			foreach ($calculator->getWrappedCalculators() as $wrapped_calculator) {
-				$changed = array_merge($changed, $this->getChangedScopesDueToTraverse($wrapped_calculator));
-			}
+	private function getNestedScopes(Scope $scope) {
+		$nested_scopes = [];
+		foreach ($scope->getGuardedScopes() as $guarded_scope) {
+			$inclosed = $guarded_scope->getInclosedScope();
+			$nested_scopes[] = $inclosed;
+			$nested_scopes = array_merge($nested_scopes, $this->getNestedScopes($inclosed));
 		}
-		return $changed;
+		return $nested_scopes;
 	}
-
 }

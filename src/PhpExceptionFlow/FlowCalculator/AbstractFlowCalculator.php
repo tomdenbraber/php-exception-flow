@@ -1,11 +1,11 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
-use PHPTypes\Type;
+use PhpExceptionFlow\Exception_;
+use PhpExceptionFlow\Scope\Scope;
 
 abstract class AbstractFlowCalculator implements FlowCalculatorInterface {
-	/** @var \SplObjectStorage|Type[][] $scopes */
+	/** @var \SplObjectStorage|Exception_[][] $scopes */
 	protected $scopes;
 
 	public function __construct() {
@@ -15,7 +15,7 @@ abstract class AbstractFlowCalculator implements FlowCalculatorInterface {
 	/**
 	 * @param Scope $scope
 	 * @throws \UnexpectedValueException
-	 * @return Type[]
+	 * @return Exception_[]
 	 */
 	public function getForScope(Scope $scope) {
 		if ($this->scopes->contains($scope) === false) {

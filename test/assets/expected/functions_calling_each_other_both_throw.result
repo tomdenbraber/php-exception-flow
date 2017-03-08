@@ -1,0 +1,6 @@
+{main}:
+	encounters: []
+a:
+	encounters: [badfunctioncallexception, runtimeexception]
+b:
+	encounters: [runtimeexception, badfunctioncallexception]

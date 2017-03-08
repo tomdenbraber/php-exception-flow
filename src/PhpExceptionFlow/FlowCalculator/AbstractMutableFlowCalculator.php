@@ -1,8 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
-use PHPTypes\Type;
+use PhpExceptionFlow\Scope\Scope;
 
 abstract class AbstractMutableFlowCalculator extends AbstractFlowCalculator {
 	/** @var \SplObjectStorage $has_changed */

@@ -2,7 +2,7 @@
 namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\NodeTraverser;
@@ -27,8 +27,8 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->ast_throws_collector = $this->createMock(ThrowsCollector::class);
 		$this->raises_calculator = new RaisesCalculator($this->ast_traverser, $this->ast_throws_collector);
 
-		$this->xyz_type = $this->createType("xyz");
-		$this->abc_type = $this->createType("abc");
+		$this->xyz_type = $this->createExceptionMock("xyz");
+		$this->abc_type = $this->createExceptionMock("abc");
 	}
 
 	public function testGetTypeReturnsRaises() {
@@ -76,14 +76,21 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 			->with($this->equalTo("type"), $this->anything())
 			->willReturn($this->abc_type);
 
-
 		$this->ast_throws_collector->expects($this->exactly(1))
 			->method("getThrows")
 			->with()
 			->willReturn(array($throw_stmt1_mock, $throw_stmt2_mock));
 
 		$this->raises_calculator->determineForScope($scope_mock);
-		$this->assertEquals(array($this->xyz_type, $this->abc_type), $this->raises_calculator->getForScope($scope_mock));
+
+		$types_scope = [];
+		foreach ($this->raises_calculator->getForScope($scope_mock) as $exception) {
+			$types_scope[] = $exception->getType();
+		}
+
+		$this->assertEquals($this->xyz_type, $types_scope[0]);
+		$this->assertEquals($this->abc_type, $types_scope[1]);
+		$this->assertCount(2, $types_scope);
 	}
 
 	public function testWithMultipleAndThrowsReturnsCorrectExceptions() {
@@ -119,15 +126,26 @@ class RaisesCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->raises_calculator->determineForScope($scope_1_mock);
 		$this->raises_calculator->determineForScope($scope_2_mock);
 
-		$this->assertEquals(array($this->xyz_type), $this->raises_calculator->getForScope($scope_1_mock));
-		$this->assertEquals(array($this->abc_type), $this->raises_calculator->getForScope($scope_2_mock));
+		$types_scope_1 = [];
+		foreach ($this->raises_calculator->getForScope($scope_1_mock) as $exception) {
+			$types_scope_1[] = $exception->getType();
+		}
+		$types_scope_2 = [];
+		foreach ($this->raises_calculator->getForScope($scope_2_mock) as $exception) {
+			$types_scope_2[] = $exception->getType();
+		}
+
+		$this->assertEquals($this->xyz_type, $types_scope_1[0]);
+		$this->assertEquals($this->abc_type, $types_scope_2[0]);
+		$this->assertCount(1, $types_scope_1);
+		$this->assertCount(1, $types_scope_2);
 	}
 
 	/**
 	 * @param string $userType
 	 * @return Type
 	 */
-	private function createType($userType) {
+	private function createExceptionMock($userType) {
 		return new Type(Type::TYPE_OBJECT, array(), $userType);
 	}
 }

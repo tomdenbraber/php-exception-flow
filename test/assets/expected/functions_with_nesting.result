@@ -1,0 +1,10 @@
+{main}:
+	encounters: []
+a:
+	encounters: []
+	try
+		encounters: [unexpectedvalueexception]
+	catch#0 catches: [unexpectedvalueexception], could catch: [unexpectedvalueexception]
+	uncaught: []
+b:
+	encounters: [unexpectedvalueexception]

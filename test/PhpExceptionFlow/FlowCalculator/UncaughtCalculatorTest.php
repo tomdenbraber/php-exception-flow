@@ -2,10 +2,12 @@
 
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\GuardedScope;
-use PhpExceptionFlow\Scope;
-use PhpExceptionFlow\ScopeVisitor\CaughtExceptionTypesCalculator;
+use PhpExceptionFlow\Exception_;
+use PhpExceptionFlow\Scope\GuardedScope;
+use PhpExceptionFlow\Scope\Scope;
+use PhpExceptionFlow\Scope\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpParser\Node\Stmt\Catch_;
+use PHPTypes\Type;
 
 class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 	/** @var UncaughtCalculator $uncaught_calculator */
@@ -37,6 +39,11 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$inclosed_scope_mock = $this->createMock(Scope::class);
 		$catch_clause_mock = $this->createMock(Catch_::class);
 
+		$type_a = $this->createType("a");
+		$type_b = $this->createType("b");
+		$exception_b = $this->createExceptionMock("b");
+		$exception_c = $this->createExceptionMock("c");
+
 		$enclosing_scope_mock->expects($this->once())
 			->method("getGuardedScopes")
 			->willReturn(array($guarded_scope_mock));
@@ -51,17 +58,17 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->catch_clause_type_resolver->expects($this->once())
 			->method("getCaughtTypesForClause")
 			->with($catch_clause_mock)
-			->willReturn(array("a", "b"));
+			->willReturn(array($type_a, $type_b));
 
 		$this->encounters_calculator->expects($this->once())
 			->method("getForScope")
 			->with($inclosed_scope_mock)
-			->willReturn(array("b", "c"));
+			->willReturn(array($exception_b, $exception_c));
 
 		$this->uncaught_calculator->determineForScope($enclosing_scope_mock);
-		$this->assertEquals(array("c"), $this->uncaught_calculator->getForScope($enclosing_scope_mock));
-		$this->assertEquals(array("c"), $this->uncaught_calculator->getForGuardedScope($guarded_scope_mock));
-		$this->assertEquals(array("b"), $this->uncaught_calculator->getCaughtExceptions($catch_clause_mock));
+		$this->assertEquals([$exception_c], $this->uncaught_calculator->getForScope($enclosing_scope_mock));
+		$this->assertEquals([$exception_c], $this->uncaught_calculator->getForGuardedScope($guarded_scope_mock));
+		$this->assertEquals([$exception_b], $this->uncaught_calculator->getCaughtExceptions($catch_clause_mock));
 	}
 
 	public function testUncaughtCorrectlyModeledWithMultipleGuardedScopesWithMultipleCatchClauses() {
@@ -73,6 +80,13 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$catch_clause_1_1_mock = $this->createMock(Catch_::class);
 		$catch_clause_1_2_mock = $this->createMock(Catch_::class);
 		$catch_clause_2_1_mock = $this->createMock(Catch_::class);
+
+		$type_a = $this->createType("a");
+		$type_b = $this->createType("b");
+		$type_c = $this->createType("c");
+		$exception_a = $this->createExceptionMock("a");
+		$exception_b = $this->createExceptionMock("b");
+		$exception_c = $this->createExceptionMock("c");
 
 		$enclosing_scope_mock->expects($this->once())
 			->method("getGuardedScopes")
@@ -102,8 +116,8 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 				array($inclosed_scope_1_mock),
 				array($inclosed_scope_2_mock))
 			->will($this->onConsecutiveCalls(
-				array("b", "c", "a"),
-				array("b")
+				array($exception_b, $exception_c, $exception_a),
+				array($exception_b)
 			));
 
 
@@ -115,19 +129,21 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 				array($catch_clause_1_2_mock),
 				array($catch_clause_2_1_mock))
 			->will($this->onConsecutiveCalls(
-				array("b"),
-				array("a", "b", "c"),
-				array("c")
+				array($type_b),
+				array($type_a, $type_b, $type_c),
+				array($type_c)
 			));
 
 		$this->uncaught_calculator->determineForScope($enclosing_scope_mock);
-		$this->assertEquals(array("b"), $this->uncaught_calculator->getForScope($enclosing_scope_mock)); //from second guarded scope
-		$this->assertEquals(array(), $this->uncaught_calculator->getForGuardedScope($guarded_scope_1_mock));
-		$this->assertEquals(array("b"), $this->uncaught_calculator->getForGuardedScope($guarded_scope_2_mock));
 
-		$this->assertEquals(array("b"), $this->uncaught_calculator->getCaughtExceptions($catch_clause_1_1_mock));
-		$this->assertEquals(array("c", "a"), $this->uncaught_calculator->getCaughtExceptions($catch_clause_1_2_mock));
-		$this->assertEquals(array(), $this->uncaught_calculator->getCaughtExceptions($catch_clause_2_1_mock));
+
+		$this->assertEquals([$exception_b], $this->uncaught_calculator->getCaughtExceptions($catch_clause_1_1_mock));
+		$this->assertEquals([$exception_c, $exception_a], $this->uncaught_calculator->getCaughtExceptions($catch_clause_1_2_mock));
+		$this->assertEquals([], $this->uncaught_calculator->getCaughtExceptions($catch_clause_2_1_mock));
+
+		$this->assertEquals([$exception_b], $this->uncaught_calculator->getForScope($enclosing_scope_mock)); //from second guarded scope
+		$this->assertEquals([], $this->uncaught_calculator->getForGuardedScope($guarded_scope_1_mock));
+		$this->assertEquals([$exception_b], $this->uncaught_calculator->getForGuardedScope($guarded_scope_2_mock));
 	}
 
 
@@ -141,6 +157,11 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$guarded_scope_mock = $this->createMock(GuardedScope::class);
 		$inclosed_scope_mock = $this->createMock(Scope::class);
 		$catch_clause_mock = $this->createMock(Catch_::class);
+
+		$type_a = $this->createType("a");
+		$type_b = $this->createType("b");
+		$exception_b = $this->createExceptionMock("b");
+		$exception_c = $this->createExceptionMock("c");
 
 		$enclosing_scope_mock->expects($this->once())
 			->method("getGuardedScopes")
@@ -156,12 +177,12 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->catch_clause_type_resolver->expects($this->once())
 			->method("getCaughtTypesForClause")
 			->with($catch_clause_mock)
-			->willReturn(array("a", "b"));
+			->willReturn(array($type_a, $type_b));
 
 		$this->encounters_calculator->expects($this->once())
 			->method("getForScope")
 			->with($inclosed_scope_mock)
-			->willReturn(array("b", "c"));
+			->willReturn(array($exception_b, $exception_c));
 
 		$this->uncaught_calculator->determineForScope($enclosing_scope_mock);
 
@@ -175,6 +196,11 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$guarded_scope_mock = $this->createMock(GuardedScope::class);
 		$inclosed_scope_mock = $this->createMock(Scope::class);
 		$catch_clause_mock = $this->createMock(Catch_::class);
+
+		$type_a = $this->createType("a");
+		$type_b = $this->createType("b");
+		$exception_b = $this->createExceptionMock("b");
+		$exception_c = $this->createExceptionMock("c");
 
 		$enclosing_scope_mock->expects($this->exactly(2))
 			->method("getGuardedScopes")
@@ -190,12 +216,12 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->catch_clause_type_resolver->expects($this->exactly(2))
 			->method("getCaughtTypesForClause")
 			->with($catch_clause_mock)
-			->willReturn(array("a", "b"));
+			->willReturn(array($type_a, $type_b));
 
 		$this->encounters_calculator->expects($this->exactly(2))
 			->method("getForScope")
 			->with($inclosed_scope_mock)
-			->willReturn(array("b", "c"));
+			->willReturn(array($exception_b, $exception_c));
 
 		$this->uncaught_calculator->determineForScope($enclosing_scope_mock); //now changed,
 		$this->assertTrue($this->uncaught_calculator->scopeHasChanged($enclosing_scope_mock));
@@ -204,4 +230,21 @@ class UncaughtCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertFalse($this->uncaught_calculator->scopeHasChanged($enclosing_scope_mock, false));
 		$this->assertFalse($this->uncaught_calculator->scopeHasChanged($enclosing_scope_mock, true));
 	}
+
+	/**
+	 * @param string $type_str
+	 * @return Exception_
+	 */
+	private function createExceptionMock(string $type_str) {
+		$exception_mock = $this->createMock(Exception_::class);
+		$type = $this->createType($type_str);
+		$exception_mock->method("getType")
+			->willReturn($type);
+		return $exception_mock;
+	}
+
+	private function createType(string $type_str) {
+		return new Type(Type::TYPE_OBJECT, [], $type_str);
+	}
+
 }

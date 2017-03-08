@@ -1,0 +1,6 @@
+<?php
+try {
+	try {
+		throw new \InvalidArgumentException();
+	} catch (DomainException $de) {}
+} catch (\InvalidArgumentException $le) {}

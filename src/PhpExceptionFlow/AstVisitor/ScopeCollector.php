@@ -1,18 +1,18 @@
 <?php
 namespace PhpExceptionFlow\AstVisitor;
 
-use PhpExceptionFlow\GuardedScope;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Scope\Collector\CallableScopeCollector;
+use PhpExceptionFlow\Scope\GuardedScope;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
-use PHPTypes\State;
 
 /**
  * Class ScopeCollector
  * This class Visits the AST and collects all Scopes and GuardedScopes it encounters.
  * @package PhpExceptionFlow\Visitor
  */
-class ScopeCollector extends NodeVisitorAbstract {
+class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollector {
 	/** @var Scope $main_scope */
 	private $main_scope;
 	/** @var Scope[] $function_scopes, indexed by name */
@@ -27,77 +27,87 @@ class ScopeCollector extends NodeVisitorAbstract {
 	/** @var GuardedScope current_guarded_scope */
 	private $current_guarded_scope;
 
+	private $current_namespace = "";
 
 	/** @var Node\Stmt\ClassLike */
 	private $current_class;
 
-	/** @var State $state */
-	private $state;
+	/** @var Node[] */
+	private $current_scope_node_stack = [];
+	/** @var Node[][] */
+	private $node_stacks = [];
 
-	public function __construct(State $state) {
+	/** @var int indicates how many try/catch nodes still reside in the AST while they should be removed */
+	private $try_catches_to_be_removed = 0;
+
+	public function __construct() {
 		$this->main_scope = new Scope("{main}");
 		$this->current_scope = $this->main_scope;
-		$this->state = $state;
 
 		$this->current_guarded_scope = null;
 		$this->current_class = null;
 	}
 
-	public function beforeTraverse(array $nodes) {
-		//add all top level nodes that are not declarations/try-catches to the main scope
-		$this->addInstructionsToScope($this->main_scope, $nodes);
-	}
-
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\ClassLike) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->current_namespace = strtolower(implode("\\", $node->name->parts));
+		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = $node;
 		} else if ($node instanceof Node\FunctionLike) {
-			$name = "";
 			switch (get_class($node)) {
 				case Node\Expr\Closure::class:
 					//todo: implement correctly, thinking of how closures behave.
-					$name = md5(random_bytes(64));
+					//currently do nothing to not interfere with 'normal' function scopes
 					break;
 				case Node\Stmt\Function_::class:
 					/** @var Node\Stmt\Function_ $node */
 					$name = $node->name;
+					$this->current_scope = new Scope($name);
 					break;
 				case Node\Stmt\ClassMethod::class:
 					/** @var Node\Stmt\ClassMethod $node */
 					$name = $this->current_class->name . "::" . $node->name;
+					$this->current_scope = new Scope($name);
 					break;
 				default:
 					throw new \LogicException("Unknown implementation of FunctionLike: " . get_class($node));
 			}
-
-			$this->current_scope = new Scope($name);
-			$this->addInstructionsToScope($this->current_scope, $node->getStmts());
 		} else if ($node instanceof Node\Stmt\TryCatch) {
-			$enclosing_scope = $this->current_scope;
-			$inclosed_scope = new Scope(md5(random_bytes(64)));
-			$new_guarded_scope = new GuardedScope($enclosing_scope, $inclosed_scope);
-			$enclosing_scope->addGuardedScope($new_guarded_scope);
-			$inclosed_scope->setEnclosingGuardedScope($new_guarded_scope);
-			$this->addInstructionsToScope($inclosed_scope, $node->stmts);
+			$enclosing = $this->current_scope;
+			$inclosed = new Scope(md5(random_bytes(64)));
+			$guarded_scope = new GuardedScope($enclosing, $inclosed);
+			$inclosed->setEnclosingGuardedScope($guarded_scope);
+			$enclosing->addGuardedScope($guarded_scope);
+			// switch node stacks
+			$this->node_stacks[] = $this->current_scope_node_stack;
+			$this->current_scope_node_stack = [];
 
-			$this->current_scope = $inclosed_scope;
-			$this->current_guarded_scope = $new_guarded_scope;
+			$this->current_scope = $inclosed;
+			$this->current_guarded_scope = $guarded_scope;
 		} else if ($node instanceof Node\Stmt\Catch_) {
 			$this->current_guarded_scope->addCatchClause($node);
+		} else {
+			$this->current_scope_node_stack[] = $node;
 		}
 	}
 
 	public function leaveNode(Node $node) {
-		if ($node instanceof Node\Stmt\ClassLike) {
+		if ($node instanceof Node\Stmt\Namespace_) {
+			$this->current_namespace = "";
+		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = null;
 		} else if ($node instanceof Node\FunctionLike) {
 			// go back to main scope when we leave a function
 			if ($node instanceof Node\Stmt\Function_) {
-				$this->function_scopes[$node->name] = $this->current_scope;
+				$this->function_scopes[strtolower($node->name)] = $this->current_scope;
+				$this->current_scope = $this->main_scope;
 			} else if ($node instanceof Node\Stmt\ClassMethod) {
-				$this->method_scopes[strtolower($this->current_class->name)][$node->name] = $this->current_scope;
+				$cls_name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($this->current_class->name) : strtolower($this->current_class->name);
+				$this->method_scopes[$cls_name][strtolower($node->name)] = $this->current_scope;
+				$this->current_scope = $this->main_scope;
+			} else if ($node instanceof Node\Expr\Closure) {
+				//todo: implement correct closure handling
 			}
-			$this->current_scope = $this->main_scope;
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			//a scope inside a try catch can never be a function scope, so add to non-function scopes
 			$this->non_function_scopes[] = $this->current_scope;
@@ -109,6 +119,41 @@ class ScopeCollector extends NodeVisitorAbstract {
 			} else {
 				$this->current_guarded_scope = null;
 			}
+			//restore the node stack of the enclosing scope
+			$this->current_scope_node_stack = array_pop($this->node_stacks);
+			$this->try_catches_to_be_removed += 1;
+		} else if ($node instanceof Node\Stmt\Catch_) {
+			//skip it, it is also added via GuardedScope->addCatchClause
+		} else {
+			$popped_node = array_pop($this->current_scope_node_stack);
+			if ($popped_node !== $node) {
+				throw new \LogicException(sprintf("Node popped from stack does not correspond with node that is left: %s (left) vs %s (popped).", $node->getType(), $popped_node->getType()));
+			}
+			if (count($this->current_scope_node_stack) === 0) { //this node is directly below the current scope level, so add it to the current scope
+				$this->current_scope->addInstruction($node);
+			}
+
+			/**
+			 * guarded scopes should not have their instructions inserted into normal scopes.
+			 * Therefore, remove the try/catch (and consequently, all its children) from the current node
+			 */
+			if ($this->try_catches_to_be_removed > 0) {
+				$before = $this->try_catches_to_be_removed;
+				foreach ($node->getSubNodeNames() as $sub_node_name) {
+					if (is_array($node->$sub_node_name) === true) {
+						foreach ($node->$sub_node_name as $i => $stmt) {
+							if ($stmt instanceof Node\Stmt\TryCatch === true) {
+								unset($node->$sub_node_name[$i]);
+								$this->try_catches_to_be_removed -= 1;
+							}
+						}
+					}
+				}
+				if ($before !== $this->try_catches_to_be_removed) {
+					return $node; //indicates that we have changed the node; if we do not change anything, there is no need to return it.
+				}
+			}
+
 		}
 	}
 
@@ -162,19 +207,5 @@ class ScopeCollector extends NodeVisitorAbstract {
 	 */
 	public function getAllScopes() {
 		return array_merge(array($this->main_scope), $this->getFunctionScopes(true), $this->getMethodScopes(true), $this->non_function_scopes);
-	}
-
-	/**
-	 * @param Scope $scope
-	 * @param array $nodes
-	 */
-	private function addInstructionsToScope(Scope $scope, array $nodes) {
-		foreach ($nodes as $stmt) {
-			if (($stmt instanceof Node\Stmt\ClassLike) === false &&
-				($stmt instanceof Node\FunctionLike) === false &&
-				($stmt instanceof Node\Stmt\TryCatch) === false) {
-				$scope->addInstruction($stmt);
-			}
-		}
 	}
 }

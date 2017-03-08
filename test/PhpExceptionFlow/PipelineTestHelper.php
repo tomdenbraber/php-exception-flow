@@ -1,97 +1,117 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\AstBridge\Parser\FileParserInterface as AstParser;
+use PhpExceptionFlow\AstBridge\System as AstSystem;
+use PhpExceptionFlow\AstBridge\SystemTraverser;
 use PhpExceptionFlow\AstVisitor;
-use PhpExceptionFlow\CHA\AppliesToCalculator;
-use PhpExceptionFlow\CHA\AppliesToVisitor;
-use PhpExceptionFlow\CHA\MethodComparator;
+use PhpExceptionFlow\CallGraphConstruction\MethodResolver;
+use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
+use PhpExceptionFlow\CfgBridge\SystemFactoryInterface;
+use PhpExceptionFlow\CfgBridge\System as CfgSystem;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
-use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpParser;
 use PHPCfg;
 use PHPTypes;
 
 class PipelineTestHelper {
 	/**
-	 * @param PhpParser\Parser $php_parser
-	 * @param $code
-	 * @return null|PhpParser\Node[]
+	 * @param AstParser $php_parser
+	 * @param $filename
+	 * @return AstSystem
 	 */
-	public static function getAst(PhpParser\Parser $php_parser, $code) {
-		return $php_parser->parse($code);
+	public static function getAstSystem(AstParser $php_parser, $filename) {
+		$system = new AstSystem();
+		$ast = $php_parser->parse($filename);
+		$system->addAst($filename, $ast);
+		return $system;
 	}
 
 	/**
-	 * @param PhpParser\Parser $php_parser
-	 * @param PhpParser\Node[] $ast
-	 * @return PHPCfg\Script
+	 * @param SystemFactoryInterface $cfg_system_factory
+	 * @param AstSystem $ast_system
+	 * @return CfgSystem
 	 */
-	public static function simplifyingCfgPass(PhpParser\Parser $php_parser, array $ast) {
-		/** @var \PHPCfg\Parser $cfg_parser */
-		$cfg_parser = new PHPCfg\Parser($php_parser);
+	public static function simplifyingCfgPass(SystemFactoryInterface $cfg_system_factory, AstSystem $ast_system) {
+
+		$cfg_system = $cfg_system_factory->create($ast_system);
+
+		$cfg_traverser = new PHPCfg\Traverser;
+		$cfg_system_traverser = new CfgBridge\SystemTraverser($cfg_traverser);
 		$simplifier = new PHPCfg\Visitor\Simplifier;
-
-		$initial_cfg_traverser = new PHPCfg\Traverser;
-		$initial_cfg_traverser->addVisitor($simplifier);
-
-		/** @var PHPCfg\Script $script */
-		$script = $cfg_parser->parseAst($ast, "foo.php");
-		$initial_cfg_traverser->traverse($script);
-		return $script;
+		$cfg_system_traverser->addVisitor($simplifier);
+		$cfg_system_traverser->traverse($cfg_system);
+		return $cfg_system;
 	}
 
-	public static function calculateState(PHPCfg\Script $script) {
+	/**
+	 * @param CfgSystem $cfg_system
+	 * @return PHPTypes\State
+	 * @throws \InvalidArgumentException
+	 */
+	public static function calculateState(CfgSystem $cfg_system) {
 		$type_reconstructor = new PHPTypes\TypeReconstructor();
-		$state = new PHPTypes\State(array($script));
+
+		$scripts = [];
+		foreach ($cfg_system->getFilenames() as $filename) {
+			$scripts[] = $cfg_system->getScript($filename);
+		}
+
+		$state = new PHPTypes\State($scripts);
 		$type_reconstructor->resolve($state);
 		return $state;
 	}
 
 	/**
-	 * @param PHPCfg\Script $script
+	 * @param CfgSystem $cfg_system
 	 * @return PHPCfg\Visitor\AstNodeToCfgNodesCollector
 	 */
-	public static function linkingCfgPass(PHPCfg\Script $script) {
-		$linking_cfg_traverser = new PHPCfg\Traverser;
+	public static function linkingCfgPass(CfgSystem $cfg_system) {
+		$cfg_traverser = new PHPCfg\Traverser;
+		$cfg_system_traverser = new CfgBridge\SystemTraverser($cfg_traverser);
 		$operand_ast_node_linker = new PHPCfg\Visitor\OperandAstNodeLinker();
 		$ast_nodes_collector = new PHPCfg\Visitor\AstNodeToCfgNodesCollector();
-		$linking_cfg_traverser->addVisitor($operand_ast_node_linker);
-		$linking_cfg_traverser->addVisitor($ast_nodes_collector);
-		$linking_cfg_traverser->traverse($script);
+		$cfg_system_traverser->addVisitor($operand_ast_node_linker);
+		$cfg_system_traverser->addVisitor($ast_nodes_collector);
+		$cfg_system_traverser->traverse($cfg_system);
 		return $ast_nodes_collector;
 	}
 
 	/**
 	 * @param PHPTypes\State $state
 	 * @param PHPCfg\Visitor\AstNodeToCfgNodesCollector $ast_nodes_collector
-	 * @param PhpParser\Node[] $ast
+	 * @param AstSystem $ast_system
 	 * @return AstVisitor\ScopeCollector
 	 */
-	public static function calculateScopes(PHPTypes\State $state, PHPCfg\Visitor\AstNodeToCfgNodesCollector $ast_nodes_collector, array $ast) {
-		// now do a walk over the AST to collect the scopes
-		$scope_collector = new AstVisitor\ScopeCollector($state);
+	public static function calculateScopes(PHPTypes\State $state, PHPCfg\Visitor\AstNodeToCfgNodesCollector $ast_nodes_collector, AstSystem $ast_system) {
 		$ast_traverser = new PhpParser\NodeTraverser;
-		$ast_traverser->addVisitor(new AstVisitor\TypesToAstVisitor($ast_nodes_collector->getLinkedOps(), $ast_nodes_collector->getLinkedOperands()));
-		$ast_traverser->addVisitor($scope_collector);
-		$ast_traverser->traverse($ast);
+		$ast_system_traverser = new SystemTraverser($ast_traverser);
+
+		$scope_collector = new AstVisitor\ScopeCollector($state);
+		$ast_system_traverser->addVisitor(new AstVisitor\TypesToAstVisitor($ast_nodes_collector->getLinkedOps(), $ast_nodes_collector->getLinkedOperands()));
+		$ast_system_traverser->addVisitor($scope_collector);
+
+		// now do a walk over the AST to collect the scopes
+		$ast_system_traverser->traverse($ast_system);
 
 		return $scope_collector;
 	}
 
-	public static function calculateAppliesTo($ast, $state) {
-		$partial_order = new PartialOrder(new MethodComparator($state->classResolves));
+	/**
+	 * @param AstSystem $ast_system
+	 * @param PHPTypes\State $state
+	 * @return array
+	 */
+	public static function calculateMethodMap(AstSystem $ast_system, PHPTypes\State $state) {
+		$partial_order = new PartialOrder(new MethodComparator($state));
 		$method_collecting_visitor = new AstVisitor\MethodCollectingVisitor($partial_order);
 
-		$node_traverser = new PhpParser\NodeTraverser();
-		$node_traverser->addVisitor($method_collecting_visitor);
-		$node_traverser->traverse($ast);
+		$ast_traverser = new PhpParser\NodeTraverser();
+		$ast_system_traverser = new SystemTraverser($ast_traverser);
+		$ast_system_traverser->addVisitor($method_collecting_visitor);
+		$ast_system_traverser->traverse($ast_system);
 
-		$applies_to_calculator = new AppliesToCalculator($partial_order, $state->classResolvedBy);
-		$applies_to_visitor = new AppliesToVisitor($applies_to_calculator);
-		$partial_order_traverser = new TopDownBreadthFirstTraverser();
-		$partial_order_traverser->addVisitor($applies_to_visitor);
-		$partial_order_traverser->traverse($partial_order);
-
-		return $applies_to_visitor->getClassToMethodMap();
+		$method_resolver = new MethodResolver($state);
+		return $method_resolver->fromPartialOrder($partial_order);
 	}
 }

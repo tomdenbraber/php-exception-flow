@@ -1,0 +1,14 @@
+<?php
+class E {
+	public function k() {
+		throw new BadMethodCallException();
+	}
+}
+
+function some_fn ($e) {
+	$e->k();
+}
+
+$e = new E();
+some_fn($e);
+

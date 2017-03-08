@@ -1,0 +1,20 @@
+<?php
+interface A {
+    public function m();
+}
+
+class B implements A {
+    public function m() {
+        throw new RuntimeException();
+    }
+}
+
+class C implements A {
+    public function m() {
+        throw new LogicException();
+    }
+}
+
+function use_a(A $a) {
+    $a->m();
+}

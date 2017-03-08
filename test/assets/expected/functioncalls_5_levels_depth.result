@@ -1,0 +1,13 @@
+{main}:
+	encounters: [logicexception]
+a:
+	encounters: [logicexception]
+b:
+	encounters: [logicexception]
+c:
+	encounters: [logicexception]
+d:
+	encounters: [logicexception]
+e:
+	encounters: [logicexception]
+

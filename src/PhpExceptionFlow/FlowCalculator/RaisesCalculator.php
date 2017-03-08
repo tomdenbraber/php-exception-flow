@@ -2,7 +2,8 @@
 namespace PhpExceptionFlow\FlowCalculator;
 
 use PhpExceptionFlow\AstVisitor\ThrowsCollector;
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Exception_;
+use PhpExceptionFlow\Scope\Scope;
 use PhpParser\NodeTraverser;
 use PHPTypes\Type;
 
@@ -26,12 +27,13 @@ class RaisesCalculator extends AbstractFlowCalculator {
 		$instructions = $scope->getInstructions();
 		$this->ast_traverser->traverse($instructions);
 		$throw_nodes = $this->ast_throws_collector->getThrows();
-		$throw_types = [];
+		$exceptions = [];
 		foreach ($throw_nodes as $throw) {
-			$throw_types[] = $this->lowerType($throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN)));
+			$exception_type = $this->lowerType($throw->expr->getAttribute("type", new Type(Type::TYPE_UNKNOWN)));
+			$exceptions[] = new Exception_($exception_type, $throw, $scope);
 		}
 
-		$this->scopes[$scope] = $throw_types;
+		$this->scopes[$scope] = $exceptions;
 	}
 
 	public function getType() {
@@ -43,6 +45,12 @@ class RaisesCalculator extends AbstractFlowCalculator {
 		if ($type->hasSubtypes() === true) {
 			$subtypes = array_map(array($this, 'lowerType'), $type->subTypes);
 		}
-		return new Type($type->type, $subtypes, strtolower($type->userType));
+		if ($type->type === Type::TYPE_OBJECT) {
+			$user_type = strtolower($type->userType);
+		} else {
+			$user_type = null;
+		}
+
+		return new Type($type->type, $subtypes, $user_type);
 	}
 }

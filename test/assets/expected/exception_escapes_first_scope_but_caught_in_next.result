@@ -1,0 +1,10 @@
+{main}:
+	encounters: []
+	try
+		encounters: [invalidargumentexception]
+		try
+			encounters: [invalidargumentexception]
+		catch#0 catches: [], could catch: [domainexception]
+		uncaught: [invalidargumentexception]
+	catch#0 catches: [invalidargumentexception], could catch: [invalidargumentexception]
+	uncaught: []

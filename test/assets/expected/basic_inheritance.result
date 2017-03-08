@@ -1,0 +1,12 @@
+{main}:
+	encounters: []
+a_m:
+	encounters: [logicexception, unexpectedvalueexception]
+b_m:
+	encounters: [logicexception, unexpectedvalueexception]
+c_m:
+	encounters: [unexpectedvalueexception]
+A::m:
+	encounters: [logicexception]
+C::m:
+	encounters: [unexpectedvalueexception]

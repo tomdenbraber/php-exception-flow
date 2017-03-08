@@ -1,9 +1,0 @@
-<?php
-function a() {
-	throw new \InvalidArgumentException();
-}
------
-{main}:
-	encounters: []
-a:
-	encounters: [invalidargumentexception]

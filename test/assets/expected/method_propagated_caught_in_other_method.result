@@ -1,0 +1,10 @@
+{main}:
+	encounters: []
+A::m:
+	encounters: []
+	try
+		encounters: [badmethodcallexception]
+	catch#0 catches: [badmethodcallexception], could catch: [badmethodcallexception]
+	uncaught: []
+E::k:
+	encounters: [badmethodcallexception]

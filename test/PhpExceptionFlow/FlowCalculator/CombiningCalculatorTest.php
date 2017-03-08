@@ -1,7 +1,8 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
-use PhpExceptionFlow\Scope;
+use PhpExceptionFlow\Exception_;
+use PhpExceptionFlow\Scope\Scope;
 
 class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	/** @var CombiningCalculator $combining_calculator */
@@ -37,6 +38,9 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 	public function testReturnsOutputOfCalculatorWithOneCalculator() {
 		$scope_mock = $this->createMock(Scope::class);
 
+		$exc_a = $this->createMock(Exception_::class);
+		$exc_b = $this->createMock(Exception_::class);
+
 		$calc_mock_1 = $this->createMock(FlowCalculatorInterface::class);
 		$calc_mock_1->method("getType")
 			->willReturn("kaas");
@@ -48,11 +52,11 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$calc_mock_1->expects($this->once())
 			->method("getForScope")
 			->with($scope_mock)
-			->willReturn(array("a", "b"));
+			->willReturn(array($exc_a, $exc_b));
 
 		$this->combining_calculator->addCalculator($calc_mock_1);
 		$this->combining_calculator->determineForScope($scope_mock);
-		$this->assertEquals(array("a", "b"), $this->combining_calculator->getForScope($scope_mock));
+		$this->assertEquals(array($exc_a, $exc_b), $this->combining_calculator->getForScope($scope_mock));
 	}
 
 	public function testReturnsCombinedOutputOfCalculatorsWithMultipleCalculator() {
@@ -66,6 +70,15 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$calc_mock_2->method("getType")
 			->willReturn("fromage");
 
+		$exception_a = $this->createMock(Exception_::class);
+		$exception_a->method('getType')
+			->willReturn("a");
+		$exception_b = $this->createMock(Exception_::class);
+		$exception_b->method('getType')
+			->willReturn("b");
+		$exception_c = $this->createMock(Exception_::class);
+		$exception_c->method('getType')
+			->willReturn("c");
 
 		$calc_mock_1->expects($this->once())
 			->method("determineForScope")
@@ -77,11 +90,11 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 		$calc_mock_1->expects($this->once())
 			->method("getForScope")
 			->with($scope_mock)
-			->willReturn(array("a", "b"));
+			->willReturn(array($exception_a, $exception_b));
 		$calc_mock_2->expects($this->once())
 			->method("getForScope")
 			->with($scope_mock)
-			->willReturn(array("b", "c"));
+			->willReturn(array($exception_b, $exception_c));
 
 		$this->combining_calculator->addCalculator($calc_mock_1);
 		$this->combining_calculator->addCalculator($calc_mock_2);
@@ -89,7 +102,7 @@ class CombiningCalculatorTest extends \PHPUnit_Framework_TestCase {
 
 		$types = $this->combining_calculator->getForScope($scope_mock);
 		sort($types);
-		$this->assertEquals(array("a", "b", "c"), $types);
+		$this->assertEquals(array($exception_a, $exception_b, $exception_c), $types);
 	}
 
 	public function testScopeHasChangedWhenWrappedCalculatorsSaySo() {

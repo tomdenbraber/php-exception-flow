@@ -1,0 +1,6 @@
+{main}:
+	encounters: []
+	try
+		encounters: [invalidargumentexception]
+	catch#0 catches: [invalidargumentexception], could catch: [invalidargumentexception]
+	uncaught: []

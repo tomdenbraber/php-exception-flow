@@ -1,0 +1,14 @@
+<?php
+trait A {
+    public function m() {
+        throw new LogicException();
+    }
+}
+
+class UseA {
+    use A, B;
+
+    private function k() {
+        $this->m();
+    }
+}

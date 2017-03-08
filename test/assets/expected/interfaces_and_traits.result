@@ -1,0 +1,35 @@
+{main}:
+	encounters: []
+use_a_m:
+	encounters: [logicexception]
+use_a_n:
+	encounters: [logicexception]
+use_hasm_m:
+	encounters: [logicexception]
+use_hasn_n:
+	encounters: [logicexception]
+uses_uses_m_calls_m:
+	encounters: [logicexception]
+uses_uses_m_calls_n:
+	encounters: []
+uses_uses_both_overrides_both:
+	encounters: []
+use_uses_both:
+	encounters: [logicexception]
+A::m:
+	encounters: []
+A::n:
+	encounters: []
+HasM::m:
+	encounters: [logicexception]
+HasN::n:
+	encounters: [logicexception]
+UsesM::n:
+	encounters: []
+UsesN::m:
+	encounters: []
+UsesBothOverridesBoth::m:
+	encounters: []
+UsesBothOverridesBoth::n:
+	encounters: []
+

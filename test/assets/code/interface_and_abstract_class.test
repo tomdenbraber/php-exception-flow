@@ -1,0 +1,44 @@
+<?php
+interface A {
+    public function m();
+    public function n();
+}
+
+abstract class B implements A {
+    abstract public function m();
+    public function n() {
+        throw new RuntimeException();
+    }
+}
+
+class C extends B {
+    public function m() {
+        throw new LogicException();
+    }
+
+    public function n() {
+        throw new LogicException();
+    }
+}
+
+class D extends B {
+    public function m() {
+        throw new UnexpectedValueException();
+    }
+}
+
+function use_a_m(A $a) {
+    $a->m();
+}
+
+function use_a_n(A $a) {
+    $a->n();
+}
+
+function use_b_m(B $b) {
+    $b->m();
+}
+
+function use_b_n(B $b) {
+    $b->n();
+}

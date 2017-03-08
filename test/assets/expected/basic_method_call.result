@@ -1,0 +1,6 @@
+{main}:
+	encounters: []
+A::m:
+	encounters: [badmethodcallexception]
+E::k:
+	encounters: [badmethodcallexception]

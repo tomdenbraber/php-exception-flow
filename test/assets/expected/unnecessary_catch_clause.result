@@ -1,0 +1,7 @@
+{main}:
+	encounters: []
+	try
+		encounters: []
+	catch#0 catches: [], could catch: [badfunctioncallexception, badmethodcallexception]
+	catch#1 catches: [], could catch: []
+	uncaught: []

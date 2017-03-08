@@ -1,0 +1,15 @@
+<?php
+class A {
+    public function m() {
+        throw new Exception();
+    }
+}
+
+class B {
+    /** @var A $a */
+    private $a;
+
+    public function f() {
+        $this->a->m();
+    }
+}
