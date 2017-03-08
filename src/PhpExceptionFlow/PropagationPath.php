@@ -63,6 +63,13 @@ class PropagationPath {
 	}
 
 	/**
+	 * @return Scope
+	 */
+	public function getLastScopeInChain() {
+		return $this->scope_chain[count($this->scope_chain) - 1];
+	}
+
+	/**
 	 * @param Scope $scope
 	 * @return PropagationPath
 	 */

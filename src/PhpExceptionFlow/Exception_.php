@@ -56,10 +56,12 @@ class Exception_ {
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
 		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($called_scope, $caller_scope) === true) {
-				$this->propagation_paths[] = $propagation_path->addCall($called_scope, $caller_scope);
+			//check if the current call is not already covered in this chain
+			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($called_scope, $caller_scope) === false) {
+				if ($propagation_path->getLastScopeInChain() === $called_scope) {
+					$this->propagation_paths[] = $propagation_path->addCall($called_scope, $caller_scope);
+				}
 			}
-
 		}
 	}
 
