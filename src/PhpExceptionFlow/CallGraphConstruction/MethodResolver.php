@@ -9,7 +9,7 @@ use PHPTypes\State;
  * this class can be used to build a map from methods defined in interfaces/abstract classes/classes to implementation
  * of that method further down in the class hierarchy.
  */
-class OverridingMethodResolver implements MethodCallToMethodResolverInterface {
+class MethodResolver implements MethodCallToMethodResolverInterface {
 
 	/** @var State */
 	private $state;

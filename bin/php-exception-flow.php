@@ -16,7 +16,7 @@ use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
 use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CallGraphConstruction\CombiningClassMethodToMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\AppliesToMethodResolver;
-use PhpExceptionFlow\CallGraphConstruction\OverridingMethodResolver;
+use PhpExceptionFlow\CallGraphConstruction\MethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\AstCallNodeToScopeResolver;
 
 use PhpExceptionFlow\Scope\ScopeVisitor;
@@ -236,8 +236,8 @@ function calculateClassMethodToMethodMap(AstSystem $ast_system, PHPTypes\State $
 
 	print "Created partial order with methods\n";
 
-	$contract_method_resolver = new OverridingMethodResolver($state);
-	return $contract_method_resolver->fromPartialOrder($partial_order);
+	$method_resolver = new MethodResolver($state);
+	return $method_resolver->fromPartialOrder($partial_order);
 }
 
 function stringifyClassMethodToMethodMap(array $map) {

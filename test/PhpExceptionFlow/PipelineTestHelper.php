@@ -5,7 +5,7 @@ use PhpExceptionFlow\AstBridge\Parser\FileParserInterface as AstParser;
 use PhpExceptionFlow\AstBridge\System as AstSystem;
 use PhpExceptionFlow\AstBridge\SystemTraverser;
 use PhpExceptionFlow\AstVisitor;
-use PhpExceptionFlow\CallGraphConstruction\OverridingMethodResolver;
+use PhpExceptionFlow\CallGraphConstruction\MethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CfgBridge\SystemFactoryInterface;
 use PhpExceptionFlow\CfgBridge\System as CfgSystem;
@@ -111,7 +111,7 @@ class PipelineTestHelper {
 		$ast_system_traverser->addVisitor($method_collecting_visitor);
 		$ast_system_traverser->traverse($ast_system);
 
-		$contract_method_resolver = new OverridingMethodResolver($state);
-		return $contract_method_resolver->fromPartialOrder($partial_order);
+		$method_resolver = new MethodResolver($state);
+		return $method_resolver->fromPartialOrder($partial_order);
 	}
 }

@@ -6,14 +6,14 @@ use PhpExceptionFlow\Collection\PartialOrderInterface;
 use PHPTypes\State;
 
 class OverridingMethodResolverTest extends \PHPUnit_Framework_TestCase {
-	/** @var OverridingMethodResolver */
+	/** @var MethodResolver */
 	private $resolver;
 	/** @var State $state */
 	private $state;
 
 	public function setUp() {
 		$this->state = $this->createMock(State::class);
-		$this->resolver = new OverridingMethodResolver($this->state);
+		$this->resolver = new MethodResolver($this->state);
 	}
 
 	public function testWithEmptyOrderReturnsEmpty() {
