@@ -1,0 +1,12 @@
+<?php
+class A {
+    public function __construct() {
+        $this->throws_an_exception();
+    }
+
+    private function throws_an_exception() {
+        throw new LogicException();
+    }
+}
+
+$a = new A(); //throws logicexception
