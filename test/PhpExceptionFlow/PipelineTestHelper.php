@@ -5,17 +5,11 @@ use PhpExceptionFlow\AstBridge\Parser\FileParserInterface as AstParser;
 use PhpExceptionFlow\AstBridge\System as AstSystem;
 use PhpExceptionFlow\AstBridge\SystemTraverser;
 use PhpExceptionFlow\AstVisitor;
-use PhpExceptionFlow\CallGraphConstruction\AppliesToCalculator;
-use PhpExceptionFlow\CallGraphConstruction\AppliesToMethodResolver;
-use PhpExceptionFlow\CallGraphConstruction\AppliesToVisitor;
-use PhpExceptionFlow\CallGraphConstruction\ChaMethodResolver;
-use PhpExceptionFlow\CallGraphConstruction\CombiningClassMethodToMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\OverridingMethodResolver;
 use PhpExceptionFlow\CallGraphConstruction\MethodComparator;
 use PhpExceptionFlow\CfgBridge\SystemFactoryInterface;
 use PhpExceptionFlow\CfgBridge\System as CfgSystem;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
-use PhpExceptionFlow\Collection\PartialOrder\TopDownBreadthFirstTraverser;
 use PhpParser;
 use PHPCfg;
 use PHPTypes;
@@ -118,11 +112,6 @@ class PipelineTestHelper {
 		$ast_system_traverser->traverse($ast_system);
 
 		$contract_method_resolver = new OverridingMethodResolver($state);
-		$cha_method_resolver = new AppliesToMethodResolver($state->classResolvedBy);
-		$combining_method_resolver = new CombiningClassMethodToMethodResolver();
-		$combining_method_resolver->addResolver($contract_method_resolver);
-		$combining_method_resolver->addResolver($cha_method_resolver);
-
-		return $combining_method_resolver->fromPartialOrder($partial_order);
+		return $contract_method_resolver->fromPartialOrder($partial_order);
 	}
 }
