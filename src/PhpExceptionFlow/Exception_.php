@@ -56,13 +56,22 @@ class Exception_ {
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
 		foreach ($this->propagation_paths as $propagation_path) {
-			//check if the current call is not already covered in this chain
-			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($called_scope, $caller_scope) === false) {
-				if ($propagation_path->getLastScopeInChain() === $called_scope) {
-					$this->propagation_paths[] = $propagation_path->addCall($called_scope, $caller_scope);
+			if ($propagation_path->getLastScopeInChain() === $called_scope) {
+				$new_path = $propagation_path->addCall($called_scope, $caller_scope);
+				if ($this->pathAlreadyExists($new_path) === false) {
+					$this->propagation_paths[] = $new_path;
 				}
 			}
 		}
+	}
+
+	public function pathAlreadyExists(PropagationPath $path) {
+		foreach ($this->propagation_paths as $propagation_path) {
+			if ($path->getScopeChain() === $propagation_path->getScopeChain()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public function __toString() {
