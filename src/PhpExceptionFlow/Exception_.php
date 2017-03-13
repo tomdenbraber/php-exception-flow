@@ -1,7 +1,9 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Path\Propagates;
+use PhpExceptionFlow\Path\Uncaught;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
@@ -57,9 +59,18 @@ class Exception_ {
 	 * @param Scope $caller_scope
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
+		$this->addPropagationLink(new Propagates($caller_scope), $called_scope);
+	}
+
+	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
+		$this->addPropagationLink(new Uncaught($enclosing_scope, $escaped_scope), $escaped_scope->getInclosedScope());
+
+	}
+
+	private function addPropagationLink(PathEntryInterface $path_entry, Scope $last_scope) {
 		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->getLastEntryInChain()->getScope() === $called_scope) {
-				$new_path = $propagation_path->addEntry(new Propagates($caller_scope));
+			if ($propagation_path->getLastEntryInChain()->getScope() === $last_scope) {
+				$new_path = $propagation_path->addEntry($path_entry);
 				if ($this->pathAlreadyExists($new_path) === false) {
 					$this->propagation_paths[] = $new_path;
 				}
@@ -67,7 +78,8 @@ class Exception_ {
 		}
 	}
 
-	public function pathAlreadyExists(Path $path) {
+
+	private function pathAlreadyExists(Path $path) {
 		foreach ($this->propagation_paths as $existing_path) {
 			if ($path->equals($existing_path) === true) {
 				return true;
