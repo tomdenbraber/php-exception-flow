@@ -15,7 +15,7 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 	}
 
 	public function beforeTraverse(array $scopes) {
-		$this->result[] = "method;raises;propagates\n";
+		$this->result[] = "method;raises;propagates;uncaught\n";
 	}
 
 	public function enterScope(Scope $scope) {
@@ -24,17 +24,29 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 
 			$raises = [];
 			$propagates = [];
+			$uncaught = [];
 			foreach ($encounters as $exception) {
 				$paths = $exception->getPropagationPaths();
 				foreach ($paths as $path) {
-					if ($path->getLastEntryInChain() === $scope && count($path->getScopeChain()) === 1) {
-						$raises[] = $exception;
-					} else { //todo: handle nested scopes correctly, add uncaughts to exception chain.
-						$propagates[] = $exception;
+					$last_entry = $path->getLastEntryInChain();
+					if ($last_entry->getScope() === $scope) {
+						switch ($last_entry->getType()) {
+							case "raises":
+								$raises[] = $exception;
+								break;
+							case "uncaught":
+								$uncaught[] = $exception;
+								break;
+							case "propagates":
+								$propagates[] = $exception;
+								break;
+							default:
+								throw new \LogicException(sprintf("Unknown link type %s in path for scope %s", $last_entry->getType(), $last_entry->getScope()->getName()));
+						}
 					}
 				}
 			}
-			$this->result[] = sprintf("%s;%s;%s\n", $scope->getName(), implode(",", array_unique($raises)), implode(",", array_unique($propagates)));
+			$this->result[] = sprintf("%s;%s;%s;%s\n", $scope->getName(), implode(",", array_unique($raises)), implode(",", array_unique($propagates)),implode(",", array_unique($uncaught)));
 		}
 	}
 
