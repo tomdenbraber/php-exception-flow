@@ -27,7 +27,7 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 			foreach ($encounters as $exception) {
 				$paths = $exception->getPropagationPaths();
 				foreach ($paths as $path) {
-					if ($path->getLastScopeInChain() === $scope && count($path->getScopeChain()) === 1) {
+					if ($path->getLastEntryInChain() === $scope && count($path->getScopeChain()) === 1) {
 						$raises[] = $exception;
 					} else { //todo: handle nested scopes correctly, add uncaughts to exception chain.
 						$propagates[] = $exception;

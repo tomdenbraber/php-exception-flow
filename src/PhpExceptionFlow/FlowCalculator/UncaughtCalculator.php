@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow\FlowCalculator;
 
+use PhpExceptionFlow\Exception_;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpExceptionFlow\Scope\ScopeVisitor\CaughtExceptionTypesCalculator;
@@ -63,11 +64,13 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 			}
 			$uncaught = array_merge($uncaught, $inclosed_encounters);
 			$this->guarded_scopes[$guarded_scope] = $uncaught;
+			foreach ($inclosed_encounters as $exception_) {
+				$exception_->uncaught($guarded_scope, $scope);
+			}
 		}
 
-		$uncaught_set = array_values($uncaught);
-		$this->setScopeHasChanged($scope, $uncaught_set);
-		$this->scopes[$scope] = $uncaught_set;
+		$this->setScopeHasChanged($scope, $uncaught);
+		$this->scopes[$scope] = $uncaught;
 	}
 
 	public function getCaughtExceptions(Catch_ $catch_clause) {

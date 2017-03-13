@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow\Path;
 
+use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 
 class PathTest extends \PHPUnit_Framework_TestCase {
@@ -26,9 +27,11 @@ class PathTest extends \PHPUnit_Framework_TestCase {
 		$scope_2 = $this->createMock(Scope::class);
 		$scope_3 = $this->createMock(Scope::class);
 
-		$uncaught_1 = new Uncaught($scope_2);
+		$gs_1 = $this->createMock(GuardedScope::class);
+
+		$uncaught_1 = new Uncaught($scope_2, $gs_1);
 		$propagates_1 = new Propagates($scope_3);
-		$uncaught_2 = new Uncaught($scope_2);
+		$uncaught_2 = new Uncaught($scope_2, $gs_1);
 		$propagates_2 = new Propagates($scope_3);
 
 
