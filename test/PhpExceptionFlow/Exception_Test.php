@@ -1,6 +1,8 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\Propagates;
+use PhpExceptionFlow\Path\Raises;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PHPTypes\Type;
@@ -16,7 +18,7 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(1, $propagation_paths);
-		$this->assertEquals([$caused_in], $propagation_paths[0]->getScopeChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
 	}
 
 
@@ -30,9 +32,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$exception->propagate($caused_in, $propagated_to);
 
 		$propagation_paths = $exception->getPropagationPaths();
-		$this->assertCount(2, $propagation_paths);
-		$this->assertEquals([$caused_in], $propagation_paths[0]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to], $propagation_paths[1]->getScopeChain());
+//		$this->assertCount(2, $propagation_paths);
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
+		//$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to)], $propagation_paths[1]->getChain());
 	}
 
 	public function testPropagateTwiceFromSameStartingPoint() {
@@ -49,9 +51,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$propagation_paths = $exception->getPropagationPaths();
 
 		$this->assertCount(3, $propagation_paths);
-		$this->assertEquals([$caused_in], $propagation_paths[0]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to_1], $propagation_paths[1]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to_2], $propagation_paths[2]->getScopeChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
+		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1)], $propagation_paths[1]->getChain());
+		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_2)], $propagation_paths[2]->getChain());
 	}
 
 	public function testPropagateTwiceToFormChainOfLengthThree() {
@@ -68,9 +70,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$propagation_paths = $exception->getPropagationPaths();
 
 		$this->assertCount(3, $propagation_paths);
-		$this->assertEquals([$caused_in], $propagation_paths[0]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to_1], $propagation_paths[1]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to_1, $propagated_to_2], $propagation_paths[2]->getScopeChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
+		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1)], $propagation_paths[1]->getChain());
+		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1), new Propagates($propagated_to_2)], $propagation_paths[2]->getChain());
 	}
 
 	public function testPropagateSameCallIsOnlyAddedOnce() {
@@ -85,7 +87,7 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(2, $propagation_paths);
-		$this->assertEquals([$caused_in], $propagation_paths[0]->getScopeChain());
-		$this->assertEquals([$caused_in, $propagated_to], $propagation_paths[1]->getScopeChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
+		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to)], $propagation_paths[1]->getChain());
 	}
 }

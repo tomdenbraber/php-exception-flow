@@ -1,17 +1,19 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\Propagates;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PHPTypes\Type;
+use PhpExceptionFlow\Path\Path;
 
 class Exception_ {
 	/** @var Type */
 	private $type;
 	/** @var Node\Stmt */
 	private $initial_cause;
-	/** @var PropagationPath[] */
+	/** @var Path[] */
 	private $propagation_paths = [];
 	/** @var GuardedScope[] */
 	private $escaped_guarded_scopes = [];
@@ -19,7 +21,7 @@ class Exception_ {
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
 		$this->initial_cause = $initial_cause;
-		$this->propagation_paths[] = PropagationPath::fromInitialScope($caused_in);
+		$this->propagation_paths[] = Path::fromInitialScope($caused_in);
 	}
 
 	/**
@@ -30,7 +32,7 @@ class Exception_ {
 	}
 
 	/**
-	 * @return PropagationPath[]
+	 * @return Path[]
 	 */
 	public function getPropagationPaths() {
 		return $this->propagation_paths;
@@ -56,8 +58,8 @@ class Exception_ {
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
 		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->getLastScopeInChain() === $called_scope) {
-				$new_path = $propagation_path->addCall($called_scope, $caller_scope);
+			if ($propagation_path->getLastEntryInChain()->getScope() === $called_scope) {
+				$new_path = $propagation_path->addEntry(new Propagates($caller_scope));
 				if ($this->pathAlreadyExists($new_path) === false) {
 					$this->propagation_paths[] = $new_path;
 				}
@@ -65,9 +67,9 @@ class Exception_ {
 		}
 	}
 
-	public function pathAlreadyExists(PropagationPath $path) {
-		foreach ($this->propagation_paths as $propagation_path) {
-			if ($path->getScopeChain() === $propagation_path->getScopeChain()) {
+	public function pathAlreadyExists(Path $path) {
+		foreach ($this->propagation_paths as $existing_path) {
+			if ($path->equals($existing_path) === true) {
 				return true;
 			}
 		}
