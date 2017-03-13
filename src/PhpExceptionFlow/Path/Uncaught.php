@@ -14,7 +14,7 @@ class Uncaught extends AbstractPathEntry {
 	}
 
 	public function getType() {
-		return "uncaugth";
+		return "uncaught";
 	}
 
 	/**
