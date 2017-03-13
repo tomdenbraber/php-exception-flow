@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpExceptionFlow;
+namespace PhpExceptionFlow\Path;
 
 use PhpExceptionFlow\Scope\Scope;
 
