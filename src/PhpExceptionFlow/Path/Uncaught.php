@@ -24,7 +24,7 @@ class Uncaught extends AbstractPathEntry {
 		return $this->escaped_scope;
 	}
 
-	public function equals(PathEntryInterface $path_entry){
+	public function equals(PathEntryInterface $path_entry) {
 		return parent::equals($path_entry) &&
 			$path_entry instanceof Uncaught &&
 			$this->escaped_scope = $path_entry->getEscapedScope();

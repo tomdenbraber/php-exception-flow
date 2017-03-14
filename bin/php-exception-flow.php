@@ -99,6 +99,7 @@ $scope_traverser->addVisitor($catch_clause_type_resolver);
 $scope_traverser->addVisitor($call_to_scope_linker);
 $scope_traverser->traverse($scopes);
 $scope_traverser->removeVisitor($catch_clause_type_resolver);
+$scope_traverser->removeVisitor($call_to_scope_linker);
 
 print "resolved calls and catch clauses\n";
 
@@ -132,10 +133,15 @@ print "calculation done\n";
 
 
 $printing_visitor = new ScopeVisitor\DetailedPrintingVisitor($raises_calculator, $uncaught_calculator, $propagates_calculator);
+$csv_printing_visitor = new ScopeVisitor\CsvPrintingVisitor($combining);
 $scope_traverser->addVisitor($printing_visitor);
+$scope_traverser->addVisitor($csv_printing_visitor);
 $scope_traverser->traverse($scope_collector->getTopLevelScopes());
 $scope_traverser->removeVisitor($printing_visitor);
+$scope_traverser->removeVisitor($csv_printing_visitor);
 
+
+$csv_printing_visitor->writeToFile(sprintf("%s/../results/%s_encounters_eval.csv", __DIR__, $parsed_project));
 
 $result_file = fopen(sprintf("%s/../results/%s_encounters.txt", __DIR__, $parsed_project), 'w');
 fwrite($result_file, $printing_visitor->getResult());
