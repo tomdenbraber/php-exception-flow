@@ -1,8 +1,11 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\PathCollection;
+use PhpExceptionFlow\Path\PathCollectionInterface;
 use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Path\Propagates;
+use PhpExceptionFlow\Path\Raises;
 use PhpExceptionFlow\Path\Uncaught;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
@@ -15,17 +18,14 @@ class Exception_ {
 	private $type;
 	/** @var Node\Stmt */
 	private $initial_cause;
-	/** @var Path[] */
-	private $propagation_paths = [];
-	/** @var GuardedScope[] */
-	private $escaped_guarded_scopes = [];
-	/** @var int $no_propagation_paths */
-	private $no_propagation_paths = 1;
+	/** @var PathCollectionInterface $path_collection */
+	private $path_collection;
 
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
 		$this->initial_cause = $initial_cause;
-		$this->propagation_paths[] = Path::fromInitialScope($caused_in);
+		$this->path_collection = new PathCollection();
+		$this->path_collection->addPath(Path::fromInitialScope($caused_in));
 	}
 
 	/**
@@ -39,7 +39,7 @@ class Exception_ {
 	 * @return Path[]
 	 */
 	public function getPropagationPaths() {
-		return $this->propagation_paths;
+		return $this->path_collection->getPaths();
 	}
 
 	/**
@@ -47,13 +47,6 @@ class Exception_ {
 	 */
 	public function getInitialCause() {
 		return $this->initial_cause;
-	}
-
-	/**
-	 * @return GuardedScope[]
-	 */
-	public function getEscapedGuardedScopes() {
-		return $this->escaped_guarded_scopes;
 	}
 
 	/**
@@ -69,29 +62,23 @@ class Exception_ {
 	}
 
 	private function addPropagationLink(PathEntryInterface $path_entry, Scope $last_scope) {
-		$start = microtime($get_as_float = true);
-		print sprintf("Updating propagation paths (%s)... currently %d paths present\n", $path_entry->getType(), $this->no_propagation_paths);
-		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->getLastEntryInChain()->getScope() === $last_scope) {
-				$new_path = $propagation_path->addEntry($path_entry);
-				if ($this->pathAlreadyExists($new_path) === false) {
-					$this->propagation_paths[] = $new_path;
-					$this->no_propagation_paths++;
+		$possible_last_entries = [
+			new Propagates($last_scope),
+			new Raises($last_scope),
+		];
+
+		if ($last_scope->isEnclosed() === true) {
+			$possible_last_entries[] = new Uncaught($last_scope, $last_scope->getEnclosingGuardedScope());
+		}
+
+		foreach ($possible_last_entries as $possible_last_entry) {
+			foreach ($this->path_collection->getPathsEndingIn($possible_last_entry) as $path) {
+				$new_path = $path->addEntry($path_entry);
+				if ($this->path_collection->containsPath($new_path) === false) {
+					$this->path_collection->addPath($new_path);
 				}
 			}
 		}
-		$duration = microtime($get_as_float = true) - $start;
-		print sprintf("After update (%s): %d paths present; took %f\n", $path_entry->getType(), $this->no_propagation_paths, $duration);
-	}
-
-
-	private function pathAlreadyExists(Path $path) {
-		foreach ($this->propagation_paths as $existing_path) {
-			if ($path->equals($existing_path) === true) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public function __toString() {

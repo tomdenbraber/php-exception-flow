@@ -108,4 +108,52 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
 		$this->assertEquals([new Raises($caused_in), new Uncaught($ends_up_in, $guarded)], $propagation_paths[1]->getChain());
 	}
+
+	/**
+	 * This test is just here to see if the exception propagation mechanism is fast enough, which was previously not the case
+	 */
+	public function testWithLargeNumberOfPaths() {
+		$nr = 0;
+		$caused_in = new Scope((string)$nr);
+		$last_scope = $caused_in;
+		$initial_cause = $this->createMock(Node\Stmt::class);
+		$type = $this->createMock(Type::class);
+
+		$exception = new Exception_($type, $initial_cause, $caused_in);
+		while ($nr < 5000) {
+			$nr += 1;
+			$propagate_scope = new Scope((string)$nr);
+			$exception->propagate($last_scope, $propagate_scope);
+			$last_scope = $propagate_scope;
+		}
+	}
+
+	/**
+	 * This test is just here to see if the exception propagation mechanism is fast enough, which was previously not the case
+	 */
+	public function testWithLargeNumberOfPathsWithAllKindsOfBranches() {
+		$nr = 0;
+		$caused_in = new Scope((string)$nr);
+		$last_scope = $caused_in;
+		$initial_cause = $this->createMock(Node\Stmt::class);
+		$type = $this->createMock(Type::class);
+		$scopes = [];
+
+		$exception = new Exception_($type, $initial_cause, $caused_in);
+		while ($nr < 2500) {
+			$scopes[$nr] = $last_scope;
+
+			$nr += 1;
+			$propagate_scope = new Scope((string)$nr);
+			$random_scope = $scopes[random_int(0, $nr - 1)];
+			$exception->propagate($random_scope, $propagate_scope);
+			$last_scope = $propagate_scope;
+		}
+
+		for ($i = 0; $i < 2500; $i++) {
+			$origin_scope = $scopes[random_int(0, 2499)];
+			$propagate_scope = $scopes[random_int(0, 2499)];
+			$exception->propagate($origin_scope, $propagate_scope);
+		}
+	}
 }
