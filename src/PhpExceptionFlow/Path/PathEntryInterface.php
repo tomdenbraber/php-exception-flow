@@ -12,7 +12,12 @@ interface PathEntryInterface {
 	/**
 	 * @return Scope
 	 */
-	public function getScope();
+	public function getFromScope();
+
+	/**
+	 * @return Scope
+	 */
+	public function getToScope();
 
 	/**
 	 * @param PathEntryInterface $path_entry

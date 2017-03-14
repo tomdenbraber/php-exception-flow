@@ -5,37 +5,45 @@ namespace PhpExceptionFlow\Path;
 use PhpExceptionFlow\Scope\Scope;
 
 class Path {
-	/** @var PathEntryInterface[] */
-	private $chain;
-	/** @var int $path_length */
-	private $path_length = 0;
 
-	/**
-	 * PropagationPath constructor.
-	 * @param PathEntryInterface[] $scope_chain
-	 * @param int $count
-	 */
-	private function __construct(array $scope_chain, int $count) {
-		$this->chain = $scope_chain;
-		$this->path_length = $count;
+	/** @var PathEntryInterface $initial_link */
+	private $initial_link;
+
+	private $entries = [];
+
+	/** @var \SplObjectStorage $scope_links */
+	private $scope_links;
+
+	public function __construct(PathEntryInterface $initial_link) {
+		$this->initial_link = $initial_link;
+		$this->scope_links = new \SplObjectStorage;
 	}
+
 
 	/**
 	 * @return PathEntryInterface[]
 	 */
-	public function getChain() {
-		return $this->chain;
+	public function getPaths() {
+
+
+		return [];
 	}
 
 	/**
-	 * @param PathEntryInterface $next_entry
-	 * @return Path
+	 * @param PathEntryInterface $entry
 	 */
-	public function addEntry(PathEntryInterface $next_entry) {
-		$new_chain = $this->chain;
-		$new_chain[] = $next_entry;
+	public function addEntry(PathEntryInterface $entry) {
+		$this->entries[(string)$entry] = $entry;
 
-		return new Path($new_chain, $this->path_length + 1);
+		$available_links = $this->scope_links[$entry->getFromScope()] ?? [];
+		$available_links[] = $entry->getToScope();
+		$this->scope_links[$entry->getFromScope()] = $available_links;
+	}
+
+
+	public function pathContainsEntry(PathEntryInterface $entry) {
+		$entry_key = (string)$entry;
+		return isset($this->entries[$entry_key]) === true;
 	}
 
 	/**
@@ -64,14 +72,5 @@ class Path {
 
 	public function getLength() {
 		return $this->path_length;
-	}
-
-	/**
-	 * @param Scope $scope
-	 * @return Path
-	 */
-	public static function fromInitialScope(Scope $scope) {
-		$scope_chain = [new Raises($scope)];
-		return new Path($scope_chain, 1);
 	}
 }

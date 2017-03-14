@@ -18,14 +18,15 @@ class Exception_ {
 	private $type;
 	/** @var Node\Stmt */
 	private $initial_cause;
-	/** @var PathCollectionInterface $path_collection */
-	private $path_collection;
+	/** @var Path $path */
+	private $path;
 
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
 		$this->initial_cause = $initial_cause;
 		$this->path_collection = new PathCollection();
-		$this->path_collection->addPath(Path::fromInitialScope($caused_in));
+		//$this->path_collection->addPath(Path::fromInitialScope($caused_in));
+		$this->path = Path::fromInitialScope($caused_in);
 	}
 
 	/**
@@ -49,11 +50,21 @@ class Exception_ {
 		return $this->initial_cause;
 	}
 
+	public function propagate(Scope $called_scope, Scope $caller_scope) {
+		$entry = new Propagates($called_scope, $caller_scope);
+		$this->path->addEntry($entry);
+	}
+
+	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
+		$entry = new Uncaught($escaped_scope, $enclosing_scope);
+		$this->path->addEntry($entry);
+	}
+
 	/**
 	 * @param Scope $called_scope
 	 * @param Scope $caller_scope
 	 */
-	public function propagate(Scope $called_scope, Scope $caller_scope) {
+	/*public function propagate(Scope $called_scope, Scope $caller_scope) {
 		$this->addPropagationLink(new Propagates($caller_scope), $called_scope);
 	}
 
@@ -79,7 +90,7 @@ class Exception_ {
 				}
 			}
 		}
-	}
+	}*/
 
 	public function __toString() {
 		return (string) $this->getType();
