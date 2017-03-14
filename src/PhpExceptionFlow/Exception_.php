@@ -19,6 +19,8 @@ class Exception_ {
 	private $propagation_paths = [];
 	/** @var GuardedScope[] */
 	private $escaped_guarded_scopes = [];
+	/** @var int $no_propagation_paths */
+	private $no_propagation_paths = 1;
 
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
@@ -64,18 +66,22 @@ class Exception_ {
 
 	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
 		$this->addPropagationLink(new Uncaught($enclosing_scope, $escaped_scope), $escaped_scope->getInclosedScope());
-
 	}
 
 	private function addPropagationLink(PathEntryInterface $path_entry, Scope $last_scope) {
+		$start = microtime($get_as_float = true);
+		print sprintf("Updating propagation paths (%s)... currently %d paths present\n", $path_entry->getType(), $this->no_propagation_paths);
 		foreach ($this->propagation_paths as $propagation_path) {
 			if ($propagation_path->getLastEntryInChain()->getScope() === $last_scope) {
 				$new_path = $propagation_path->addEntry($path_entry);
 				if ($this->pathAlreadyExists($new_path) === false) {
 					$this->propagation_paths[] = $new_path;
+					$this->no_propagation_paths++;
 				}
 			}
 		}
+		$duration = microtime($get_as_float = true) - $start;
+		print sprintf("After update (%s): %d paths present; took %f\n", $path_entry->getType(), $this->no_propagation_paths, $duration);
 	}
 
 

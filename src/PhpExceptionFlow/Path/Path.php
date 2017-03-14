@@ -7,13 +7,23 @@ use PhpExceptionFlow\Scope\Scope;
 class Path {
 	/** @var PathEntryInterface[] */
 	private $chain;
+	/** @var int $path_length */
+	private $path_length = 0;
 
 	/**
 	 * PropagationPath constructor.
 	 * @param PathEntryInterface[] $scope_chain
+	 * @param int $count
 	 */
-	private function __construct(array $scope_chain) {
+	private function __construct(array $scope_chain, int $count) {
 		$this->chain = $scope_chain;
+		$this->path_length = $count;
+
+		if ($count > 100) {
+			$first = $this->chain[0];
+			$last = $this->chain[$this->path_length - 1];
+			print sprintf("path starting in %s(%s), ending in %s(%s) has %d entries\n", $first->getType(), $first->getScope()->getName(), $last->getType(), $last->getScope()->getName(), $this->path_length);
+		}
 	}
 
 	/**
@@ -31,14 +41,14 @@ class Path {
 		$new_chain = $this->chain;
 		$new_chain[] = $next_entry;
 
-		return new Path($new_chain);
+		return new Path($new_chain, $this->path_length + 1);
 	}
 
 	/**
 	 * @return PathEntryInterface
 	 */
 	public function getLastEntryInChain() {
-		return $this->chain[count($this->chain) - 1];
+		return $this->chain[$this->path_length - 1];
 	}
 
 	/**
@@ -46,11 +56,10 @@ class Path {
 	 * @return bool
 	 */
 	public function equals(Path $path) {
-		$other_scope_chain = $path->getChain();
-		if (count($this->chain) === count($other_scope_chain)) {
-			print count($this->chain) . "===" .  count($other_scope_chain). "\n";
-			foreach ($other_scope_chain as $i => $other_path_entry) {
-				if ($other_path_entry->equals($this->chain[$i]) === false) {
+		if ($this->getLength() === $path->getLength()) {
+			$other_scope_chain = $path->getChain();
+			for ($i = $this->getLength() - 1; $i >= 0; $i--) {
+				if ($other_scope_chain[$i]->equals($this->chain[$i]) === false) {
 					return false;
 				}
 			}
@@ -59,6 +68,9 @@ class Path {
 		return false;
 	}
 
+	public function getLength() {
+		return $this->path_length;
+	}
 
 	/**
 	 * @param Scope $scope
@@ -66,6 +78,6 @@ class Path {
 	 */
 	public static function fromInitialScope(Scope $scope) {
 		$scope_chain = [new Raises($scope)];
-		return new Path($scope_chain);
+		return new Path($scope_chain, 1);
 	}
 }
