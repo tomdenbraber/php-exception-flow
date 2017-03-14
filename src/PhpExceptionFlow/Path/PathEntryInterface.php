@@ -19,4 +19,9 @@ interface PathEntryInterface {
 	 * @return bool
 	 */
 	public function equals(PathEntryInterface $path_entry);
+
+	/**
+	 * @return string
+	 */
+	public function __toString();
 }

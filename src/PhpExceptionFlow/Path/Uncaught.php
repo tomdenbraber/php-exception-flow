@@ -29,4 +29,8 @@ class Uncaught extends AbstractPathEntry {
 			$path_entry instanceof Uncaught &&
 			$this->escaped_scope = $path_entry->getEscapedScope();
 	}
+
+	public function __toString() {
+		return parent::__toString() . "(" . $this->escaped_scope->getInclosedScope()->getName() . ")";
+	}
 }

@@ -19,4 +19,8 @@ abstract class AbstractPathEntry implements PathEntryInterface {
 		return $path_entry->getType() === $this->getType() &&
 			$path_entry->getScope() === $this->getScope();
 	}
+
+	public function __toString() {
+		return $this->getType() . ":" . $this->scope->getName();
+	}
 }
