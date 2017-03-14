@@ -18,12 +18,6 @@ class Path {
 	private function __construct(array $scope_chain, int $count) {
 		$this->chain = $scope_chain;
 		$this->path_length = $count;
-
-		if ($count > 100) {
-			$first = $this->chain[0];
-			$last = $this->chain[$this->path_length - 1];
-			print sprintf("path starting in %s(%s), ending in %s(%s) has %d entries\n", $first->getType(), $first->getScope()->getName(), $last->getType(), $last->getScope()->getName(), $this->path_length);
-		}
 	}
 
 	/**
