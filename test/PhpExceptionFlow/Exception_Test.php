@@ -20,7 +20,7 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(1, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
 	}
 
 
@@ -35,8 +35,8 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(2, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to)], $propagation_paths[1]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to)], $propagation_paths[1]);
 	}
 
 	public function testPropagateTwiceFromSameStartingPoint() {
@@ -53,9 +53,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$propagation_paths = $exception->getPropagationPaths();
 
 		$this->assertCount(3, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1)], $propagation_paths[1]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_2)], $propagation_paths[2]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to_1)], $propagation_paths[1]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to_2)], $propagation_paths[2]);
 	}
 
 	public function testPropagateTwiceToFormChainOfLengthThree() {
@@ -72,9 +72,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$propagation_paths = $exception->getPropagationPaths();
 
 		$this->assertCount(3, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1)], $propagation_paths[1]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to_1), new Propagates($propagated_to_2)], $propagation_paths[2]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to_1)], $propagation_paths[1]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to_1), new Propagates($propagated_to_1, $propagated_to_2)], $propagation_paths[2]);
 	}
 
 	public function testPropagateSameCallIsOnlyAddedOnce() {
@@ -89,8 +89,8 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(2, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Propagates($propagated_to)], $propagation_paths[1]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Propagates($caused_in, $propagated_to)], $propagation_paths[1]);
 	}
 
 	public function testUncaught() {
@@ -105,8 +105,8 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(2, $propagation_paths);
-		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]->getChain());
-		$this->assertEquals([new Raises($caused_in), new Uncaught($ends_up_in, $guarded)], $propagation_paths[1]->getChain());
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Uncaught($guarded, $ends_up_in)], $propagation_paths[1]);
 	}
 
 	/**
@@ -126,6 +126,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 			$exception->propagate($last_scope, $propagate_scope);
 			$last_scope = $propagate_scope;
 		}
+
+		print "Ok, well done, now calculate the actual paths...\n";
+		print count($exception->getPropagationPaths()) . " paths found\n";
 	}
 
 	/**
@@ -140,7 +143,7 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$scopes = [];
 
 		$exception = new Exception_($type, $initial_cause, $caused_in);
-		while ($nr < 2500) {
+		while ($nr < 100) {
 			$scopes[$nr] = $last_scope;
 
 			$nr += 1;
@@ -150,10 +153,13 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 			$last_scope = $propagate_scope;
 		}
 
-		for ($i = 0; $i < 2500; $i++) {
-			$origin_scope = $scopes[random_int(0, 2499)];
-			$propagate_scope = $scopes[random_int(0, 2499)];
+		for ($i = 0; $i < 500; $i++) {
+			$origin_scope = $scopes[random_int(0, 99)];
+			$propagate_scope = $scopes[random_int(0, 99)];
 			$exception->propagate($origin_scope, $propagate_scope);
 		}
+
+		print "Ok, well done, now calculate the actual paths...\n";
+		print count($exception->getPropagationPaths()) . " paths found\n";
 	}
 }
