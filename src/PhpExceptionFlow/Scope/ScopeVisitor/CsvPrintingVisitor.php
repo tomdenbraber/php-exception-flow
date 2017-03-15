@@ -2,6 +2,7 @@
 namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
 use PhpExceptionFlow\FlowCalculator\CombiningCalculatorInterface;
+use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Scope\Scope;
 
 class CsvPrintingVisitor extends AbstractScopeVisitor {
@@ -27,9 +28,10 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 			$uncaught = [];
 			foreach ($encounters as $exception) {
 				$paths = $exception->getPropagationPaths();
+				/** @var PathEntryInterface[] $path */
 				foreach ($paths as $path) {
-					$last_entry = $path->getLastEntryInChain();
-					if ($last_entry->getScope() === $scope) {
+					$last_entry = $path[count($path) - 1];
+					if ($last_entry->getToScope() === $scope) {
 						switch ($last_entry->getType()) {
 							case "raises":
 								$raises[] = $exception;
@@ -41,7 +43,7 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 								$propagates[] = $exception;
 								break;
 							default:
-								throw new \LogicException(sprintf("Unknown link type %s in path for scope %s", $last_entry->getType(), $last_entry->getScope()->getName()));
+								throw new \LogicException(sprintf("Unknown link type %s in path for scope %s", $last_entry->getType(), $last_entry->getToScope()->getName()));
 						}
 					}
 				}
