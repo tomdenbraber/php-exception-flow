@@ -1,58 +1,92 @@
 <?php
+
 namespace PhpExceptionFlow\Path;
 
-class PathCollection implements PathCollectionInterface {
+class PathCollection {
 
-	/** @var int[][] */
-	private $last_entry_to_ind = [];
+	/** @var PathEntryInterface $initial_link */
+	private $initial_link;
 
-	/** @var Path[] */
-	private $paths = [];
+	private $entries = [];
 
-	/** @var int */
-	private $no_paths = 0;
+	/** @var \SplObjectStorage|PathEntryInterface[][] $scope_links */
+	private $scope_links;
 
-	public function addPath(Path $path) {
-		$last_entry = $path->getLastEntryInChain();
-		$last_entry_key = (string)$last_entry;
-		$indices = $this->last_entry_to_ind[$last_entry_key] ?? [];
-
-		$indices[] = $this->no_paths;
-		$this->last_entry_to_ind[$last_entry_key] = $indices;
-
-		$this->paths[] = $path;
-		$this->no_paths += 1;
+	public function __construct(PathEntryInterface $initial_link) {
+		$this->initial_link = $initial_link;
+		$this->scope_links = new \SplObjectStorage;
 	}
 
-	public function containsPath(Path $path) {
-		$last_entry = $path->getLastEntryInChain();
-		$last_entry_key = (string)$last_entry;
-		if (isset($this->last_entry_to_ind[$last_entry_key]) === true) {
-			foreach ($this->last_entry_to_ind[$last_entry_key] as $index) {
-				if ($this->paths[$index]->equals($path) === true) {
-					return true;
+
+	/**
+	 * @return PathEntryInterface[][]
+	 */
+	public function getPaths() {
+		$paths = [
+			[$this->initial_link]
+		];
+		$link_to_ind = [(string)$this->initial_link => [0]];
+		$no_paths = 1;
+
+		$covered_links = [];
+
+		/** @var PathEntryInterface[] $queue */
+		$queue = [$this->initial_link];
+		while (empty($queue) === false) {
+			$link = array_shift($queue);
+
+			$paths_ending_in_current_elem = [];
+			$indices = $link_to_ind[(string)$link] ?? [];
+			foreach ($indices as $index) {
+				$paths_ending_in_current_elem[] = $paths[$index];
+			}
+			if (empty($paths_ending_in_current_elem) === true) {
+				$paths_ending_in_current_elem[] = [];
+			}
+
+
+			$next_links = $this->scope_links[$link->getToScope()] ?? [];
+
+			foreach ($next_links as $next_link) {
+				if (isset($covered_links[(string)$next_link]) === false) {
+					foreach ($paths_ending_in_current_elem as $i => $relevant_path) {
+						$relevant_path[]  = $next_link;
+						$paths[] = $relevant_path;
+						if (isset($link_to_ind[(string)$next_link]) === true) {
+							$link_to_ind[(string)$next_link][] = $no_paths;
+						} else {
+							$link_to_ind[(string)$next_link] = [$no_paths];
+						}
+						$no_paths += 1;
+					}
+				}
+			}
+
+			$covered_links[(string)$link] = true;
+
+			foreach ($next_links as $next_link) {
+				if (isset($covered_links[(string)$next_link]) === false) {
+					$queue[] = $next_link;
 				}
 			}
 		}
-		return false;
-	}
-
-	public function getPathsEndingIn(PathEntryInterface $entry) {
-		$indices = $this->last_entry_to_ind[(string)$entry] ?? [];
-		$paths = [];
-		foreach ($indices as $index) {
-			$paths[] = $this->paths[$index];
-		}
-		print "paths ending in " . $entry . ": " . count($paths) . "\n";
 		return $paths;
 	}
 
-	public function getPaths() {
-		return $this->paths;
+	/**
+	 * @param PathEntryInterface $entry
+	 */
+	public function addEntry(PathEntryInterface $entry) {
+		$this->entries[(string)$entry] = $entry;
+
+		$available_links = $this->scope_links[$entry->getFromScope()] ?? [];
+		$available_links[] = $entry;
+		$this->scope_links[$entry->getFromScope()] = $available_links;
 	}
 
-	public function getNumberOfPaths() {
-		return $this->no_paths;
-	}
 
+	public function containsEntry(PathEntryInterface $entry) {
+		$entry_key = (string)$entry;
+		return isset($this->entries[$entry_key]) === true;
+	}
 }
