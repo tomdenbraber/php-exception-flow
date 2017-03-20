@@ -2,6 +2,7 @@
 namespace PhpExceptionFlow\Scope\ScopeVisitor;
 
 use PhpExceptionFlow\FlowCalculator\CombiningCalculatorInterface;
+use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Scope\Scope;
 
 class CsvPrintingVisitor extends AbstractScopeVisitor {
@@ -26,24 +27,16 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 			$propagates = [];
 			$uncaught = [];
 			foreach ($encounters as $exception) {
-				$paths = $exception->getPropagationPaths();
-				foreach ($paths as $path) {
-					$last_entry = $path->getLastEntryInChain();
-					if ($last_entry->getScope() === $scope) {
-						switch ($last_entry->getType()) {
-							case "raises":
-								$raises[] = $exception;
-								break;
-							case "uncaught":
-								$uncaught[] = $exception;
-								break;
-							case "propagates":
-								$propagates[] = $exception;
-								break;
-							default:
-								throw new \LogicException(sprintf("Unknown link type %s in path for scope %s", $last_entry->getType(), $last_entry->getScope()->getName()));
-						}
-					}
+				$exception_causes = $exception->getCauses($scope);
+				if (count($exception_causes["raises"]) > 0) {
+					$raises[] = $exception;
+				}
+				/** @var Scope $propagated_from_scope */
+				foreach ($exception_causes["propagates"] as $propagated_from_scope) {
+					$propagates[] = $propagated_from_scope->getName() . "->" . $exception;
+				}
+				if (count($exception_causes["uncaught"]) > 0) {
+					$uncaught[] = $exception;
 				}
 			}
 			$this->result[] = sprintf("%s;%s;%s;%s\n", $scope->getName(), implode(",", array_unique($raises)), implode(",", array_unique($propagates)),implode(",", array_unique($uncaught)));

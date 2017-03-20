@@ -2,7 +2,6 @@
 namespace PhpExceptionFlow;
 
 use PhpExceptionFlow\Path\PathCollection;
-use PhpExceptionFlow\Path\PathCollectionInterface;
 use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Path\Propagates;
 use PhpExceptionFlow\Path\Raises;
@@ -11,21 +10,19 @@ use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
 use PHPTypes\Type;
-use PhpExceptionFlow\Path\Path;
 
 class Exception_ {
 	/** @var Type */
 	private $type;
 	/** @var Node\Stmt */
 	private $initial_cause;
-	/** @var PathCollectionInterface $path_collection */
+	/** @var PathCollection $path_collection */
 	private $path_collection;
 
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
 		$this->initial_cause = $initial_cause;
-		$this->path_collection = new PathCollection();
-		$this->path_collection->addPath(Path::fromInitialScope($caused_in));
+		$this->path_collection = new PathCollection(new Raises($caused_in));
 	}
 
 	/**
@@ -36,7 +33,7 @@ class Exception_ {
 	}
 
 	/**
-	 * @return Path[]
+	 * @return PathEntryInterface[][]
 	 */
 	public function getPropagationPaths() {
 		return $this->path_collection->getPaths();
@@ -54,31 +51,37 @@ class Exception_ {
 	 * @param Scope $caller_scope
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
-		$this->addPropagationLink(new Propagates($caller_scope), $called_scope);
+		$entry = new Propagates($called_scope, $caller_scope);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
+		}
 	}
 
+	/**
+	 * @param GuardedScope $escaped_scope
+	 * @param Scope $enclosing_scope
+	 */
 	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
-		$this->addPropagationLink(new Uncaught($enclosing_scope, $escaped_scope), $escaped_scope->getInclosedScope());
+		$entry = new Uncaught($escaped_scope, $enclosing_scope);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
+		}
 	}
 
-	private function addPropagationLink(PathEntryInterface $path_entry, Scope $last_scope) {
-		$possible_last_entries = [
-			new Propagates($last_scope),
-			new Raises($last_scope),
+	/**
+	 * @return Scope[][]
+	 */
+	public function getCauses(Scope $scope) {
+		$entries = $this->path_collection->getEntriesForToScope($scope);
+		$res = [
+			"raises" => [],
+			"propagates" => [],
+			"uncaught" => [],
 		];
-
-		if ($last_scope->isEnclosed() === true) {
-			$possible_last_entries[] = new Uncaught($last_scope, $last_scope->getEnclosingGuardedScope());
+		foreach ($entries as $entry) {
+			$res[$entry->getType()][] = $entry->getFromScope();
 		}
-
-		foreach ($possible_last_entries as $possible_last_entry) {
-			foreach ($this->path_collection->getPathsEndingIn($possible_last_entry) as $path) {
-				$new_path = $path->addEntry($path_entry);
-				if ($this->path_collection->containsPath($new_path) === false) {
-					$this->path_collection->addPath($new_path);
-				}
-			}
-		}
+		return $res;
 	}
 
 	public function __toString() {

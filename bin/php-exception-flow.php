@@ -141,7 +141,6 @@ $scope_traverser->removeVisitor($printing_visitor);
 $scope_traverser->removeVisitor($csv_printing_visitor);
 
 
-$csv_printing_visitor->writeToFile(sprintf("%s/../results/%s_encounters_eval.csv", __DIR__, $parsed_project));
 
 $result_file = fopen(sprintf("%s/../results/%s_encounters.txt", __DIR__, $parsed_project), 'w');
 fwrite($result_file, $printing_visitor->getResult());
@@ -152,6 +151,7 @@ fwrite($scope_calls_scope_file, stringifyScopeCallsScopeMap($call_to_scope_linke
 $unresolved_calls_file = fopen(sprintf("%s/../results/%s_unresolved_calls_file.txt", __DIR__, $parsed_project), 'w');
 fwrite($unresolved_calls_file, stringifyUnresolvedCallsPerScope($call_to_scope_linker->getUnresolvedCalls()));
 
+$csv_printing_visitor->writeToFile(sprintf("%s/../results/%s_encounters_eval.csv", __DIR__, $parsed_project));
 
 
 
