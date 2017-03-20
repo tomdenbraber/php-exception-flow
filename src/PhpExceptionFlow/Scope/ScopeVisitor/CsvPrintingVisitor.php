@@ -31,8 +31,9 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 				if (count($exception_causes["raises"]) > 0) {
 					$raises[] = $exception;
 				}
+				/** @var Scope $propagated_from_scope */
 				foreach ($exception_causes["propagates"] as $propagated_from_scope) {
-					$propagates[] = $propagated_from_scope . "->" . $exception;
+					$propagates[] = $propagated_from_scope->getName() . "->" . $exception;
 				}
 				if (count($exception_causes["uncaught"]) > 0) {
 					$uncaught[] = $exception;
