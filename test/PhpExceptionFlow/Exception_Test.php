@@ -125,17 +125,20 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$scope_b_cause = $exception->getCauses($propagated_to);
 		$scope_c_cause = $exception->getCauses($final_destination);
 
-		$this->assertTrue($scope_a_cause["raises"]);
-		$this->assertFalse($scope_a_cause["propagates"]);
-		$this->assertFalse($scope_a_cause["uncaught"]);
+		$this->assertCount(1, $scope_a_cause["raises"]);
+		$this->assertEquals($caused_in, $scope_a_cause["raises"][0]);
+		$this->assertCount(0, $scope_a_cause["propagates"]);
+		$this->assertCount(0, $scope_a_cause["uncaught"]);
 
-		$this->assertFalse($scope_b_cause["raises"]);
-		$this->assertTrue($scope_b_cause["propagates"]);
-		$this->assertFalse($scope_b_cause["uncaught"]);
+		$this->assertCount(0, $scope_b_cause["raises"]);
+		$this->assertCount(1, $scope_b_cause["propagates"]);
+		$this->assertEquals($caused_in, $scope_b_cause["propagates"][0]); //the exception is propagated from caused_in to propagated_to
+		$this->assertCount(0, $scope_b_cause["uncaught"]);
 
-		$this->assertFalse($scope_c_cause["raises"]);
-		$this->assertFalse($scope_c_cause["propagates"]);
-		$this->assertTrue($scope_c_cause["uncaught"]);
+		$this->assertCount(0, $scope_c_cause["raises"]);
+		$this->assertCount(0, $scope_c_cause["propagates"]);
+		$this->assertCount(1, $scope_c_cause["uncaught"]);
+		$this->assertEquals($propagated_to, $scope_c_cause["uncaught"][0]);//the exception is uncaught in propagated_to and then end up in final_destination
 	}
 
 

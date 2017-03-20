@@ -27,15 +27,14 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 			$propagates = [];
 			$uncaught = [];
 			foreach ($encounters as $exception) {
-
 				$exception_causes = $exception->getCauses($scope);
-				if ($exception_causes["raises"] === true) {
+				if (count($exception_causes["raises"]) > 0) {
 					$raises[] = $exception;
 				}
-				if ($exception_causes["propagates"] === true) {
-					$propagates[] = $exception;
+				foreach ($exception_causes["propagates"] as $propagated_from_scope) {
+					$propagates[] = $propagated_from_scope . "->" . $exception;
 				}
-				if ($exception_causes["uncaught"] === true) {
+				if (count($exception_causes["uncaught"]) > 0) {
 					$uncaught[] = $exception;
 				}
 			}
