@@ -56,7 +56,9 @@ foreach ($iter as $file) {
 		$skipped_files += 1;
 		continue;
 	}
-	if ($file->getExtension() === "php") {
+
+	$extension = $file->getExtension();
+	if ($extension === "php" || $extension === "inc") {
 		$ast_system->addAst($file->getPathname(), $caching_parser->parse($file->getPathname()));
 	}
 }
