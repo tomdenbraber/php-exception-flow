@@ -27,25 +27,16 @@ class CsvPrintingVisitor extends AbstractScopeVisitor {
 			$propagates = [];
 			$uncaught = [];
 			foreach ($encounters as $exception) {
-				$paths = $exception->getPropagationPaths();
-				/** @var PathEntryInterface[] $path */
-				foreach ($paths as $path) {
-					$last_entry = $path[count($path) - 1];
-					if ($last_entry->getToScope() === $scope) {
-						switch ($last_entry->getType()) {
-							case "raises":
-								$raises[] = $exception;
-								break;
-							case "uncaught":
-								$uncaught[] = $exception;
-								break;
-							case "propagates":
-								$propagates[] = $exception;
-								break;
-							default:
-								throw new \LogicException(sprintf("Unknown link type %s in path for scope %s", $last_entry->getType(), $last_entry->getToScope()->getName()));
-						}
-					}
+
+				$exception_causes = $exception->getCauses($scope);
+				if ($exception_causes["raises"] === true) {
+					$raises[] = $exception;
+				}
+				if ($exception_causes["propagates"] === true) {
+					$propagates[] = $exception;
+				}
+				if ($exception_causes["uncaught"] === true) {
+					$uncaught[] = $exception;
 				}
 			}
 			$this->result[] = sprintf("%s;%s;%s;%s\n", $scope->getName(), implode(",", array_unique($raises)), implode(",", array_unique($propagates)),implode(",", array_unique($uncaught)));
