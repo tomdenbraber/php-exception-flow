@@ -68,6 +68,22 @@ class Exception_ {
 		}
 	}
 
+	/**
+	 * @return bool[]
+	 */
+	public function getCauses(Scope $scope) {
+		$entries = $this->path_collection->getEntriesForToScope($scope);
+		$res = [
+			"raises" => false,
+			"propagates" => false,
+			"uncaught" => false,
+		];
+		foreach ($entries as $entry) {
+			$res[$entry->getType()] = true;
+		}
+		return $res;
+	}
+
 	public function __toString() {
 		return (string) $this->getType();
 	}

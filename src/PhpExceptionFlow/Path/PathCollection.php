@@ -2,6 +2,8 @@
 
 namespace PhpExceptionFlow\Path;
 
+use PhpExceptionFlow\Scope\Scope;
+
 class PathCollection {
 
 	/** @var PathEntryInterface $initial_link */
@@ -9,12 +11,17 @@ class PathCollection {
 
 	private $entries = [];
 
-	/** @var \SplObjectStorage|PathEntryInterface[][] $scope_links */
-	private $scope_links;
+	/** @var \SplObjectStorage|PathEntryInterface[][] $scope_from_links */
+	private $scope_from_links;
+	/** @var \SplObjectStorage|PathEntryInterface[][] $scope_to_links */
+	private $scope_to_links;
 
 	public function __construct(PathEntryInterface $initial_link) {
 		$this->initial_link = $initial_link;
-		$this->scope_links = new \SplObjectStorage;
+		$this->scope_from_links = new \SplObjectStorage;
+		$this->scope_to_links = new \SplObjectStorage;
+
+		$this->addEntry($initial_link);
 	}
 
 
@@ -28,7 +35,7 @@ class PathCollection {
 		$link_to_ind = [(string)$this->initial_link => [0]];
 		$no_paths = 1;
 
-		$covered_links = [];
+		$covered_links = [(string)$this->initial_link => true];
 
 		/** @var PathEntryInterface[] $queue */
 		$queue = [$this->initial_link];
@@ -45,7 +52,7 @@ class PathCollection {
 			}
 
 
-			$next_links = $this->scope_links[$link->getToScope()] ?? [];
+			$next_links = $this->scope_from_links[$link->getToScope()] ?? [];
 
 			foreach ($next_links as $next_link) {
 				if (isset($covered_links[(string)$next_link]) === false) {
@@ -79,14 +86,26 @@ class PathCollection {
 	public function addEntry(PathEntryInterface $entry) {
 		$this->entries[(string)$entry] = $entry;
 
-		$available_links = $this->scope_links[$entry->getFromScope()] ?? [];
-		$available_links[] = $entry;
-		$this->scope_links[$entry->getFromScope()] = $available_links;
+		$available__to_links = $this->scope_from_links[$entry->getFromScope()] ?? [];
+		$available__to_links[] = $entry;
+		$this->scope_from_links[$entry->getFromScope()] = $available__to_links;
+
+		$available_from_links = $this->scope_to_links[$entry->getToScope()] ?? [];
+		$available_from_links[] = $entry;
+		$this->scope_to_links[$entry->getToScope()] = $available_from_links;
 	}
 
 
 	public function containsEntry(PathEntryInterface $entry) {
 		$entry_key = (string)$entry;
 		return isset($this->entries[$entry_key]) === true;
+	}
+
+	public function getEntriesForToScope(Scope $scope) {
+		if ($this->scope_to_links->contains($scope) === true) {
+			return $this->scope_to_links[$scope];
+		} else {
+			return [];
+		}
 	}
 }

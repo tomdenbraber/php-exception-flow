@@ -109,10 +109,43 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals([new Raises($caused_in), new Uncaught($guarded, $ends_up_in)], $propagation_paths[1]);
 	}
 
+	public function testCauseDetection() {
+		$type = $this->createMock(Type::class);
+		$initial_cause = $this->createMock(Node\Stmt::class);
+		$caused_in = new Scope("a");
+		$propagated_to = new Scope("b");
+		$final_destination = new Scope("c");
+		$uncaught_in = new GuardedScope($final_destination, $propagated_to);
+
+		$exception = new Exception_($type, $initial_cause, $caused_in);
+		$exception->propagate($caused_in, $propagated_to);
+		$exception->uncaught($uncaught_in, $final_destination);
+
+		$scope_a_cause = $exception->getCauses($caused_in);
+		$scope_b_cause = $exception->getCauses($propagated_to);
+		$scope_c_cause = $exception->getCauses($final_destination);
+
+		$this->assertTrue($scope_a_cause["raises"]);
+		$this->assertFalse($scope_a_cause["propagates"]);
+		$this->assertFalse($scope_a_cause["uncaught"]);
+
+		$this->assertFalse($scope_b_cause["raises"]);
+		$this->assertTrue($scope_b_cause["propagates"]);
+		$this->assertFalse($scope_b_cause["uncaught"]);
+
+		$this->assertFalse($scope_c_cause["raises"]);
+		$this->assertFalse($scope_c_cause["propagates"]);
+		$this->assertTrue($scope_c_cause["uncaught"]);
+	}
+
+
+
+
+
 	/**
 	 * This test is just here to see if the exception propagation mechanism is fast enough, which was previously not the case
 	 */
-	public function testWithLargeNumberOfPaths() {
+	public function testPathCollectionWithLargeNumberOfPaths() {
 		$nr = 0;
 		$caused_in = new Scope((string)$nr);
 		$last_scope = $caused_in;
@@ -134,7 +167,7 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 	/**
 	 * This test is just here to see if the exception propagation mechanism is fast enough, which was previously not the case
 	 */
-	public function testWithLargeNumberOfPathsWithAllKindsOfBranches() {
+	public function testPathCollectionWithLargeNumberOfPathsWithAllKindsOfBranches() {
 		$nr = 0;
 		$caused_in = new Scope((string)$nr);
 		$last_scope = $caused_in;
