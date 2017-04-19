@@ -1,0 +1,10 @@
+{main}:
+	encounters: []
+A::a:
+	encounters: []
+B::a:
+	encounters: [runtimeexception]
+C::a:
+    encounters: [logicexception]
+D::a:
+    encounters: []

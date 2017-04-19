@@ -1,0 +1,20 @@
+<?php
+class A {
+    public function a() {}
+}
+class B extends A {
+    public function a() {
+        throw new RuntimeException();
+    }
+}
+class C extends A {
+    public function a() {
+        throw new LogicException();
+    }
+}
+class D extends A {
+    public function a() {
+        return parent::a();
+    }
+}
+
