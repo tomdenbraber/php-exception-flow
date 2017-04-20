@@ -6,5 +6,5 @@ B::a:
 	encounters: [runtimeexception]
 C::a:
 	encounters: [logicexception]
-D::a:
+E::a:
 	encounters: [unexpectedvalueexception]

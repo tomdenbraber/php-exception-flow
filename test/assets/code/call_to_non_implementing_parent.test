@@ -14,7 +14,8 @@ class C extends A {
         throw new LogicException();
     }
 }
-class D extends A {
+class D extends A {}
+class E extends D {
     public function a() {
         return parent::a();
     }
