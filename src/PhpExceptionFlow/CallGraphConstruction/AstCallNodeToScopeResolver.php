@@ -3,6 +3,7 @@ namespace PhpExceptionFlow\CallGraphConstruction;
 
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
+use PHPTypes\State;
 use PHPTypes\Type;
 
 class AstCallNodeToScopeResolver implements CallResolverInterface {
@@ -12,16 +13,19 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 	private $function_scopes;
 	/** @var Method[][][] $class_method_to_implementations */
 	private $class_method_to_implementations;
+	/** @var State $state */
+	private $state;
 
 	/**
 	 * @param Scope[][] $method_scopes
 	 * @param Scope[] $function_scopes
 	 * @param array $class_method_to_method
 	 */
-	public function __construct(array $method_scopes, array $function_scopes, array $class_method_to_method) {
+	public function __construct(array $method_scopes, array $function_scopes, array $class_method_to_method, State $state) {
 		$this->method_scopes = $method_scopes;
 		$this->function_scopes = $function_scopes;
 		$this->class_method_to_implementations = $class_method_to_method;
+		$this->state = $state;
 	}
 
 	/**
@@ -42,6 +46,9 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 				/** @var Node\Expr\StaticCall $func_call */
 				return $this->resolveStaticCall($func_call);
 				break;
+			case Node\Expr\New_::class:
+				/** @var Node\Expr\New_ $func_call */
+				return $this->resolveConstructorCall($func_call);
 			default:
 				throw new \LogicException("This type of node cannot be handled: " . get_class($func_call));
 		}
@@ -103,6 +110,10 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 	 */
 	private function resolveStaticCall(Node\Expr\StaticCall $call) {
 		if ($call->class instanceof Node\Name) {
+			if ($call->class->getAttribute("original callee name") === "parent") {
+				return $this->resolveCallToParent($call);
+			}
+
 			$class = strtolower(implode("\\", $call->class->parts));
 			if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
 				/** @var Method[] $called_methods */
@@ -113,6 +124,65 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 					$called_method_class = strtolower($called_method->getClass());
 					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
 						$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+					} else {
+						throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
+					}
+				}
+				return $called_scopes;
+			} else {
+				throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
+			}
+		} else {
+			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
+		}
+	}
+
+	private function resolveConstructorCall(Node\Expr\New_ $call) {
+		if ($call->class instanceof Node\Name) {
+			$class = strtolower(implode("\\", $call->class->parts));
+			$constructor_name = '__construct';
+			if (isset($this->class_method_to_implementations[$class]) === true && isset($this->class_method_to_implementations[$class][$constructor_name]) === true) {
+				/** @var Method[] $called_methods */
+				$called_methods = $this->class_method_to_implementations[$class][$constructor_name];
+				$called_scopes = [];
+				foreach ($called_methods as $called_method) {
+					$called_method_name = strtolower($called_method->getName());
+					$called_method_class = strtolower($called_method->getClass());
+					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+						$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+					} else {
+						throw new \UnexpectedValueException(sprintf("Method %s::__construct() could not be found in method scopes", $class));
+					}
+				}
+				return $called_scopes;
+			} else {
+				throw new \UnexpectedValueException(sprintf("Method %s::__construct() could not be found in applies to set (%d)", $class, $call->getLine()));
+			}
+		} else {
+			throw new \UnexpectedValueException(sprintf("Cannot resolve constructor call; class expression has type %s", $call->class->getAttribute("type", Type::unknown())));
+		}
+	}
+
+	/**
+	 * @param Node\Expr\StaticCall $call
+	 * @return Scope[]
+	 * @throws \UnexpectedValueException
+	 */
+	private function resolveCallToParent(Node\Expr\StaticCall $call) {
+		if ($call->class instanceof Node\Name) {
+			$class = strtolower(implode("\\", $call->class->parts));
+			$class_resolves = $this->state->classResolves[$class];
+			if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
+				/** @var Method[] $called_methods */
+				$called_methods = $this->class_method_to_implementations[$class][$call->name];
+				$called_scopes = [];
+				foreach ($called_methods as $called_method) {
+					$called_method_name = strtolower($called_method->getName());
+					$called_method_class = strtolower($called_method->getClass());
+					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+						if (isset($class_resolves[$called_method_class]) === true) {
+							$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+						}
 					} else {
 						throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
 					}

@@ -90,6 +90,9 @@ class CallToScopeLinkingVisitor extends AbstractScopeVisitor {
 		foreach ($this->call_collector->getStaticCalls() as $static_call) {
 			$calls[] = $static_call;
 		}
+		foreach ($this->call_collector->getConstructorCalls() as $constructor_call) {
+			$calls[] = $constructor_call;
+		}
 		return $calls;
 	}
 

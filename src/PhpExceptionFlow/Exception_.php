@@ -1,6 +1,12 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\Catches;
+use PhpExceptionFlow\Path\PathCollection;
+use PhpExceptionFlow\Path\PathEntryInterface;
+use PhpExceptionFlow\Path\Propagates;
+use PhpExceptionFlow\Path\Raises;
+use PhpExceptionFlow\Path\Uncaught;
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node;
@@ -11,15 +17,13 @@ class Exception_ {
 	private $type;
 	/** @var Node\Stmt */
 	private $initial_cause;
-	/** @var PropagationPath[] */
-	private $propagation_paths = [];
-	/** @var GuardedScope[] */
-	private $escaped_guarded_scopes = [];
+	/** @var PathCollection $path_collection */
+	private $path_collection;
 
 	public function __construct(Type $type, Node\Stmt $initial_cause, Scope $caused_in) {
 		$this->type = $type;
 		$this->initial_cause = $initial_cause;
-		$this->propagation_paths[] = PropagationPath::fromInitialScope($caused_in);
+		$this->path_collection = new PathCollection(new Raises($caused_in));
 	}
 
 	/**
@@ -30,10 +34,10 @@ class Exception_ {
 	}
 
 	/**
-	 * @return PropagationPath[]
+	 * @return PathEntryInterface[][]
 	 */
 	public function getPropagationPaths() {
-		return $this->propagation_paths;
+		return $this->path_collection->getPaths();
 	}
 
 	/**
@@ -44,23 +48,66 @@ class Exception_ {
 	}
 
 	/**
-	 * @return GuardedScope[]
-	 */
-	public function getEscapedGuardedScopes() {
-		return $this->escaped_guarded_scopes;
-	}
-
-	/**
 	 * @param Scope $called_scope
 	 * @param Scope $caller_scope
 	 */
 	public function propagate(Scope $called_scope, Scope $caller_scope) {
-		foreach ($this->propagation_paths as $propagation_path) {
-			if ($propagation_path->lastOcccurrencesOfScopesAreCallingEachother($called_scope, $caller_scope) === true) {
-				$this->propagation_paths[] = $propagation_path->addCall($called_scope, $caller_scope);
-			}
-
+		$entry = new Propagates($called_scope, $caller_scope);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
 		}
+	}
+
+	/**
+	 * @param GuardedScope $escaped_scope
+	 * @param Scope $enclosing_scope
+	 */
+	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
+		$entry = new Uncaught($escaped_scope, $enclosing_scope);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
+		}
+	}
+
+	/**
+	 * @param GuardedScope $caught_in
+	 * @param Node\Stmt\Catch_ $caught_by
+	 */
+	public function catches(GuardedScope $caught_in, Node\Stmt\Catch_ $caught_by) {
+		$entry = new Catches($caught_in, $caught_by);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
+		}
+	}
+
+	/**
+	 * @return Scope[][]
+	 */
+	public function getCauses(Scope $scope) {
+		$entries = $this->path_collection->getEntriesForToScope($scope);
+		$res = [
+			"raises" => [],
+			"propagates" => [],
+			"uncaught" => [],
+		];
+		foreach ($entries as $entry) {
+			$res[$entry->getType()][] = $entry->getFromScope();
+		}
+		return $res;
+	}
+
+	/**
+	 * @param Scope $scope
+	 * @return false|PathEntryInterface false if the path does not end in the given scope, else the corresponding entry
+	 */
+	public function pathEndsIn(Scope $scope) {
+		$entries = $this->path_collection->getEntriesForFromScope($scope);
+		foreach ($entries as $entry) {
+			if ($entry->isLastEntry() === true) {
+				return $entry;
+			}
+		}
+		return false;
 	}
 
 	public function __toString() {

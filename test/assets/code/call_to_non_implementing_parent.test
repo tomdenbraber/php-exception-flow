@@ -1,0 +1,23 @@
+<?php
+class A {
+    public function a() {
+        throw new UnexpectedValueException();
+    }
+}
+class B extends A {
+    public function a() {
+        throw new RuntimeException();
+    }
+}
+class C extends A {
+    public function a() {
+        throw new LogicException();
+    }
+}
+class D extends A {}
+class E extends D {
+    public function a() {
+        return parent::a();
+    }
+}
+

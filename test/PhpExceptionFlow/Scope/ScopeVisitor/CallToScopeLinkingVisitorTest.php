@@ -43,6 +43,9 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->call_collector_mock->expects($this->once())
 			->method("getStaticCalls")
 			->willReturn(array());
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
+			->willReturn(array());
 
 
 		$this->visitor->enterScope($scope);
@@ -80,6 +83,10 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->call_collector_mock->expects($this->once())
 			->method("getStaticCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
 			->willReturn(array());
 
 		$this->call_resolver_mock->expects($this->once())
@@ -120,6 +127,10 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 
 		$this->call_collector_mock->expects($this->once())
 			->method("getStaticCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
 			->willReturn(array());
 
 		$this->call_resolver_mock->expects($this->once())
@@ -165,6 +176,10 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->call_collector_mock->expects($this->once())
 			->method("getStaticCalls")
 			->willReturn(array($calls_scope_2_mock));
+
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
+			->willReturn(array());
 
 		$this->call_resolver_mock->expects($this->exactly(3))
 			->method("resolve")
@@ -216,6 +231,10 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 			->method("getStaticCalls")
 			->willReturn(array());
 
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
+			->willReturn(array());
+
 		$this->call_resolver_mock->expects($this->once())
 			->method("resolve")
 			->with($fn_call_mock)
@@ -233,5 +252,52 @@ class CallToScopeLinkingVisitorTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(array(), $caller_based[$scope]);
 		$this->assertEquals(1, $unresolved[$scope]->count());
 		$this->assertTrue($unresolved[$scope]->contains($fn_call_mock));
+	}
+
+	public function testWithConstructor() {
+		$scope = $this->createMock(Scope::class);
+		$some_constructor_scope = $this->createMock(Scope::class);
+
+		$scope->expects($this->once())
+			->method("getInstructions")
+			->willReturn(array());
+
+		$fn_call_mock = $this->createMock(Node::class);
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getFunctionCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getMethodCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method("getStaticCalls")
+			->willReturn(array());
+
+		$this->call_collector_mock->expects($this->once())
+			->method('getConstructorCalls')
+			->willReturn(array(
+				$fn_call_mock
+			));
+
+		$this->call_resolver_mock->expects($this->once())
+			->method("resolve")
+			->with($fn_call_mock)
+			->willReturn([$some_constructor_scope]);
+
+		$this->visitor->enterScope($scope);
+
+		$caller_based = $this->visitor->getCallerCallsCalleeScopes();
+		$callee_based = $this->visitor->getCalleeCalledByCallerScopes();
+		$unresolved = $this->visitor->getUnresolvedCalls();
+
+		$this->assertEquals(1, $callee_based->count());
+		$this->assertEquals(1, $caller_based->count());
+		$this->assertEquals(1, $unresolved->count());
+		$this->assertEquals(array($some_constructor_scope), $caller_based[$scope]);
+		$this->assertEquals(array($scope), $callee_based[$some_constructor_scope]);
+		$this->assertEquals(0, $unresolved[$scope]->count());
 	}
 }

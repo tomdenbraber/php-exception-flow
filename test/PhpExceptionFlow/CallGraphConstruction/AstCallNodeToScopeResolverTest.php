@@ -7,6 +7,7 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
+use PHPTypes\State;
 use PHPTypes\Type;
 
 class AstCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
@@ -142,7 +143,7 @@ class AstCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 				"n" => $this->scope_conc_n,
 			],
 		);
-		$this->resolver = new AstCallNodeToScopeResolver($this->method_scopes, $this->function_scopes, $this->class_method_to_actual_implementation);
+		$this->resolver = new AstCallNodeToScopeResolver($this->method_scopes, $this->function_scopes, $this->class_method_to_actual_implementation, new State([]));
 	}
 
 	public function testThrowsLogicExceptionOnWrongNodeType() {
@@ -266,6 +267,10 @@ class AstCallNodeToScopeResolverTest extends \PHPUnit_Framework_TestCase {
 		$method_call_i_m = new MethodCall($var_expr, "m"); //i->m: interface, abs->m: abstract, so should resolve to conc->m
 		$resolved_to = $this->resolver->resolve($method_call_i_m);
 		$this->assertEquals([$this->scope_conc_m], $resolved_to);
+	}
+
+	public function testParentCallResolvedCorrectly() {
+		$this->markTestIncomplete("Still todo");
 	}
 
 

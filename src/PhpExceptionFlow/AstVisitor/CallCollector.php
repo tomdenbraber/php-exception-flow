@@ -11,11 +11,14 @@ class CallCollector extends NodeVisitorAbstract {
 	private $method_calls;
 	/** @var \SplObjectStorage $static_calls */
 	private $static_calls;
+	/** @var \SplObjectStorage $constructor_calls */
+	private $constructor_calls;
 
 	public function __construct() {
 		$this->func_calls = new \SplObjectStorage;
 		$this->method_calls = new \SplObjectStorage;
 		$this->static_calls = new \SplObjectStorage;
+		$this->constructor_calls = new \SplObjectStorage;
 	}
 
 	public function enterNode(Node $node) {
@@ -25,6 +28,8 @@ class CallCollector extends NodeVisitorAbstract {
 			$this->method_calls->attach($node);
 		} else if ($node instanceof Node\Expr\StaticCall) {
 			$this->static_calls->attach($node);
+		} else if ($node instanceof Node\Expr\New_) {
+			$this->constructor_calls->attach($node);
 		}
 	}
 
@@ -50,11 +55,19 @@ class CallCollector extends NodeVisitorAbstract {
 	}
 
 	/**
+	 * @return \SplObjectStorage
+	 */
+	public function getConstructorCalls() {
+		return $this->constructor_calls;
+	}
+
+	/**
 	 * empties all the sets of collected calls
 	 */
 	public function reset() {
 		$this->func_calls = new \SplObjectStorage;
 		$this->method_calls = new \SplObjectStorage;
 		$this->static_calls = new \SplObjectStorage;
+		$this->constructor_calls = new \SplObjectStorage;
 	}
 }

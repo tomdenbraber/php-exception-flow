@@ -26,6 +26,8 @@ if ($argc !== 2) {
 	throw new \UnexpectedValueException("Expected exactly 2 input arguments");
 }
 
+$start_time = time();
+
 $parsed_project = basename(realpath($argv[1]));
 
 if (is_dir(__DIR__ . "/../cache/" . $parsed_project) === false) {
@@ -56,29 +58,38 @@ foreach ($iter as $file) {
 		$skipped_files += 1;
 		continue;
 	}
-	if ($file->getExtension() === "php") {
+
+	$extension = $file->getExtension();
+	if ($extension === "php" || $extension === "inc") {
 		$ast_system->addAst($file->getPathname(), $caching_parser->parse($file->getPathname()));
 	}
 }
 
 print sprintf("skipped %d files because they were located in a folder called 'test'\n", $skipped_files);
 print "parsing done\n";
+$parse_finished_time = time();
 
 $cfg_system_factory = CfgSystemFactory::createDefault();
 $cfg_system = createCfgSystem($cfg_system_factory, $ast_system);
 print "Cfg creation done\n";
+$cfg_finished_time = time();
+
 
 $state = calculateState($cfg_system);
 print "type-inference done\n";
+$type_inference_time = time();
 
 $ast_nodes_collector = linkingCfgPass($cfg_system);
 print "linking types back to ast done\n";
+$type_linking_time = time();
 
 $scope_collector = calculateScopes($state, $ast_nodes_collector, $ast_system);
 print "scope collection done\n";
+$scope_collection_time = time();
 
 $class_method_to_method_map = calculateClassMethodToMethodMap($ast_system, $state);
 print "call site calculation done\n";
+$call_site_calculation_time = time();
 
 $builtin_collector = new \PhpExceptionFlow\Scope\Collector\BuiltInCollector($state->internalTypeInfo);
 
@@ -89,7 +100,7 @@ $combining_scope_collector = new \PhpExceptionFlow\Scope\Collector\CombiningScop
 
 $scopes = $combining_scope_collector->getTopLevelScopes();
 
-$call_resolver = new AstCallNodeToScopeResolver($combining_scope_collector->getMethodScopes(), $combining_scope_collector->getFunctionScopes(), $class_method_to_method_map);
+$call_resolver = new AstCallNodeToScopeResolver($combining_scope_collector->getMethodScopes(), $combining_scope_collector->getFunctionScopes(), $class_method_to_method_map, $state);
 
 $call_to_scope_linker = new ScopeVisitor\CallToScopeLinkingVisitor(new PhpParser\NodeTraverser(), new AstVisitor\CallCollector(), $call_resolver);
 
@@ -99,9 +110,10 @@ $scope_traverser->addVisitor($catch_clause_type_resolver);
 $scope_traverser->addVisitor($call_to_scope_linker);
 $scope_traverser->traverse($scopes);
 $scope_traverser->removeVisitor($catch_clause_type_resolver);
+$scope_traverser->removeVisitor($call_to_scope_linker);
 
 print "resolved calls and catch clauses\n";
-
+$calls_catches_resolved_time = time();
 
 $combining_mutable = new \PhpExceptionFlow\FlowCalculator\CombiningCalculator();
 $combining_immutable = new \PhpExceptionFlow\FlowCalculator\CombiningCalculator();
@@ -129,12 +141,17 @@ $combining->addCalculator($combining_mutable);
 print "calculating encounters\n";
 $encounters_calc->calculateEncounters($scope_collector->getTopLevelScopes());
 print "calculation done\n";
+$calculation_done_time = time();
 
 
 $printing_visitor = new ScopeVisitor\DetailedPrintingVisitor($raises_calculator, $uncaught_calculator, $propagates_calculator);
+$csv_printing_visitor = new ScopeVisitor\CsvPrintingVisitor($combining);
 $scope_traverser->addVisitor($printing_visitor);
+$scope_traverser->addVisitor($csv_printing_visitor);
 $scope_traverser->traverse($scope_collector->getTopLevelScopes());
 $scope_traverser->removeVisitor($printing_visitor);
+$scope_traverser->removeVisitor($csv_printing_visitor);
+
 
 
 $result_file = fopen(sprintf("%s/../results/%s_encounters.txt", __DIR__, $parsed_project), 'w');
@@ -146,9 +163,19 @@ fwrite($scope_calls_scope_file, stringifyScopeCallsScopeMap($call_to_scope_linke
 $unresolved_calls_file = fopen(sprintf("%s/../results/%s_unresolved_calls_file.txt", __DIR__, $parsed_project), 'w');
 fwrite($unresolved_calls_file, stringifyUnresolvedCallsPerScope($call_to_scope_linker->getUnresolvedCalls()));
 
+$csv_printing_visitor->writeToFile(sprintf("%s/../results/%s_encounters_eval.csv", __DIR__, $parsed_project));
 
 
-
+print sprintf("Started at %d\n", $start_time);
+print sprintf("Parsing done in:\t%d\n", $parse_finished_time - $start_time);
+print sprintf("Cfg creation done in:\t%d\n", $cfg_finished_time - $parse_finished_time);
+print sprintf("Type inference done in:\t%d\n", $type_inference_time - $cfg_finished_time);
+print sprintf("Type linking done in:\t%d\n", $type_linking_time - $type_inference_time);
+print sprintf("Scope collection done in:\t%d\n", $scope_collection_time - $type_linking_time);
+print sprintf("Classmethod/method map done in:\t%d\n", $call_site_calculation_time - $scope_collection_time);
+print sprintf("Call/catch resolution done in:\t%d\n", $calls_catches_resolved_time - $call_site_calculation_time);
+print sprintf("Encounters calculation done in:\t%d\n", $calculation_done_time - $calls_catches_resolved_time);
+print sprintf("Complete process:\t%d\n", $calculation_done_time - $start_time);
 
 
 

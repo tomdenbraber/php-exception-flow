@@ -47,7 +47,7 @@ class CompletePipelineTest extends \PHPUnit_Framework_TestCase {
 
 		$scopes = $scope_collector->getTopLevelScopes();
 
-		$call_resolver = new AstCallNodeToScopeResolver($scope_collector->getMethodScopes(), $scope_collector->getFunctionScopes(), $class_method_to_method);
+		$call_resolver = new AstCallNodeToScopeResolver($scope_collector->getMethodScopes(), $scope_collector->getFunctionScopes(), $class_method_to_method, $state);
 
 		$call_to_scope_linker = new CallToScopeLinkingVisitor(new PhpParser\NodeTraverser(), new CallCollector(), $call_resolver);
 

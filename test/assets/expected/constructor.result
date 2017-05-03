@@ -1,0 +1,6 @@
+{main}:
+	encounters: [logicexception]
+A::__construct:
+	encounters: [logicexception]
+A::throws_an_exception:
+	encounters: [logicexception]

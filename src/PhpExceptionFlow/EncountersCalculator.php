@@ -58,12 +58,10 @@ class EncountersCalculator {
 	 * @param Scope $scope
 	 */
 	private function addAffectedScopesToWorklist(Scope $scope) {
-		while ($scope->isEnclosed() === true) {
+		if ($scope->isEnclosed() === true) {
 			$scope = $scope->getEnclosingGuardedScope()->getEnclosingScope();
 			$this->addToWorklist($scope);
-		}
-
-		if ($this->callee_called_by_scopes->contains($scope) === true) {
+		} else if ($this->callee_called_by_scopes->contains($scope) === true) {
 			$calling_scopes = $this->callee_called_by_scopes[$scope];
 			/**
 			 * @var Scope[] $calling_scopes
