@@ -78,10 +78,11 @@ class PathCollectionTest extends \PHPUnit_Framework_TestCase {
 		$origin = new Scope("a");
 		$next_1 = new Scope("b");
 		$next_2 = new Scope("c");
+		$guarded_enclosing_next_2 = new GuardedScope($this->createMock(Scope::class), $next_2);
 		$initial_link = new Raises($origin);
 		$propagates_1 = new Propagates($origin, $next_1);
 		$propagates_2 = new Propagates($origin, $next_2);
-		$catches_2 = new Catches($next_2, $this->createMock(Catch_::class));
+		$catches_2 = new Catches($guarded_enclosing_next_2, $this->createMock(Catch_::class));
 
 		$path_collection = new PathCollection($initial_link);
 		$path_collection->addEntry($propagates_1);

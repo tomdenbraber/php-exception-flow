@@ -70,10 +70,10 @@ class Exception_ {
 	}
 
 	/**
-	 * @param Scope $caught_in
+	 * @param GuardedScope $caught_in
 	 * @param Node\Stmt\Catch_ $caught_by
 	 */
-	public function catches(Scope $caught_in, Node\Stmt\Catch_ $caught_by) {
+	public function catches(GuardedScope $caught_in, Node\Stmt\Catch_ $caught_by) {
 		$entry = new Catches($caught_in, $caught_by);
 		if ($this->path_collection->containsEntry($entry) === false) {
 			$this->path_collection->addEntry($entry);

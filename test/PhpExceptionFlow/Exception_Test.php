@@ -120,12 +120,12 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$guarded->addCatchClause($catch_clause);
 
 		$exception = new Exception_($type, $initial_cause, $caused_in);
-		$exception->catches($caused_in, $catch_clause);
+		$exception->catches($guarded, $catch_clause);
 
 		$propagation_paths = $exception->getPropagationPaths();
 		$this->assertCount(2, $propagation_paths);
 		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
-		$this->assertEquals([new Raises($caused_in), new Catches($caused_in, $catch_clause)], $propagation_paths[1]);
+		$this->assertEquals([new Raises($caused_in), new Catches($guarded, $catch_clause)], $propagation_paths[1]);
 	}
 
 	public function testPathEndsIn() {
@@ -138,9 +138,9 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$guarded->addCatchClause($catch_clause);
 
 		$exception = new Exception_($type, $initial_cause, $caused_in);
-		$exception->catches($caused_in, $catch_clause);
+		$exception->catches($guarded, $catch_clause);
 
-		$expected_catches = new Catches($caused_in, $catch_clause);
+		$expected_catches = new Catches($guarded, $catch_clause);
 		$this->assertTrue($exception->pathEndsIn($caused_in)->equals($expected_catches));
 		$this->assertFalse($exception->pathEndsIn($enclosing_scope));
 	}

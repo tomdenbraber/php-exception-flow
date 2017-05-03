@@ -1,28 +1,29 @@
 <?php
 namespace PhpExceptionFlow\Path;
 
+use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
 use PhpParser\Node\Stmt\Catch_;
 
 class Catches extends AbstractPathEntry {
-	/** @var Scope $encountered_in_scope */
-	private $encountered_in_scope;
+	/** @var GuardedScope $guarded_scope */
+	private $guarded_scope;
 
 	/** @var Catch_ $caught_by the catch statement that caught this statement */
 	private $caught_by;
 
 
-	public function __construct(Scope $encountered_in_scope, Catch_ $catch_statement) {
-		$this->encountered_in_scope = $encountered_in_scope;
+	public function __construct(GuardedScope $caught_in_guarded_scope, Catch_ $catch_statement) {
+		$this->guarded_scope = $caught_in_guarded_scope;
 		$this->caught_by = $catch_statement;
 	}
 
 	public function getFromScope() {
-		return $this->encountered_in_scope;
+		return $this->guarded_scope->getInclosedScope();
 	}
 
 	public function getToScope() {
-		return $this->encountered_in_scope;
+		return $this->guarded_scope->getInclosedScope();
 	}
 
 	public function getCaughtBy() {
@@ -33,7 +34,7 @@ class Catches extends AbstractPathEntry {
 	 * @return \PhpExceptionFlow\Scope\GuardedScope
 	 */
 	public function getGuardedScope() {
-		return $this->encountered_in_scope->getEnclosingGuardedScope();
+		return $this->guarded_scope;
 	}
 
 	/**
