@@ -96,6 +96,20 @@ class Exception_ {
 		return $res;
 	}
 
+	/**
+	 * @param Scope $scope
+	 * @return false|PathEntryInterface false if the path does not end in the given scope, else the corresponding entry
+	 */
+	public function pathEndsIn(Scope $scope) {
+		$entries = $this->path_collection->getEntriesForFromScope($scope);
+		foreach ($entries as $entry) {
+			if ($entry->isLastEntry() === true) {
+				return $entry;
+			}
+		}
+		return false;
+	}
+
 	public function __toString() {
 		return (string) $this->getType();
 	}

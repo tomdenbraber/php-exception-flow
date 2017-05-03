@@ -113,4 +113,12 @@ class PathCollection {
 			return [];
 		}
 	}
+
+	public function getEntriesForFromScope(Scope $scope) {
+		if ($this->scope_from_links->contains($scope) === true) {
+			return $this->scope_from_links[$scope];
+		} else {
+			return [];
+		}
+	}
 }

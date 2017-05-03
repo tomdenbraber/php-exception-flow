@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\Catches;
 use PhpExceptionFlow\Path\Propagates;
 use PhpExceptionFlow\Path\Raises;
 use PhpExceptionFlow\Path\Uncaught;
@@ -109,6 +110,41 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals([new Raises($caused_in), new Uncaught($guarded, $ends_up_in)], $propagation_paths[1]);
 	}
 
+	public function testCatches() {
+		$type = $this->createMock(Type::class);
+		$initial_cause = $this->createMock(Node\Stmt::class);
+		$caused_in = new Scope("a");
+		$enclosing_scope = new Scope("b");
+		$guarded = new GuardedScope($enclosing_scope, $caused_in);
+		$catch_clause = $this->createMock(Node\Stmt\Catch_::class);
+		$guarded->addCatchClause($catch_clause);
+
+		$exception = new Exception_($type, $initial_cause, $caused_in);
+		$exception->catches($caused_in, $catch_clause);
+
+		$propagation_paths = $exception->getPropagationPaths();
+		$this->assertCount(2, $propagation_paths);
+		$this->assertEquals([new Raises($caused_in)], $propagation_paths[0]);
+		$this->assertEquals([new Raises($caused_in), new Catches($caused_in, $catch_clause)], $propagation_paths[1]);
+	}
+
+	public function testPathEndsIn() {
+		$type = $this->createMock(Type::class);
+		$initial_cause = $this->createMock(Node\Stmt::class);
+		$caused_in = new Scope("a");
+		$enclosing_scope = new Scope("b");
+		$guarded = new GuardedScope($enclosing_scope, $caused_in);
+		$catch_clause = $this->createMock(Node\Stmt\Catch_::class);
+		$guarded->addCatchClause($catch_clause);
+
+		$exception = new Exception_($type, $initial_cause, $caused_in);
+		$exception->catches($caused_in, $catch_clause);
+
+		$expected_catches = new Catches($caused_in, $catch_clause);
+		$this->assertTrue($exception->pathEndsIn($caused_in)->equals($expected_catches));
+		$this->assertFalse($exception->pathEndsIn($enclosing_scope));
+	}
+
 	public function testCauseDetection() {
 		$type = $this->createMock(Type::class);
 		$initial_cause = $this->createMock(Node\Stmt::class);
@@ -138,12 +174,8 @@ class Exception_Test extends \PHPUnit_Framework_TestCase {
 		$this->assertCount(0, $scope_c_cause["raises"]);
 		$this->assertCount(0, $scope_c_cause["propagates"]);
 		$this->assertCount(1, $scope_c_cause["uncaught"]);
-		$this->assertEquals($propagated_to, $scope_c_cause["uncaught"][0]);//the exception is uncaught in propagated_to and then end up in final_destination
+		$this->assertEquals($propagated_to, $scope_c_cause["uncaught"][0]);//the exception is uncaught in propagated_to and then ends up in final_destination
 	}
-
-
-
-
 
 	/**
 	 * This test is just here to see if the exception propagation mechanism is fast enough, which was previously not the case
