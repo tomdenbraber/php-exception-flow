@@ -51,7 +51,7 @@ class PathCollection {
 				$paths_ending_in_current_elem[] = [];
 			}
 
-			if ($link->getToScope() !== null) {
+			if ($link->isLastEntry() === false) {
 				$next_links = $this->scope_from_links[$link->getToScope()] ?? [];
 			} else {
 				$next_links = [];
@@ -93,7 +93,7 @@ class PathCollection {
 		$available__to_links[] = $entry;
 		$this->scope_from_links[$entry->getFromScope()] = $available__to_links;
 
-		if ($entry->getToScope() !== null) {
+		if ($entry->isLastEntry() === false) {
 			$available_from_links = $this->scope_to_links[$entry->getToScope()] ?? [];
 			$available_from_links[] = $entry;
 			$this->scope_to_links[$entry->getToScope()] = $available_from_links;

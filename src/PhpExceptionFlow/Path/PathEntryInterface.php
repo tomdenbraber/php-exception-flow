@@ -26,6 +26,12 @@ interface PathEntryInterface {
 	public function equals(PathEntryInterface $path_entry);
 
 	/**
+	 * Some path entries are inherently always the last entry in a chain, as further propagation is impossible (for Catch clauses)
+	 * @return bool
+	 */
+	public function isLastEntry();
+
+	/**
 	 * @return string
 	 */
 	public function __toString();

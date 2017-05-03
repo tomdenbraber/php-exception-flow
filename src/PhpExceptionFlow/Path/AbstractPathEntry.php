@@ -9,6 +9,14 @@ abstract class AbstractPathEntry implements PathEntryInterface {
 			$path_entry->getToScope() === $this->getToScope();
 	}
 
+	/**
+	 * By default, return false as most entries can be the last entry
+	 * @return bool
+	 */
+	public function isLastEntry() {
+		return false;
+	}
+
 	public function __toString() {
 		return $this->getType() . ":" . $this->getFromScope()->getName() . "->" . $this->getToScope()->getName();
 	}
