@@ -74,7 +74,7 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 			}
 		} else if ($node instanceof Node\Stmt\TryCatch) {
 			$enclosing = $this->current_scope;
-			$inclosed = new Scope(md5(random_bytes(64)));
+			$inclosed = new Scope(sprintf("%s try #%d", $enclosing->getName(), count($enclosing->getGuardedScopes()) + 1));
 			$guarded_scope = new GuardedScope($enclosing, $inclosed);
 			$inclosed->setEnclosingGuardedScope($guarded_scope);
 			$enclosing->addGuardedScope($guarded_scope);
