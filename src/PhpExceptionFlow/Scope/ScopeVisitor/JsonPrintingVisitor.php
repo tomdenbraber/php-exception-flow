@@ -74,6 +74,9 @@ class JsonPrintingVisitor extends AbstractScopeVisitor {
 
 		foreach ($inclosed_encounters as $exception) {
 			if (($catches_path_entry = $exception->pathEndsIn($inclosed)) !== false) {
+				if ($catches_path_entry instanceof Catches === false) {
+					throw new \LogicException(sprintf("Unknown type %s apparently terminates the Exception Flow, but it is unknown how to handle it.", get_class($catches_path_entry)));
+				}
 				/** @var Catches $catches_path_entry */
 				$guarded_scope_entry["catch clauses"][(string)$catches_path_entry->getCaughtBy()->type][] = (string)$exception;
 			}
