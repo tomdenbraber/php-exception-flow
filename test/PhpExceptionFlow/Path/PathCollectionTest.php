@@ -3,6 +3,7 @@ namespace PhpExceptionFlow\Path;
 
 use PhpExceptionFlow\Scope\GuardedScope;
 use PhpExceptionFlow\Scope\Scope;
+use PhpParser\Node\Stmt\Catch_;
 
 class PathCollectionTest extends \PHPUnit_Framework_TestCase {
 
@@ -71,6 +72,28 @@ class PathCollectionTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals([$initial_link], $paths[0]);
 		$this->assertEquals([$initial_link, $propagates_1], $paths[1]);
 		$this->assertEquals([$initial_link, $propagates_1, $uncaught_1], $paths[2]);
+	}
+
+	public function testWithCatches() {
+		$origin = new Scope("a");
+		$next_1 = new Scope("b");
+		$next_2 = new Scope("c");
+		$initial_link = new Raises($origin);
+		$propagates_1 = new Propagates($origin, $next_1);
+		$propagates_2 = new Propagates($origin, $next_2);
+		$catches_2 = new Catches($next_2, $this->createMock(Catch_::class));
+
+		$path_collection = new PathCollection($initial_link);
+		$path_collection->addEntry($propagates_1);
+		$path_collection->addEntry($propagates_2);
+		$path_collection->addEntry($catches_2);
+
+		$paths = $path_collection->getPaths();
+		$this->assertCount(4, $paths);
+		$this->assertEquals([$initial_link], $paths[0]);
+		$this->assertEquals([$initial_link, $propagates_1], $paths[1]);
+		$this->assertEquals([$initial_link, $propagates_2], $paths[2]);
+		$this->assertEquals([$initial_link, $propagates_2, $catches_2], $paths[3]);
 	}
 
 	public function testDoublePathOnlyShowsUpOnce() {

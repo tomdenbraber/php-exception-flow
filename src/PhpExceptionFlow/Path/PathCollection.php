@@ -51,8 +51,11 @@ class PathCollection {
 				$paths_ending_in_current_elem[] = [];
 			}
 
-
-			$next_links = $this->scope_from_links[$link->getToScope()] ?? [];
+			if ($link->getToScope() !== null) {
+				$next_links = $this->scope_from_links[$link->getToScope()] ?? [];
+			} else {
+				$next_links = [];
+			}
 
 			foreach ($next_links as $next_link) {
 				if (isset($covered_links[(string)$next_link]) === false) {
@@ -90,9 +93,11 @@ class PathCollection {
 		$available__to_links[] = $entry;
 		$this->scope_from_links[$entry->getFromScope()] = $available__to_links;
 
-		$available_from_links = $this->scope_to_links[$entry->getToScope()] ?? [];
-		$available_from_links[] = $entry;
-		$this->scope_to_links[$entry->getToScope()] = $available_from_links;
+		if ($entry->getToScope() !== null) {
+			$available_from_links = $this->scope_to_links[$entry->getToScope()] ?? [];
+			$available_from_links[] = $entry;
+			$this->scope_to_links[$entry->getToScope()] = $available_from_links;
+		}
 	}
 
 

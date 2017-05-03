@@ -1,6 +1,7 @@
 <?php
 namespace PhpExceptionFlow;
 
+use PhpExceptionFlow\Path\Catches;
 use PhpExceptionFlow\Path\PathCollection;
 use PhpExceptionFlow\Path\PathEntryInterface;
 use PhpExceptionFlow\Path\Propagates;
@@ -63,6 +64,17 @@ class Exception_ {
 	 */
 	public function uncaught(GuardedScope $escaped_scope, Scope $enclosing_scope) {
 		$entry = new Uncaught($escaped_scope, $enclosing_scope);
+		if ($this->path_collection->containsEntry($entry) === false) {
+			$this->path_collection->addEntry($entry);
+		}
+	}
+
+	/**
+	 * @param Scope $caught_in
+	 * @param Node\Stmt\Catch_ $caught_by
+	 */
+	public function catches(Scope $caught_in, Node\Stmt\Catch_ $caught_by) {
+		$entry = new Catches($caught_in, $caught_by);
 		if ($this->path_collection->containsEntry($entry) === false) {
 			$this->path_collection->addEntry($entry);
 		}

@@ -55,6 +55,7 @@ class UncaughtCalculator extends AbstractMutableFlowCalculator {
 					foreach ($potentially_caught_types as $potentially_caught_type) {
 						if ($potentially_caught_type->equals($exception->getType()) === true) {
 							$actually_caught_exceptions[] = $exception;
+							$exception->catches($scope, $catch_clause);
 							//remove this exception from the exceptions that still need catching
 							unset($inclosed_encounters[array_search($exception, $inclosed_encounters, true)]);
 						}

@@ -15,7 +15,7 @@ interface PathEntryInterface {
 	public function getFromScope();
 
 	/**
-	 * @return Scope
+	 * @return Scope|null
 	 */
 	public function getToScope();
 
