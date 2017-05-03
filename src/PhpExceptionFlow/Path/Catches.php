@@ -30,6 +30,13 @@ class Catches extends AbstractPathEntry {
 	}
 
 	/**
+	 * @return \PhpExceptionFlow\Scope\GuardedScope
+	 */
+	public function getGuardedScope() {
+		return $this->encountered_in_scope->getEnclosingGuardedScope();
+	}
+
+	/**
 	 * A Catches is always the last entry in a chain, as after an exception is caught, it cannot be propagated further
 	 * @return bool
 	 */
