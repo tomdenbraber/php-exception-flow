@@ -109,7 +109,15 @@ class Runner {
 		$scope_traverser->traverse($this->scope_collector->getTopLevelScopes());
 		$scope_traverser->removeVisitor($json_printing_visitor);
 
-		file_put_contents($this->path_to_project_specific_output . "/exception_flow.json",  $json_printing_visitor->getResult());
+		file_put_contents($this->path_to_project_specific_output . "/exception_flow.json", $json_printing_visitor->getResult());
+		file_put_contents($this->path_to_project_specific_output . "/method_order.json", json_encode($this->method_partial_order, JSON_PRETTY_PRINT));
+		file_put_contents($this->path_to_project_specific_output . "/class_hierarchy.json", json_encode([
+			"class resolves" => $this->state->classResolves,
+			"class resolved by" => $this->state->classResolvedBy,
+		], JSON_PRETTY_PRINT));
+		file_put_contents($this->path_to_project_specific_output . "/unresolved_calls.json", json_encode($this->serializeUnresolvedCalls($call_to_scope_linker->getUnresolvedCalls()), JSON_PRETTY_PRINT));
+		file_put_contents($this->path_to_project_specific_output . "/class_method_to_method.json", json_encode($this->serializeClassMethodToMethodMap($this->class_method_to_method_map), JSON_PRETTY_PRINT));
+		file_put_contents($this->path_to_project_specific_output . "/scope_calls_scope.json", json_encode($this->serializeScopeCallsScopeMap($call_to_scope_linker), JSON_PRETTY_PRINT));
 	}
 
 	private function parseProject() {
@@ -279,18 +287,24 @@ class Runner {
 
 	/**
 	 * @param array $map
-	 * @return string
+	 * @return array
 	 */
-	private function stringifyClassMethodToMethodMap(array $map) {
-		$res = "";
+	private function serializeClassMethodToMethodMap(array $map) {
+		$res = [];
 		foreach ($map as $class => $call_sites) {
+			$res[$class] = [];
 			foreach ($call_sites as $call_site => $methods) {
-				$class_name = explode("\\", $class);
-				$res .= sprintf("%s->%s() resolves to: \n", array_pop($class_name), $call_site);
+				$res[$class][$call_site] = [];
+				foreach ($methods as $method) {
+					$res[$class][$call_site][] = (string)$method;
+				}
+
+
+				/*$res .= sprintf("%s->%s() resolves to: \n", array_pop($class_name), $call_site);
 				foreach ($methods as $method) {
 					$methods_class = explode("\\", $method->getClass());
 					$res .= sprintf("\t%s->%s\n",  array_pop($methods_class), $method->getName());
-				}
+				}*/
 			}
 		}
 
@@ -299,14 +313,15 @@ class Runner {
 
 	/**
 	 * @param CallToScopeLinkingVisitor $call_linker
-	 * @return string
+	 * @return array
 	 */
-	private function stringifyScopeCallsScopeMap(CallToScopeLinkingVisitor $call_linker) {
-		$res = "";
+	private function serializeScopeCallsScopeMap(CallToScopeLinkingVisitor $call_linker) {
+		$res = [];
 		$call_map = $call_linker->getCallerCallsCalleeScopes();
 		foreach ($call_map as $caller) {
+			$res[$caller->getName()] = [];
 			foreach ($call_map[$caller] as $callee) {
-				$res .= sprintf("%s calls %s\n",  $caller->getName(), $callee->getName());
+				$res[$caller->getName()][] = $callee->getName();
 			}
 		}
 		return $res;
@@ -314,21 +329,19 @@ class Runner {
 
 	/**
 	 * @param $unresolved_calls
-	 * @return string
+	 * @return array
 	 */
-	private function stringifyUnresolvedCallsPerScope($unresolved_calls) {
+	private function serializeUnresolvedCalls($unresolved_calls) {
 		$prettyPrinter = new Standard();
-
-		$res = "";
+		$res = [];
 		/** @var \PhpExceptionFlow\Scope\Scope $caller */
 		foreach ($unresolved_calls as $caller) {
-			if ($unresolved_calls[$caller]->count() === 0) continue;
-
-			$res .= sprintf("Scope %s has unresolved: \n", $caller->getName());
+			$res[$caller->getName()] = [];
 			foreach ($unresolved_calls[$caller] as $call_node) {
-				$message = $unresolved_calls[$caller][$call_node];
-				$call_string = $prettyPrinter->prettyPrint([$call_node]);
-				$res .= sprintf("\t%s was unresolved with message '%s'\n", $call_string, $message);
+				$res[$caller->getName()][] = [
+					"message" => $unresolved_calls[$caller][$call_node],
+					"code" => $prettyPrinter->prettyPrint([$call_node]),
+				];
 			}
 		}
 		return $res;
