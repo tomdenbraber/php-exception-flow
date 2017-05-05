@@ -3,7 +3,7 @@ namespace PhpExceptionFlow\Collection\PartialOrder;
 
 use PhpExceptionFlow\Collection\PartialOrderInterface;
 
-class PartialOrder implements PartialOrderInterface {
+class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 	/** @var ComparatorInterface */
 	private $comparator;
 
@@ -23,7 +23,7 @@ class PartialOrder implements PartialOrderInterface {
 		$this->sub_links = new \SplObjectStorage();
 	}
 
-	public function addElement($element_to_add) {
+	public function addElement(PartialOrderElementInterface $element_to_add) {
 		if ($this->elements->contains($element_to_add) === true) {
 			return;
 		}
@@ -70,7 +70,7 @@ class PartialOrder implements PartialOrderInterface {
 		$this->elements->attach($element_to_add);
 	}
 
-	public function removeElement($element) {
+	public function removeElement(PartialOrderElementInterface $element) {
 		if ($this->elements->contains($element) === true) {
 			foreach ($this->super_links[$element] as $parent) {
 				$parents_children = $this->sub_links[$parent];
@@ -143,11 +143,11 @@ class PartialOrder implements PartialOrderInterface {
 	/**
 	 * Retrieves the 'smallest' possible element from the partial order whioh is still greater than
 	 * the given new_element, when we start looking at the given member_element
-	 * @param $new_element
-	 * @param $member_element
+	 * @param PartialOrderElementInterface $new_element
+	 * @param PartialOrderElementInterface $member_element
 	 * @return mixed
 	 */
-	private function getSmallestPossibleParents($new_element, $member_element) {
+	private function getSmallestPossibleParents(PartialOrderElementInterface $new_element, PartialOrderElementInterface $member_element) {
 		$resulting_elems = [];
 		$compare_res = $this->comparator->compare($new_element, $member_element);
 		switch ($compare_res) {
@@ -173,11 +173,11 @@ class PartialOrder implements PartialOrderInterface {
 	/**
 	 * Retrieves the 'greatest' possible element from the partial order whioh is still smaller than
 	 * the given new_element, when we start looking at the given member_element
-	 * @param $new_element
-	 * @param $member_element
+	 * @param PartialOrderElementInterface $new_element
+	 * @param PartialOrderElementInterface $member_element
 	 * @return mixed
 	 */
-	private function getGreatestPossibleChildren($new_element, $member_element) {
+	private function getGreatestPossibleChildren(PartialOrderElementInterface $new_element, PartialOrderElementInterface $member_element) {
 		$resulting_elems = [];
 		$compare_res = $this->comparator->compare($new_element, $member_element);
 		switch ($compare_res) {
@@ -202,9 +202,11 @@ class PartialOrder implements PartialOrderInterface {
 
 
 	/**
+	 * @param PartialOrderElementInterface $element
 	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 * @return PartialOrderElementInterface[]
 	 */
-	public function getAncestors($element) {
+	public function getAncestors(PartialOrderElementInterface $element) {
 		if ($this->elements->contains($element) === false) {
 			throw new \UnexpectedValueException("No such element in this partial order.");
 		}
@@ -221,9 +223,11 @@ class PartialOrder implements PartialOrderInterface {
 	}
 
 	/**
+	 * @param PartialOrderElementInterface $element
 	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 * @return PartialOrderElementInterface[]
 	 */
-	public function getParents($element) {
+	public function getParents(PartialOrderElementInterface $element) {
 		if ($this->elements->contains($element) === false) {
 			throw new \UnexpectedValueException("No such element in this partial order.");
 		}
@@ -231,9 +235,11 @@ class PartialOrder implements PartialOrderInterface {
 	}
 
 	/**
+	 * @param PartialOrderElementInterface $element
 	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 * @return PartialOrderElementInterface[]
 	 */
-	public function getChildren($element) {
+	public function getChildren(PartialOrderElementInterface $element) {
 		if ($this->elements->contains($element) === false) {
 			throw new \UnexpectedValueException("No such element in this partial order.");
 		}
@@ -241,9 +247,11 @@ class PartialOrder implements PartialOrderInterface {
 	}
 
 	/**
+	 * @param PartialOrderElementInterface $element
 	 * @throws \UnexpectedValueException when the given element is not in the partial order
+	 * @return PartialOrderElementInterface[]
 	 */
-	public function getDescendants($element) {
+	public function getDescendants(PartialOrderElementInterface $element) {
 		if ($this->elements->contains($element) === false) {
 			throw new \UnexpectedValueException("No such element in this partial order.");
 		}
@@ -260,11 +268,27 @@ class PartialOrder implements PartialOrderInterface {
 	}
 
 	/**
-	 * Removes the relationship between the two given elements
-	 * @param $greater
-	 * @param $smaller
+	 * @return array with for each method/function its direct children and its direct parents
 	 */
-	private function removeRelationBetween($greater, $smaller) {
+	public function jsonSerialize() {
+		$result = [];
+		foreach ($this->elements as $element) {
+			$result[(string)$element]['parents'] = array_map(function($element) {
+				return (string)$element;
+			}, $this->super_links[$element]);
+			$result[(string)$element]['children'] = array_map(function($element) {
+				return (string)$element;
+			}, $this->sub_links[$element]);
+		}
+		return $result;
+	}
+
+	/**
+	 * Removes the relationship between the two given elements
+	 * @param PartialOrderElementInterface $greater
+	 * @param PartialOrderElementInterface $smaller
+	 */
+	private function removeRelationBetween(PartialOrderElementInterface $greater, PartialOrderElementInterface $smaller) {
 		$children = $this->sub_links[$greater];
 		array_splice($children, array_search($smaller, $children, true), 1);
 		$this->sub_links[$greater] = $children;
@@ -276,10 +300,10 @@ class PartialOrder implements PartialOrderInterface {
 
 	/**
 	 * Adds the relationship between the two given elements
-	 * @param $greater
-	 * @param $smaller
+	 * @param PartialOrderElementInterface $greater
+	 * @param PartialOrderElementInterface $smaller
 	 */
-	private function addRelationBetween($greater, $smaller) {
+	private function addRelationBetween(PartialOrderElementInterface $greater, PartialOrderElementInterface $smaller) {
 		if (isset($this->sub_links[$greater]) === false) {
 			$this->sub_links[$greater] = array();
 		}

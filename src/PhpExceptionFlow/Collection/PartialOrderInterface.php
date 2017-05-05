@@ -1,10 +1,12 @@
 <?php
 namespace PhpExceptionFlow\Collection;
 
-interface PartialOrderInterface {
-	public function addElement($element);
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrderElementInterface;
 
-	public function removeElement($element);
+interface PartialOrderInterface {
+	public function addElement(PartialOrderElementInterface $element);
+
+	public function removeElement(PartialOrderElementInterface $element);
 
 	public function getMaximalElements();
 
@@ -14,13 +16,13 @@ interface PartialOrderInterface {
 
 	public function getLeastElement();
 
-	public function getParents($element);
+	public function getParents(PartialOrderElementInterface $element);
 
-	public function getChildren($element);
+	public function getChildren(PartialOrderElementInterface $element);
 
-	public function getAncestors($element);
+	public function getAncestors(PartialOrderElementInterface $element);
 
-	public function getDescendants($element);
+	public function getDescendants(PartialOrderElementInterface $element);
 
 	const NOT_COMPARABLE = 1;
 	const SMALLER = 2;

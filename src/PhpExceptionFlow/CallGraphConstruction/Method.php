@@ -1,9 +1,10 @@
 <?php
 namespace PhpExceptionFlow\CallGraphConstruction;
 
+use PhpExceptionFlow\Collection\PartialOrder\PartialOrderElementInterface;
 use PhpParser\Node\Stmt\ClassMethod;
 
-class Method {
+class Method implements PartialOrderElementInterface {
 	/** @var string $class */
 	private $class;
 	/** @var ClassMethod $method */
@@ -32,6 +33,6 @@ class Method {
 	}
 
 	public function __toString() {
-		return sprintf("%s.%s(%d) (%d)", $this->class, $this->method_node->name, count($this->method_node->params), $this->method_node->type);
+		return sprintf("%s::%s", $this->class, $this->method_node->name);
 	}
 }
