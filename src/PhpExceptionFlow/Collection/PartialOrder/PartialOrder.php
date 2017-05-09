@@ -273,12 +273,12 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 	public function jsonSerialize() {
 		$result = [];
 		foreach ($this->elements as $element) {
-			$result[(string)$element]['parents'] = array_map(function($element) {
+			$result[(string)$element]['ancestors'] = array_map(function($element) {
 				return (string)$element;
-			}, $this->super_links[$element]);
-			$result[(string)$element]['children'] = array_map(function($element) {
+			}, $this->getAncestors($element));
+			$result[(string)$element]['descendants'] = array_map(function($element) {
 				return (string)$element;
-			}, $this->sub_links[$element]);
+			}, $this->getDescendants($element));
 		}
 		return $result;
 	}
