@@ -43,6 +43,8 @@ class Runner {
 	public $scope_collector;
 	/** @var array $class_method_to_method_map */
 	public $class_method_to_method_map;
+	/** @var string[] $output_files */
+	public $output_files = [];
 
 	/** @var string $path_to_project  */
 	private $path_to_project;
@@ -52,7 +54,6 @@ class Runner {
 
 	/** @var string $path_to_project_specific_output */
 	private $path_to_project_specific_output;
-
 
 	public function __construct(string $path_to_project, string $path_to_output_folder) {
 		if (is_dir($path_to_project) === false) {
@@ -118,6 +119,16 @@ class Runner {
 		file_put_contents($this->path_to_project_specific_output . "/unresolved_calls.json", json_encode($this->serializeUnresolvedCalls($call_to_scope_linker->getUnresolvedCalls()), JSON_PRETTY_PRINT));
 		file_put_contents($this->path_to_project_specific_output . "/class_method_to_method.json", json_encode($this->serializeClassMethodToMethodMap($this->class_method_to_method_map), JSON_PRETTY_PRINT));
 		file_put_contents($this->path_to_project_specific_output . "/scope_calls_scope.json", json_encode($this->serializeScopeCallsScopeMap($call_to_scope_linker), JSON_PRETTY_PRINT));
+
+		$this->output_files = [
+			"exception flow" => $this->path_to_project_specific_output . "/exception_flow.json",
+			"method order" => $this->path_to_project_specific_output . "/method_order.json",
+			"class hierarchy" => $this->path_to_project_specific_output . "/class_hierarchy.json",
+			"unresolved calls" => $this->path_to_project_specific_output . "/unresolved_calls.json",
+			"class method to method" => $this->path_to_project_specific_output . "/class_method_to_method.json",
+			"scope calls scope" => $this->path_to_project_specific_output . "/scope_calls_scope.json",
+			"ast system cache" => __DIR__ . "/../../cache/" .  basename(realpath($this->path_to_project)) . "/ast",
+		];
 	}
 
 	private function parseProject() {
