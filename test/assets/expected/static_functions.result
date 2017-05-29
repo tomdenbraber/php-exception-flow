@@ -1,4 +1,4 @@
 {main}:
 	encounters: [logicexception]
-A::m:
+a::m:
 	encounters: [logicexception]

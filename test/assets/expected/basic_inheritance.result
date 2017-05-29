@@ -6,7 +6,7 @@ b_m:
 	encounters: [logicexception, unexpectedvalueexception]
 c_m:
 	encounters: [unexpectedvalueexception]
-A::m:
+a::m:
 	encounters: [logicexception]
-C::m:
+c::m:
 	encounters: [unexpectedvalueexception]

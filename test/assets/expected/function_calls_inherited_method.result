@@ -8,9 +8,9 @@ c:
 	encounters: []
 e:
 	encounters: [logicexception]
-A::k:
+a::k:
 	encounters: [badmethodcallexception]
-B::k:
+b::k:
 	encounters: []
-E::k:
+e::k:
 	encounters: [logicexception]

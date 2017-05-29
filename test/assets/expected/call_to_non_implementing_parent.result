@@ -1,10 +1,10 @@
 {main}:
 	encounters: []
-A::a:
+a::a:
 	encounters: [unexpectedvalueexception]
-B::a:
+b::a:
 	encounters: [runtimeexception]
-C::a:
+c::a:
 	encounters: [logicexception]
-E::a:
+e::a:
 	encounters: [unexpectedvalueexception]

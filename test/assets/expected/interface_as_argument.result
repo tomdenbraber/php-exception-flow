@@ -2,9 +2,9 @@
 	encounters: []
 use_a:
 	encounters: [runtimeexception, logicexception]
-A::m:
+a::m:
 	encounters: []
-B::m:
+b::m:
 	encounters: [runtimeexception]
-C::m:
+c::m:
 	encounters: [logicexception]

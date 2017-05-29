@@ -61,12 +61,13 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 					break;
 				case Node\Stmt\Function_::class:
 					/** @var Node\Stmt\Function_ $node */
-					$name = $node->name;
+					$name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($node->name) : strtolower($node->name);
 					$this->current_scope = new Scope($name);
 					break;
 				case Node\Stmt\ClassMethod::class:
 					/** @var Node\Stmt\ClassMethod $node */
-					$name = $this->current_class->name . "::" . $node->name;
+					$cls_name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($this->current_class->name) : strtolower($this->current_class->name);
+					$name = $cls_name . "::" . strtolower($node->name);
 					$this->current_scope = new Scope($name);
 					break;
 				default:

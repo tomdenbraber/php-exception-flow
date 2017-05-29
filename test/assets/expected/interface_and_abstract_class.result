@@ -8,17 +8,17 @@ use_b_m:
 	encounters: [logicexception, unexpectedvalueexception]
 use_b_n:
 	encounters: [runtimeexception, logicexception]
-A::m:
+a::m:
 	encounters: []
-A::n:
+a::n:
 	encounters: []
-B::m:
+b::m:
 	encounters: []
-B::n:
+b::n:
 	encounters: [runtimeexception]
-C::m:
+c::m:
 	encounters: [logicexception]
-C::n:
+c::n:
 	encounters: [logicexception]
-D::m:
+d::m:
 	encounters: [unexpectedvalueexception]

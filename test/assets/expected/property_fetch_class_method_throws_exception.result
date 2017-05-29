@@ -1,6 +1,6 @@
 {main}:
 	encounters: []
-A::m:
+a::m:
 	encounters: [exception]
-B::f:
+b::f:
 	encounters: [exception]

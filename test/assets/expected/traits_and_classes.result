@@ -8,13 +8,13 @@ c_m:
 	encounters: [logicexception]
 f_m:
 	encounters: [unexpectedvalueexception]
-A::x:
+a::x:
 	encounters: [unexpectedvalueexception]
-A::m:
+a::m:
 	encounters: []
-B::x:
+b::x:
 	encounters: [logicexception]
-C::m:
+c::m:
 	encounters: [logicexception]
-F::m:
+f::m:
 	encounters: [unexpectedvalueexception]

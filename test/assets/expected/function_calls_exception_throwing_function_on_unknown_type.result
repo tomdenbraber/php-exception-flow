@@ -2,5 +2,5 @@
 	encounters: [badmethodcallexception]
 some_fn:
 	encounters: []
-E::k:
+e::k:
 	encounters: [badmethodcallexception]

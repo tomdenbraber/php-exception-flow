@@ -1,6 +1,6 @@
 {main}:
 	encounters: []
-A::m:
+a::m:
 	encounters: [logicexception]
-UseA::k:
+usea::k:
 	encounters: [logicexception]

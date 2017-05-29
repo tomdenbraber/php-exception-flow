@@ -16,20 +16,20 @@ uses_uses_both_overrides_both:
 	encounters: []
 use_uses_both:
 	encounters: [logicexception]
-A::m:
+a::m:
 	encounters: []
-A::n:
+a::n:
 	encounters: []
-HasM::m:
+hasm::m:
 	encounters: [logicexception]
-HasN::n:
+hasn::n:
 	encounters: [logicexception]
-UsesM::n:
+usesm::n:
 	encounters: []
-UsesN::m:
+usesn::m:
 	encounters: []
-UsesBothOverridesBoth::m:
+usesbothoverridesboth::m:
 	encounters: []
-UsesBothOverridesBoth::n:
+usesbothoverridesboth::n:
 	encounters: []
 
