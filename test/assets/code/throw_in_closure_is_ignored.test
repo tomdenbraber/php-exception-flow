@@ -1,0 +1,7 @@
+<?php
+function a() {
+    $a = function () {
+        throw new LogicException();
+    };
+    throw new RuntimeException();
+}

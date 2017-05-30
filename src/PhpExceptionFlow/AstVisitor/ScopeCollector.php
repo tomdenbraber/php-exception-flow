@@ -56,8 +56,11 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 		} else if ($node instanceof Node\FunctionLike) {
 			switch (get_class($node)) {
 				case Node\Expr\Closure::class:
+					/** @var Node\Expr\Closure stmts */
 					//todo: implement correctly, thinking of how closures behave.
-					//currently do nothing to not interfere with 'normal' function scopes
+					//currently, remove all its statements so that statements in closures do not interfere with the normal scopes
+					$node->stmts = [];
+					return $node;
 					break;
 				case Node\Stmt\Function_::class:
 					/** @var Node\Stmt\Function_ $node */
