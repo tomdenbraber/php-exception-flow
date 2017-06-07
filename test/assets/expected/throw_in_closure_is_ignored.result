@@ -1,4 +1,4 @@
 {main}:
-    encounters: []
+	encounters: []
 a:
-    encounters: []
+	encounters: [runtimeexception]
