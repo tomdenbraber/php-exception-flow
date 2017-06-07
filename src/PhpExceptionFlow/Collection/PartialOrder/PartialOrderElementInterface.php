@@ -1,6 +1,6 @@
 <?php
 namespace PhpExceptionFlow\Collection\PartialOrder;
 
-interface PartialOrderElementInterface {
+interface PartialOrderElementInterface extends \JsonSerializable {
 	public function __toString();
 }

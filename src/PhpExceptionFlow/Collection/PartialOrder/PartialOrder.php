@@ -165,7 +165,7 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 				if (empty($resulting_elems) === true) {
 					$resulting_elems[] = $member_element;
 				}
-			break;
+				break;
 		}
 		return $resulting_elems;
 	}
@@ -274,10 +274,10 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 		$result = [];
 		foreach ($this->elements as $element) {
 			$result[(string)$element]['ancestors'] = array_map(function($element) {
-				return (string)$element;
+				return $element->jsonSerialize();
 			}, $this->getAncestors($element));
 			$result[(string)$element]['descendants'] = array_map(function($element) {
-				return (string)$element;
+				return $element->jsonSerialize();
 			}, $this->getDescendants($element));
 		}
 		return $result;

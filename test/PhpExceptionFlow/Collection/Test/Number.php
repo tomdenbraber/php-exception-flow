@@ -14,4 +14,8 @@ class Number implements PartialOrderElementInterface {
 	public function __toString() {
 		return (string)$this->value;
 	}
+
+	public function jsonSerialize() {
+		return $this->__toString();
+	}
 }
