@@ -33,6 +33,10 @@ class Method implements PartialOrderElementInterface {
 	}
 
 	public function __toString() {
-		return sprintf("%s::%s", $this->class, $this->method_node->name);
+		return json_encode([
+			sprintf("%s::%s", $this->class, $this->method_node->name) => [
+				"abstract" => $this->isImplemented()
+			]
+		], JSON_PRETTY_PRINT);
 	}
 }
