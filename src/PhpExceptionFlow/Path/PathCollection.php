@@ -9,6 +9,7 @@ class PathCollection {
 	/** @var PathEntryInterface $initial_link */
 	private $initial_link;
 
+	/** @var PathEntryInterface[]  */
 	private $entries = [];
 
 	/** @var \SplObjectStorage|PathEntryInterface[][] $scope_from_links */
@@ -21,9 +22,9 @@ class PathCollection {
 		$this->scope_from_links = new \SplObjectStorage;
 		$this->scope_to_links = new \SplObjectStorage;
 
-		$this->addEntry($initial_link);
+		$this->entries[] = $initial_link;
+		$this->scope_to_links[$initial_link->getToScope()] = [$initial_link];
 	}
-
 
 	/**
 	 * @return PathEntryInterface[][]
@@ -60,7 +61,7 @@ class PathCollection {
 			foreach ($next_links as $next_link) {
 				if (isset($covered_links[(string)$next_link]) === false) {
 					foreach ($paths_ending_in_current_elem as $i => $relevant_path) {
-						$relevant_path[]  = $next_link;
+						$relevant_path[] = $next_link;
 						$paths[] = $relevant_path;
 						if (isset($link_to_ind[(string)$next_link]) === true) {
 							$link_to_ind[(string)$next_link][] = $no_paths;
@@ -120,5 +121,77 @@ class PathCollection {
 		} else {
 			return [];
 		}
+	}
+
+	public function getEntries() {
+		return $this->entries;
+	}
+
+	/**
+	 * @todo: has a lot of similarities with getPaths, refactor and merge?
+	 * @param PathEntryInterface $link
+	 * @return array
+	 */
+	public function getPathsEndingInLink(PathEntryInterface $link) {
+		$paths = [
+			[$link]
+		];
+		$link_to_ind = [(string)$link => [0]];
+		$no_paths = 1;
+
+		$covered_links = [(string)$link => true];
+
+		/** @var PathEntryInterface[] $queue */
+		$queue = [$link];
+		while (empty($queue) === false) {
+			$link = array_shift($queue);
+
+			$paths_ending_in_current_elem = [];
+			$indices = $link_to_ind[(string)$link] ?? [];
+			foreach ($indices as $index) {
+				$paths_ending_in_current_elem[] = $paths[$index];
+			}
+			if (empty($paths_ending_in_current_elem) === true) {
+				$paths_ending_in_current_elem[] = [];
+			}
+
+			if ($link !== $this->initial_link) {
+				$next_links = $this->scope_to_links[$link->getFromScope()] ?? [];
+			} else {
+				$next_links = [];
+			}
+
+			foreach ($next_links as $next_link) {
+				foreach ($paths_ending_in_current_elem as $i => $relevant_path) {
+					$relevant_path[] = $next_link;
+					$paths[] = $relevant_path;
+					if (isset($link_to_ind[(string)$next_link]) === true) {
+						$link_to_ind[(string)$next_link][] = $no_paths;
+					} else {
+						$link_to_ind[(string)$next_link] = [$no_paths];
+					}
+					$no_paths += 1;
+				}
+			}
+
+			$covered_links[(string)$link] = true;
+
+			foreach ($next_links as $next_link) {
+				if (isset($covered_links[(string)$next_link]) === false) {
+					$queue[] = $next_link;
+				}
+			}
+		}
+
+		//now filter incomplete paths (not starting in raises) and reverse them
+		$complete_paths = [];
+		foreach ($paths as $i => $path) {
+			$path = array_reverse($path);
+			if ($path[0] instanceof Raises) {
+				$complete_paths[] = $path;
+			}
+		}
+
+		return $complete_paths;
 	}
 }

@@ -13,8 +13,10 @@ use PhpExceptionFlow\CallGraphConstruction\MethodResolver;
 use PhpExceptionFlow\Collection\PartialOrder\PartialOrder;
 use PhpExceptionFlow\Collection\PartialOrderInterface;
 use PhpExceptionFlow\FlowCalculator\CombiningCalculatorInterface;
+use PhpExceptionFlow\FlowCalculator\UncaughtCalculator;
 use PhpExceptionFlow\Scope\ScopeVisitor\CalculatorWrappingVisitor;
 use PhpExceptionFlow\Scope\ScopeVisitor\CallToScopeLinkingVisitor;
+use PhpExceptionFlow\Scope\ScopeVisitor\CatchesPathVisitor;
 use PhpExceptionFlow\Scope\ScopeVisitor\CaughtExceptionTypesCalculator;
 use PhpExceptionFlow\Scope\ScopeVisitor\JsonPrintingVisitor;
 use PhpParser\NodeTraverser as AstNodeTraverser;
@@ -106,9 +108,14 @@ class Runner {
 		$combining_calculator = $this->calculateEncounters($this->scope_collector, $call_to_scope_linker, $catch_clause_type_resolver);
 
 		$json_printing_visitor = new JsonPrintingVisitor($combining_calculator);
+		/** @var UncaughtCalculator $uncaught_calculator */
+		$uncaught_calculator = $combining_calculator->getCalculator("uncaught");
+		$caught_path_collecting_visitor = new CatchesPathVisitor($uncaught_calculator);
 		$scope_traverser->addVisitor($json_printing_visitor);
+		$scope_traverser->addVisitor($caught_path_collecting_visitor);
 		$scope_traverser->traverse($this->scope_collector->getTopLevelScopes());
 		$scope_traverser->removeVisitor($json_printing_visitor);
+		$scope_traverser->removeVisitor($caught_path_collecting_visitor);
 
 		file_put_contents($this->path_to_project_specific_output . "/exception_flow.json", $json_printing_visitor->getResult());
 		file_put_contents($this->path_to_project_specific_output . "/method_order.json", json_encode($this->method_partial_order, JSON_PRETTY_PRINT));
@@ -119,6 +126,7 @@ class Runner {
 		file_put_contents($this->path_to_project_specific_output . "/unresolved_calls.json", json_encode($this->serializeUnresolvedCalls($call_to_scope_linker->getUnresolvedCalls()), JSON_PRETTY_PRINT));
 		file_put_contents($this->path_to_project_specific_output . "/class_method_to_method.json", json_encode($this->serializeClassMethodToMethodMap($this->class_method_to_method_map), JSON_PRETTY_PRINT));
 		file_put_contents($this->path_to_project_specific_output . "/scope_calls_scope.json", json_encode($this->serializeScopeCallsScopeMap($call_to_scope_linker), JSON_PRETTY_PRINT));
+		file_put_contents($this->path_to_project_specific_output . "/path_to_catch_clauses.json", json_encode($caught_path_collecting_visitor->getPaths(), JSON_PRETTY_PRINT));
 
 		$this->output_files = [
 			"exception flow" => $this->path_to_project_specific_output . "/exception_flow.json",
@@ -127,6 +135,7 @@ class Runner {
 			"unresolved calls" => $this->path_to_project_specific_output . "/unresolved_calls.json",
 			"class method to method" => $this->path_to_project_specific_output . "/class_method_to_method.json",
 			"scope calls scope" => $this->path_to_project_specific_output . "/scope_calls_scope.json",
+			"path to catch clauses" => $this->path_to_project_specific_output . "/path_to_catch_clauses.json",
 			"ast system cache" => __DIR__ . "/../../cache/" .  basename(realpath($this->path_to_project)) . "/ast",
 		];
 	}
