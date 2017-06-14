@@ -41,7 +41,7 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 				$exception_idx = count($this->paths[$scope_name][(string)$caught_exception]);
 
 				foreach ($caught_exception->getPathsToCatchClause($catch_) as $path) {
-					$this->paths[$scope_name][(string)$caught_exception][$exception_idx][] = $this->pathToJson($path);
+					$this->paths[$scope_name][(string)$caught_exception][$exception_idx][] = $this->pathToJsonSerialiazable($path);
 				}
 			}
 		}
@@ -55,11 +55,12 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 	 * @param PathEntryInterface[] $path
 	 * @return array
 	 */
-	private function pathToJson(array $path) {
+	private function pathToJsonSerialiazable(array $path) {
 		$result = [];
 		foreach ($path as $entry) {
 			$result[] = [
-				$entry->getToScope()->getName() => $entry->getType()
+				"scope" => $entry->getToScope()->getName(),
+				"link" => $entry->getType()
 			];
 		}
 		return $result;
