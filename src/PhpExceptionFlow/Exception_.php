@@ -119,7 +119,9 @@ class Exception_ {
 		$paths = [];
 		foreach ($links as $link) {
 			if ($link instanceof Catches && $link->getCaughtBy() === $catch_) {
-				$paths = array_merge($this->path_collection->getPathsEndingInLink($link), $paths);
+				foreach ($this->path_collection->getPathsEndingInLink($link) as $path) {
+					$paths[] = $path;
+				}
 			}
 		}
 		return $paths;

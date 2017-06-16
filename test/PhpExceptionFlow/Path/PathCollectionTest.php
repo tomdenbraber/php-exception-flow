@@ -117,4 +117,41 @@ class PathCollectionTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals([$initial_link, $propagates_2], $paths[2]);
 		$this->assertEquals([$initial_link, $propagates_2, $propagates_3], $paths[3]);
 	}
+
+
+
+	public function testPathsUntilCatchClause() {
+		$scope_a = new Scope("a");
+		$scope_b = new Scope("b");
+		$scope_c = new Scope("c");
+		$scope_d = new Scope("d");
+		$guarding_d = new GuardedScope($this->createMock(Scope::class), $scope_d);
+
+		$raises_a = new Raises($scope_a);
+		$propagates_a_b = new Propagates($scope_a, $scope_b);
+		$propagates_a_d = new Propagates($scope_a, $scope_d);
+		$propagates_b_a = new Propagates($scope_b, $scope_a);
+		$propagates_b_c = new Propagates($scope_b, $scope_c);
+		$propagates_b_d = new Propagates($scope_b, $scope_d);
+		$propagates_c_d = new Propagates($scope_c, $scope_d);
+		$catches_d = new Catches($guarding_d, $this->createMock(Catch_::class));
+
+		$path_collection = new PathCollection($raises_a);
+		$path_collection->addEntry($propagates_a_b);
+		$path_collection->addEntry($propagates_a_d);
+		$path_collection->addEntry($propagates_b_a); //introduces cycle, but is ignored.
+		$path_collection->addEntry($propagates_b_c);
+		$path_collection->addEntry($propagates_b_d);
+		$path_collection->addEntry($propagates_c_d);
+		$path_collection->addEntry($catches_d);
+
+		$paths = [];
+		foreach ($path_collection->getPathsEndingInLink($catches_d) as $path) {
+			$paths[] = $path;
+		}
+		$this->assertCount(3, $paths);
+		$this->assertEquals([$raises_a, $propagates_a_d, $catches_d], $paths[0]);
+		$this->assertEquals([$raises_a, $propagates_a_b, $propagates_b_d, $catches_d], $paths[1]);
+		$this->assertEquals([$raises_a, $propagates_a_b, $propagates_b_c, $propagates_c_d, $catches_d], $paths[2]);
+	}
 }
