@@ -107,26 +107,42 @@ class Runner {
 
 		$combining_calculator = $this->calculateEncounters($this->scope_collector, $call_to_scope_linker, $catch_clause_type_resolver);
 
-		$json_printing_visitor = new JsonPrintingVisitor($combining_calculator);
-		/** @var UncaughtCalculator $uncaught_calculator */
-		$uncaught_calculator = $combining_calculator->getCalculator("uncaught");
-		$caught_path_collecting_visitor = new CatchesPathVisitor($uncaught_calculator);
-		$scope_traverser->addVisitor($json_printing_visitor);
-		$scope_traverser->addVisitor($caught_path_collecting_visitor);
-		$scope_traverser->traverse($this->scope_collector->getTopLevelScopes());
-		$scope_traverser->removeVisitor($json_printing_visitor);
-		$scope_traverser->removeVisitor($caught_path_collecting_visitor);
+		unset($this->ast_system);
+		unset($this->cfg_system);
 
-		file_put_contents($this->path_to_project_specific_output . "/exception_flow.json", $json_printing_visitor->getResult());
 		file_put_contents($this->path_to_project_specific_output . "/method_order.json", json_encode($this->method_partial_order, JSON_PRETTY_PRINT));
+		unset($this->method_partial_order);
 		file_put_contents($this->path_to_project_specific_output . "/class_hierarchy.json", json_encode([
 			"class resolves" => $this->state->classResolves,
 			"class resolved by" => $this->state->classResolvedBy,
 		], JSON_PRETTY_PRINT));
-		file_put_contents($this->path_to_project_specific_output . "/unresolved_calls.json", json_encode($this->serializeUnresolvedCalls($call_to_scope_linker->getUnresolvedCalls()), JSON_PRETTY_PRINT));
+		unset($this->state);
 		file_put_contents($this->path_to_project_specific_output . "/class_method_to_method.json", json_encode($this->serializeClassMethodToMethodMap($this->class_method_to_method_map), JSON_PRETTY_PRINT));
+		unset($this->class_method_to_method_map);
+		file_put_contents($this->path_to_project_specific_output . "/unresolved_calls.json", json_encode($this->serializeUnresolvedCalls($call_to_scope_linker->getUnresolvedCalls()), JSON_PRETTY_PRINT));
 		file_put_contents($this->path_to_project_specific_output . "/scope_calls_scope.json", json_encode($this->serializeScopeCallsScopeMap($call_to_scope_linker), JSON_PRETTY_PRINT));
-		file_put_contents($this->path_to_project_specific_output . "/path_to_catch_clauses.json", json_encode($caught_path_collecting_visitor->getPaths(), JSON_PRETTY_PRINT));
+		unset($this->call_to_scope_linker);
+
+		$json_printing_visitor = new JsonPrintingVisitor($combining_calculator);
+		$scope_traverser->addVisitor($json_printing_visitor);
+		$scope_traverser->traverse($this->scope_collector->getTopLevelScopes());
+		$scope_traverser->removeVisitor($json_printing_visitor);
+		file_put_contents($this->path_to_project_specific_output . "/exception_flow.json", $json_printing_visitor->getResult());
+		unset($json_printing_visitor);
+
+
+		/** @var UncaughtCalculator $uncaught_calculator */
+		$uncaught_calculator = $combining_calculator->getCalculator("uncaught");
+		$paths_file = fopen($this->path_to_project_specific_output . "/path_to_catch_clauses.json", "w");
+		$caught_path_collecting_visitor = new CatchesPathVisitor($uncaught_calculator,$paths_file);
+		$scope_traverser->addVisitor($caught_path_collecting_visitor);
+		$scope_traverser->traverse($this->scope_collector->getTopLevelScopes());
+		$scope_traverser->removeVisitor($caught_path_collecting_visitor);
+
+		fclose($paths_file);
+
+		//file_put_contents($this->path_to_project_specific_output . "/path_to_catch_clauses.json", json_encode($caught_path_collecting_visitor->getPaths(), JSON_PRETTY_PRINT));
+		unset($caught_path_collecting_visitor);
 
 		$this->output_files = [
 			"exception flow" => $this->path_to_project_specific_output . "/exception_flow.json",
