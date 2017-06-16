@@ -132,7 +132,7 @@ class PathCollection {
 	 * @param PathEntryInterface $link
 	 * @return array
 	 */
-	public function getPathsEndingInLink(PathEntryInterface $link) {
+	/*public function getPathsEndingInLink(PathEntryInterface $link) {
 		$paths = [
 			[$link]
 		];
@@ -142,7 +142,7 @@ class PathCollection {
 		$covered_links = [(string)$link => true];
 
 		/** @var PathEntryInterface[] $queue */
-		$queue = [$link];
+		/*$queue = [$link];
 		while (empty($queue) === false) {
 			$link = array_shift($queue);
 
@@ -193,5 +193,62 @@ class PathCollection {
 		}
 
 		return $complete_paths;
+	}*/
+
+	/**
+	 * Does a DFS creation of all possible paths (leaves out cycles)
+	 * @param PathEntryInterface $final_link
+	 * @return \Generator
+	 */
+	public function getPathsEndingInLink(PathEntryInterface $final_link) {
+		$stack = [$final_link];
+		$covered_entries = [];
+		$currently_stacked_entries = [
+			(string) $final_link => true
+		];
+		$covered_for_current_root = [];
+
+		while (empty($stack) === false) {
+			/** @var PathEntryInterface $current_entry */
+			$current_entry = $stack[0];
+			if (isset($covered_for_current_root[(string)$current_entry]) === false) {
+				$covered_for_current_root[(string)$current_entry] = [];
+			}
+
+			$links = $this->scope_to_links[$current_entry->getFromScope()];
+			$added_link_to_stack = false;
+			foreach ($links as $link) {
+				if (isset($covered_entries[(string)$link]) === false && isset($currently_stacked_entries[(string)$link]) === false && isset($covered_for_current_root[(string)$current_entry][(string)$link]) === false) {
+					array_unshift($stack, $link);
+					$added_link_to_stack = true;
+					$currently_stacked_entries[(string)$link] = true;
+					$covered_for_current_root[(string)$current_entry][(string)$link] = true;
+					break;
+				}
+			}
+
+			if ($added_link_to_stack === false) {
+				$top_item = $stack[0];
+				//this path is finished. if it ends in the initial link, it is a path from $initial_link to $final_link.
+				if ($top_item === $this->initial_link) {
+					yield $stack;
+				}
+				$finished_entry = array_shift($stack);
+				unset($currently_stacked_entries[(string)$top_item]);
+				$covered_entries[(string)$top_item] = true;
+				$this->cleanCoveredEntries((string)$finished_entry, $covered_entries, $covered_for_current_root);
+			}
+		}
+	}
+
+	private function cleanCoveredEntries(string $entry_key, array &$covered_entries, array &$covered_for_current_root) {
+		if (isset($covered_for_current_root[$entry_key]) === false) {
+			return;
+		}
+		foreach ($covered_for_current_root[$entry_key] as $related_entry => $_) {
+			unset($covered_entries[$related_entry]);
+			$this->cleanCoveredEntries($related_entry, $covered_entries, $covered_for_current_root);
+			unset($covered_for_current_root[$related_entry]);
+		}
 	}
 }
