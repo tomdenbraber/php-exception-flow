@@ -112,19 +112,15 @@ class Exception_ {
 
 	/**
 	 * Gets all the paths that end in a catch-clause
-	 * @return array
+	 * @return \Generator
 	 */
 	public function getPathsToCatchClause(Node\Stmt\Catch_ $catch_) {
 		$links = $this->path_collection->getEntries();
-		$paths = [];
 		foreach ($links as $link) {
 			if ($link instanceof Catches && $link->getCaughtBy() === $catch_) {
-				foreach ($this->path_collection->getPathsEndingInLink($link) as $path) {
-					$paths[] = $path;
-				}
+				yield $this->path_collection->getShortestPathEndingInLink($link);
 			}
 		}
-		return $paths;
 	}
 
 	public function __toString() {

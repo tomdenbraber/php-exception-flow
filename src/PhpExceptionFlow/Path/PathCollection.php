@@ -128,74 +128,6 @@ class PathCollection {
 	}
 
 	/**
-	 * @todo: has a lot of similarities with getPaths, refactor and merge?
-	 * @param PathEntryInterface $link
-	 * @return array
-	 */
-	/*public function getPathsEndingInLink(PathEntryInterface $link) {
-		$paths = [
-			[$link]
-		];
-		$link_to_ind = [(string)$link => [0]];
-		$no_paths = 1;
-
-		$covered_links = [(string)$link => true];
-
-		/** @var PathEntryInterface[] $queue */
-		/*$queue = [$link];
-		while (empty($queue) === false) {
-			$link = array_shift($queue);
-
-			$paths_ending_in_current_elem = [];
-			$indices = $link_to_ind[(string)$link] ?? [];
-			foreach ($indices as $index) {
-				$paths_ending_in_current_elem[] = $paths[$index];
-			}
-			if (empty($paths_ending_in_current_elem) === true) {
-				$paths_ending_in_current_elem[] = [];
-			}
-
-			if ($link !== $this->initial_link) {
-				$next_links = $this->scope_to_links[$link->getFromScope()] ?? [];
-			} else {
-				$next_links = [];
-			}
-
-			foreach ($next_links as $next_link) {
-				foreach ($paths_ending_in_current_elem as $i => $relevant_path) {
-					$relevant_path[] = $next_link;
-					$paths[] = $relevant_path;
-					if (isset($link_to_ind[(string)$next_link]) === true) {
-						$link_to_ind[(string)$next_link][] = $no_paths;
-					} else {
-						$link_to_ind[(string)$next_link] = [$no_paths];
-					}
-					$no_paths += 1;
-				}
-			}
-
-			$covered_links[(string)$link] = true;
-
-			foreach ($next_links as $next_link) {
-				if (isset($covered_links[(string)$next_link]) === false) {
-					$queue[] = $next_link;
-				}
-			}
-		}
-
-		//now filter incomplete paths (not starting in raises) and reverse them
-		$complete_paths = [];
-		foreach ($paths as $i => $path) {
-			$path = array_reverse($path);
-			if ($path[0] instanceof Raises) {
-				$complete_paths[] = $path;
-			}
-		}
-
-		return $complete_paths;
-	}*/
-
-	/**
 	 * Does a DFS creation of all possible paths (leaves out cycles)
 	 * @param PathEntryInterface $final_link
 	 * @return \Generator
@@ -240,6 +172,70 @@ class PathCollection {
 			}
 		}
 	}
+
+	/**
+	 * Uses Dijkstra to find the shortest path from the initial link to the given final link
+	 * @param PathEntryInterface $final_link
+	 * @return PathEntryInterface[]
+	 */
+	public function getShortestPathEndingInLink(PathEntryInterface $final_link) : array {
+		$queue = [];
+
+		$distances = new \SplObjectStorage();
+		$previous = new \SplObjectStorage();
+
+		$distances[$this->initial_link] = 0;
+
+		foreach ($this->entries as $node) {
+			if ($node !== $this->initial_link) {
+				$distances[$node] = INF;
+				$previous[$node] = null;
+			}
+			$queue[] = $node;
+		}
+
+		while (empty($queue) === false) {
+			/** @var PathEntryInterface $current_entry */
+			$min_dist = INF;
+			$min_index = -1;
+			//fetch entry with lowest distance from the queue
+			foreach ($queue as $i => $entry) {
+				if ($distances[$entry] < $min_dist) {
+					$min_dist = $distances[$entry];
+					$current_entry = $entry;
+					$min_index = $i;
+				}
+			}
+			array_splice($queue, $min_index, 1);
+
+
+			if ($current_entry === $final_link) {
+				break;
+			}
+
+
+			if ($this->scope_from_links->contains($current_entry->getToScope()) === true) {
+				foreach ($this->scope_from_links[$current_entry->getToScope()] as $neighbour) {
+					$dist = $distances[$current_entry] + 1; //the distance between each scope is the same, so +1
+					if ($dist < $distances[$neighbour]) {
+						$distances[$neighbour] = $dist;
+						$previous[$neighbour] = $current_entry;
+					}
+				}
+			}
+		}
+		//now rebuild path
+		$path = [];
+		$last_link = $final_link;
+		while ($previous->contains($last_link) === true) {
+			array_unshift($path, $last_link);
+			$last_link = $previous[$last_link];
+		}
+		array_unshift($path, $last_link);
+
+		return $path;
+	}
+
 
 	private function cleanCoveredEntries(string $entry_key, array &$covered_entries, array &$covered_for_current_root) {
 		if (isset($covered_for_current_root[$entry_key]) === false) {
