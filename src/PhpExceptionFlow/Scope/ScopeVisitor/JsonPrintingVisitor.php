@@ -14,8 +14,13 @@ class JsonPrintingVisitor extends AbstractScopeVisitor {
 	private $top_level_entries = [];
 	private $key_stack = [];
 
+	/** @var \SplObjectStorage $unique_exceptions */
+	private $unique_exceptions;
+
+
 	public function __construct(CombiningCalculatorInterface $encounters_calculator) {
 		$this->encounters_calculator = $encounters_calculator;
+		$this->unique_exceptions = new \SplObjectStorage;
 	}
 
 	public function enterScope(Scope $scope) {
@@ -28,24 +33,28 @@ class JsonPrintingVisitor extends AbstractScopeVisitor {
 		];
 
 		foreach ($encounters as $exception) {
+			if ($this->unique_exceptions->contains($exception) === false) {
+				$this->unique_exceptions->attach($exception, uniqid("exception_", true));
+			}
+
 			$causes = $exception->getCauses($scope);
 
 			foreach ($causes["raises"] as $original_scope) {
-				$scope_entry["raises"][] = (string)$exception;
+				$scope_entry["raises"][$this->unique_exceptions[$exception]] = (string)$exception;
 			}
 
 			/** @var Scope $original_scope */
 			foreach ($causes["propagates"] as $original_scope) {
 				$original_scope_name = $original_scope->getName();
 				$propagated_exceptions = $scope_entry["propagates"][$original_scope_name] ?? [];
-				$propagated_exceptions[] = (string)$exception;
+				$propagated_exceptions[$this->unique_exceptions[$exception]] = (string)$exception;
 				$scope_entry["propagates"][$original_scope_name] = $propagated_exceptions;
 			}
 			/** @var Scope $escaped_from_scope */
 			foreach ($causes["uncaught"] as $escaped_from_scope) {
 				$escaped_from_scope_name = $escaped_from_scope->getName();
 				$escaped_exceptions = $scope_entry["uncaught"][$escaped_from_scope_name] ?? [];
-				$escaped_exceptions[] = (string)$exception;
+				$escaped_exceptions[$this->unique_exceptions[$exception]] = (string)$exception;
 				$scope_entry["uncaught"][$escaped_from_scope_name] = $escaped_exceptions;
 			}
 		}
@@ -73,12 +82,16 @@ class JsonPrintingVisitor extends AbstractScopeVisitor {
 		}
 
 		foreach ($inclosed_encounters as $exception) {
+			if ($this->unique_exceptions->contains($exception) === false) {
+				$this->unique_exceptions->attach($exception, uniqid("exception_", true));
+			}
+
 			if (($catches_path_entry = $exception->pathEndsIn($inclosed)) !== false) {
 				if ($catches_path_entry instanceof Catches === false) {
 					throw new \LogicException(sprintf("Unknown type %s apparently terminates the Exception Flow, but it is unknown how to handle it.", get_class($catches_path_entry)));
 				}
 				/** @var Catches $catches_path_entry */
-				$guarded_scope_entry["catch clauses"][(string)$catches_path_entry->getCaughtBy()->type][] = (string)$exception;
+				$guarded_scope_entry["catch clauses"][(string)$catches_path_entry->getCaughtBy()->type][$this->unique_exceptions[$exception]] = (string)$exception;
 			}
 		}
 
