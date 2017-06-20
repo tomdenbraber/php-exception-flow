@@ -51,7 +51,7 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 						fwrite($this->file_resource, ",\n");
 					}
 
-					fwrite($this->file_resource, sprintf("\"%s#%d\": [\n", (string)$caught_exception, $exception_type_occurrences[(string)$caught_exception]));
+					fwrite($this->file_resource, sprintf("\"%s#%d\":\n", (string)$caught_exception, $exception_type_occurrences[(string)$caught_exception]));
 					$exception_type_occurrences[(string)$caught_exception] += 1;
 
 					$first_path = true;
@@ -64,8 +64,6 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 
 						fwrite($this->file_resource, sprintf("%s", json_encode($this->pathToJsonSerialiazable($path), JSON_PRETTY_PRINT)));
 					}
-
-					fwrite($this->file_resource, "]");
 				}
 			}
 		}
