@@ -76,14 +76,20 @@ class Runner {
 		$this->createNeededDirectories(realpath($this->path_to_project), realpath($this->path_to_output_folder));
 
 		$this->ast_system = $this->parseProject();
+		print "AST created.\n";
 		$cfg_system_factory = CfgSystemFactory::createDefault();
 		$this->cfg_system = $this->createCfgSystem($cfg_system_factory, $this->ast_system);
+		print "CFGs created.\n";
 		$this->state = $this->calculateState($this->cfg_system);
+		print "State calculated.\n";
 		$ast_nodes_collector = $this->linkingCfgPass($this->cfg_system);
+		print "Connected CFG to AST.\n";
 		$this->scope_collector = $this->calculateScopes($this->state, $ast_nodes_collector, $this->ast_system);
+		print "Calculated scopes.\n";
 		$this->method_partial_order = $this->calculatePartialOrder($this->ast_system, $this->state);
+		print "Calculated partial order.\n";
 		$this->class_method_to_method_map = $this->calculateClassMethodToMethodMap($this->method_partial_order, $this->state);
-
+		print "Created class method to method map.\n";
 
 		$builtin_collector = new \PhpExceptionFlow\Scope\Collector\BuiltInCollector($this->state->internalTypeInfo);
 
@@ -105,7 +111,11 @@ class Runner {
 		$scope_traverser->removeVisitor($catch_clause_type_resolver);
 		$scope_traverser->removeVisitor($call_to_scope_linker);
 
+		print "Linked calls to scopes and resolved catch clause types.\n";
+
 		$combining_calculator = $this->calculateEncounters($this->scope_collector, $call_to_scope_linker, $catch_clause_type_resolver);
+
+		print "Calculated the exception flow.\n";
 
 		unset($this->ast_system);
 		unset($this->cfg_system);
