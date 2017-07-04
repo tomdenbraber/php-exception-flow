@@ -13,22 +13,19 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 	/** @var resource $file_resource */
 	private $file_resource;
 
+	private $paths = [];
+
 	public function __construct(UncaughtCalculator $uncaught_calculator, $file_resource) {
 		$this->uncaught_calculator = $uncaught_calculator;
 		$this->file_resource = $file_resource;
 	}
 
 	public function beforeTraverse(array $scopes) {
-		fwrite($this->file_resource, "{\n");
+		$this->paths = [];
 	}
 
 	public function enterGuardedScope(GuardedScope $guarded_scope) {
 		$scope_name = $guarded_scope->getInclosedScope()->getName();
-
-		fwrite($this->file_resource, sprintf("\"%s\": {\n", $scope_name));
-
-
-		$first_exception = true;
 
 		foreach ($guarded_scope->getCatchClauses() as $catch_) {
 			try {
@@ -38,41 +35,31 @@ class CatchesPathVisitor extends AbstractScopeVisitor {
 				$caught_exceptions = [];
 			}
 
+			$exception_type_occurrences = [];
 			if (empty($caught_exceptions) === false) {
-				$exception_type_occurrences = [];
+				if (isset($this->paths[$scope_name]) === false) {
+					$this->paths[$scope_name] = [];
+				}
+
 				foreach ($caught_exceptions as $caught_exception) {
-					if (isset($exception_type_occurrences[(string)$caught_exception]) === false) {
+					if(isset($exception_type_occurrences[(string)$caught_exception]) === false) {
 						$exception_type_occurrences[(string)$caught_exception] = 0;
-					}
-
-					if ($first_exception === true) {
-						$first_exception = false;
 					} else {
-						fwrite($this->file_resource, ",\n");
+						$exception_type_occurrences[(string)$caught_exception] += 1;
 					}
 
-					fwrite($this->file_resource, sprintf("\"%s#%d\":\n", (string)$caught_exception, $exception_type_occurrences[(string)$caught_exception]));
-					$exception_type_occurrences[(string)$caught_exception] += 1;
-
-					$first_path = true;
+					$exception_name = (string)$caught_exception . "#" . $exception_type_occurrences[(string)$caught_exception];
 					foreach ($caught_exception->getPathsToCatchClause($catch_) as $path) {
-						if ($first_path === true) {
-							$first_path = false;
-						} else {
-							fwrite($this->file_resource, ",\n");
-						}
-
-						fwrite($this->file_resource, sprintf("%s", json_encode($this->pathToJsonSerialiazable($path), JSON_PRETTY_PRINT)));
+						$this->paths[$scope_name][$exception_name] = $this->pathToJsonSerialiazable($path);
 					}
+
 				}
 			}
 		}
-		fwrite($this->file_resource, "},\n");
 	}
 
 	public function afterTraverse(array $scopes) {
-		fseek($this->file_resource, - 2, SEEK_END); //overwrite last comma and newline
-		fwrite($this->file_resource, "\n}");
+		fwrite($this->file_resource, json_encode($this->paths, JSON_PRETTY_PRINT));
 	}
 
 	/**
