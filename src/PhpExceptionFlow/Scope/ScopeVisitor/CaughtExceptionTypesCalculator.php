@@ -22,6 +22,16 @@ class CaughtExceptionTypesCalculator extends AbstractScopeVisitor {
 		foreach ($guarded_scope->getCatchClauses() as $catch_clause) {
 			$caught_type = strtolower(implode('\\', $catch_clause->type->parts));
 			$caught_types = [];
+
+			if (isset($this->state->classResolvedBy[$caught_type]) === false) {
+				//todo: this is a really bad idea
+				//Apparently, this type is unknown (probably because it is an installed extension and not a native PHP/included package type)
+				//a type always resolves to itself, so just add it like that.
+				//this might result in uncaught exceptions that are actually caught...
+				$this->state->classResolvedBy[$caught_type] = [$caught_type => $caught_type];
+				$this->state->classResolves[$caught_type] = [$caught_type => $caught_type];
+				print sprintf("Added type to type matrix, as it was unknown: %s\n", $caught_type);
+			}
 			foreach ($this->state->classResolvedBy[$caught_type] as $resolved_by) {
 				if (in_array($resolved_by, $already_caught, true) === false) {
 					$caught_types[] = new Type(Type::TYPE_OBJECT, [], $resolved_by);
