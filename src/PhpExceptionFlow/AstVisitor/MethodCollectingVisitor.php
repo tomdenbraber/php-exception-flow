@@ -22,7 +22,7 @@ class MethodCollectingVisitor extends NodeVisitorAbstract {
 	}
 
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\Namespace_) {
+		if ($node instanceof Node\Stmt\Namespace_ && $node->name !== null) {
 			$this->current_namespace = strtolower(implode("\\", $node->name->parts));
 		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$cls_name = strlen($this->current_namespace) > 0 ? $this->current_namespace . "\\" . strtolower($node->name) : strtolower($node->name);

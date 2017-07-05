@@ -49,7 +49,7 @@ class ScopeCollector extends NodeVisitorAbstract implements CallableScopeCollect
 	}
 
 	public function enterNode(Node $node) {
-		if ($node instanceof Node\Stmt\Namespace_) {
+		if ($node instanceof Node\Stmt\Namespace_ && $node->name !== null) {
 			$this->current_namespace = strtolower(implode("\\", $node->name->parts));
 		} else if ($node instanceof Node\Stmt\ClassLike) {
 			$this->current_class = $node;
