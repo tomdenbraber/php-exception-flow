@@ -16,58 +16,93 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 	/** @var \SplObjectStorage */
 	private $sub_links;
 
+	private $maximal_elements;
+	private $minimal_elements;
+
 	public function __construct(ComparatorInterface $comparator) {
 		$this->comparator = $comparator;
 		$this->elements = new \SplObjectStorage();
 		$this->super_links = new \SplObjectStorage();
 		$this->sub_links = new \SplObjectStorage();
+		$this->maximal_elements = new \SplObjectStorage();
+		$this->minimal_elements = new \SplObjectStorage();
 	}
 
-	public function addElement(PartialOrderElementInterface $element_to_add) {
-		if ($this->elements->contains($element_to_add) === true) {
+	public function addElement(PartialOrderElementInterface $element) {
+		if ($this->elements->contains($element) === true) {
 			return;
 		}
 
-		$parents = array();
-		foreach ($this->getMaximalElements() as $maximal_element) {
-			$possible_parents = $this->getSmallestPossibleParents($element_to_add, $maximal_element);
-			if ($possible_parents !== false) {
-				$parents = array_merge($possible_parents, $parents);
-			}
-		}
-		$added_parent = false;
-		foreach ($parents as $parent) {
-			$this->addRelationBetween($parent, $element_to_add);
-			$added_parent = true;
-		}
-		$children = array();
-		foreach ($this->getMinimalElements() as $minimal_element) {
-			$possible_children = $this->getGreatestPossibleChildren($element_to_add, $minimal_element);
-			if ($possible_children !== false) {
-				$children = array_merge($possible_children, $children);
+		$this->elements->attach($element);
+		$this->super_links->attach($element, array());
+		$this->sub_links->attach($element, array());
+
+		$maximal_elements = $this->getMaximalElements();
+
+		$this->maximal_elements->attach($element);
+
+		foreach ($maximal_elements as $maximal_element) {
+			$comparison = $this->comparator->compare($element, $maximal_element);
+			if ($comparison === self::SMALLER) {
+				$this->insertElementBeneath($element, $maximal_element);
+			} else if ($comparison === self::GREATER) {
+				$this->insertElementAbove($element, $maximal_element);
 			}
 		}
 
-		$added_child = false;
+		$minimal_elements = $this->getMinimalElements();
+
+		$this->minimal_elements->attach($element);
+		foreach ($minimal_elements as $minimal_element) {
+			$comparison = $this->comparator->compare($element, $minimal_element);
+			if ($comparison === self::SMALLER) {
+				$this->insertElementBeneath($element, $minimal_element);
+			} else if ($comparison === self::GREATER) {
+				$this->insertElementAbove($element, $minimal_element);
+			}
+		}
+	}
+
+	private function insertElementBeneath(PartialOrderElementInterface $element, PartialOrderElementInterface $ancestor) {
+		$children = $this->getChildren($ancestor);
+		$child_selected = false;
 		foreach ($children as $child) {
-			$this->addRelationBetween($element_to_add, $child);
-			$added_child = true;
-			foreach ($this->getParents($child) as $childs_parent) {
-				if ($this->comparator->compare($childs_parent, $element_to_add) === self::GREATER) {
-					//childs_parent > element_to_add >= child
-					$this->removeRelationBetween($childs_parent, $child);
-				}
+			$comparison = $this->comparator->compare($element, $child);
+			if ($comparison === self::GREATER) {
+				$child_selected = true;
+				$this->insertElementBetween($element, $ancestor, $child);
+			} elseif ($comparison === self::SMALLER) {
+				$child_selected = true;
+				$this->insertElementBeneath($element, $child);
 			}
 		}
-
-		if ($added_parent === false) {
-			$this->super_links->attach($element_to_add, array());
+		if ($child_selected === false) {
+			$this->addRelationBetween($ancestor, $element);
 		}
 
-		if ($added_child === false) {
-			$this->sub_links->attach($element_to_add, array());
+	}
+
+	private function insertElementAbove(PartialOrderElementInterface $element, PartialOrderElementInterface $descendant) {
+		$parents = $this->getParents($descendant);
+		$child_selected = false;
+		foreach ($parents as $parent) {
+			$comparison = $this->comparator->compare($element, $parent);
+			if ($comparison === self::GREATER) {
+				$this->insertElementAbove($element, $parent);
+			} elseif ($comparison === self::SMALLER) {
+				$this->insertElementBetween($element, $parent, $descendant);
+			}
 		}
-		$this->elements->attach($element_to_add);
+		if ($child_selected === false) {
+			$this->addRelationBetween($element, $descendant);
+		}
+
+	}
+
+	private function insertElementBetween($element, $parent, $child) {
+		$this->addRelationBetween($element, $child);
+		$this->addRelationBetween($parent, $element);
+		$this->removeRelationBetween($parent, $child);
 	}
 
 	public function removeElement(PartialOrderElementInterface $element) {
@@ -116,90 +151,23 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 	 * @return array of the 'greatest' elements of this partial order
 	 */
 	public function getMaximalElements() {
-		$maximal_elements = array();
-		foreach ($this->super_links as $element) {
-			if (empty($this->super_links[$element]) === true) {
-				//this element has no parents and thus is maximal
-				$maximal_elements[] = $element;
-			}
+		$max_els = [];
+		foreach ($this->maximal_elements as $obj) {
+			$max_els[] = $obj;
 		}
-		return $maximal_elements;
+		return $max_els;
 	}
 
 	/**
 	 * @return array of the 'smallest' elements of this partial order
 	 */
 	public function getMinimalElements() {
-		$minimal_elements = array();
-		foreach ($this->sub_links as $element) {
-			if (empty($this->sub_links [$element]) === true) {
-				//this element has no children and thus is minimal
-				$minimal_elements[] = $element;
-			}
+		$min_els = [];
+		foreach ($this->minimal_elements as $obj) {
+			$min_els[] = $obj;
 		}
-		return $minimal_elements;
+		return $min_els;
 	}
-
-	/**
-	 * Retrieves the 'smallest' possible element from the partial order whioh is still greater than
-	 * the given new_element, when we start looking at the given member_element
-	 * @param PartialOrderElementInterface $new_element
-	 * @param PartialOrderElementInterface $member_element
-	 * @return mixed
-	 */
-	private function getSmallestPossibleParents(PartialOrderElementInterface $new_element, PartialOrderElementInterface $member_element) {
-		$resulting_elems = [];
-		$compare_res = $this->comparator->compare($new_element, $member_element);
-		switch ($compare_res) {
-			case self::NOT_COMPARABLE:
-			case self::EQUAL:
-			case self::GREATER;
-				return false;
-			case self::SMALLER:
-				foreach ($this->sub_links[$member_element] as $smaller_element) {
-					$smaller_parents = $this->getSmallestPossibleParents($new_element, $smaller_element);
-					if ($smaller_parents !== false) {
-						$resulting_elems[] = $smaller_element;
-					}
-				}
-				if (empty($resulting_elems) === true) {
-					$resulting_elems[] = $member_element;
-				}
-				break;
-		}
-		return $resulting_elems;
-	}
-
-	/**
-	 * Retrieves the 'greatest' possible element from the partial order whioh is still smaller than
-	 * the given new_element, when we start looking at the given member_element
-	 * @param PartialOrderElementInterface $new_element
-	 * @param PartialOrderElementInterface $member_element
-	 * @return mixed
-	 */
-	private function getGreatestPossibleChildren(PartialOrderElementInterface $new_element, PartialOrderElementInterface $member_element) {
-		$resulting_elems = [];
-		$compare_res = $this->comparator->compare($new_element, $member_element);
-		switch ($compare_res) {
-			case self::NOT_COMPARABLE:
-			case self::EQUAL:
-			case self::SMALLER:
-				return false;
-			case self::GREATER;
-				foreach ($this->super_links[$member_element] as $greater_element) {
-					$greater_children = $this->getGreatestPossibleChildren($new_element, $greater_element);
-					if ($greater_children !== false) {
-						$resulting_elems[] = $greater_element;
-					}
-				}
-				if (empty($resulting_elems) === true) {
-					$resulting_elems[] = $member_element;
-				}
-				break;
-		}
-		return $resulting_elems;
-	}
-
 
 	/**
 	 * @param PartialOrderElementInterface $element
@@ -309,19 +277,26 @@ class PartialOrder implements PartialOrderInterface, \JsonSerializable {
 	 * @param PartialOrderElementInterface $smaller
 	 */
 	private function addRelationBetween(PartialOrderElementInterface $greater, PartialOrderElementInterface $smaller) {
-		if (isset($this->sub_links[$greater]) === false) {
-			$this->sub_links[$greater] = array();
-		}
-		if (isset($this->super_links[$smaller]) === false) {
-			$this->super_links[$smaller] = array();
-		}
-
+		/** @var PartialOrderElementInterface[] $children */
 		$children = $this->sub_links[$greater];
-		$children[] = $smaller;
-		$this->sub_links[$greater] = $children;
+		if (in_array($smaller, $children, true) === false) {
+			$children[] = $smaller;
+			$this->sub_links[$greater] = $children;
+		}
 
+		/** @var PartialOrderElementInterface[] $parents */
 		$parents = $this->super_links[$smaller];
-		$parents[] = $greater;
-		$this->super_links[$smaller] = $parents;
+		if (in_array($greater, $parents, true) === false) {
+			$parents[] = $greater;
+			$this->super_links[$smaller] = $parents;
+		}
+
+		if ($this->minimal_elements->contains($greater) === true) {
+			$this->minimal_elements->detach($greater);
+		}
+
+		if ($this->maximal_elements->contains($smaller) === true) {
+			$this->maximal_elements->detach($smaller);
+		}
 	}
 }
