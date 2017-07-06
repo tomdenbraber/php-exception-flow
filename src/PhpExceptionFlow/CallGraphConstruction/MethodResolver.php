@@ -97,6 +97,11 @@ class MethodResolver implements MethodCallToMethodResolverInterface {
 		$child_methods = $partial_order->getChildren($method);
 		$current_classlike = strtolower($method->getClass());
 
+		if (isset($this->state->classResolvedBy[$current_classlike]) === false) {
+			print sprintf("%s is not registered in State, so it will be skipped(R3).\n", $current_classlike);
+			return;
+		}
+
 		$subclasses_not_implementing = $this->state->classResolvedBy[$current_classlike];
 		unset($subclasses_not_implementing[$current_classlike]);
 		foreach ($child_methods as $child) {
@@ -118,6 +123,11 @@ class MethodResolver implements MethodCallToMethodResolverInterface {
 		/** @var Method[] $ancestors */
 		$ancestors = $partial_order->getAncestors($method);
 		$current_classlike = strtolower($method->getClass());
+
+		if (isset($this->state->classResolvedBy[$current_classlike]) === false) {
+			print sprintf("%s is not registered in State, so it will be skipped(R2, R4).\n", $current_classlike);
+			return;
+		}
 
 		$current_classlike_resolves = $this->state->classResolves[$current_classlike];
 		unset($current_classlike_resolves[$current_classlike]);
