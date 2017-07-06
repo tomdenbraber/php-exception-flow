@@ -133,7 +133,7 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 				throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 			}
 		} else {
-			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
+			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, call %s is located at line %d", $call->class->getAttribute("type", Type::unknown()), is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 		}
 	}
 
@@ -171,28 +171,33 @@ class AstCallNodeToScopeResolver implements CallResolverInterface {
 	private function resolveCallToParent(Node\Expr\StaticCall $call) {
 		if ($call->class instanceof Node\Name) {
 			$class = strtolower(implode("\\", $call->class->parts));
-			$class_resolves = $this->state->classResolves[$class];
-			if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
-				/** @var Method[] $called_methods */
-				$called_methods = $this->class_method_to_implementations[$class][$call->name];
-				$called_scopes = [];
-				foreach ($called_methods as $called_method) {
-					$called_method_name = strtolower($called_method->getName());
-					$called_method_class = strtolower($called_method->getClass());
-					if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
-						if (isset($class_resolves[$called_method_class]) === true) {
-							$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+
+			if (isset($this->state->classResolves[$class]) === true) {
+				$class_resolves = $this->state->classResolves[$class];
+				if (is_string($call->name) === true && isset($this->class_method_to_implementations[$class][$call->name]) === true) {
+					/** @var Method[] $called_methods */
+					$called_methods = $this->class_method_to_implementations[$class][$call->name];
+					$called_scopes = [];
+					foreach ($called_methods as $called_method) {
+						$called_method_name = strtolower($called_method->getName());
+						$called_method_class = strtolower($called_method->getClass());
+						if (isset($this->method_scopes[$called_method_class][$called_method_name]) === true) {
+							if (isset($class_resolves[$called_method_class]) === true) {
+								$called_scopes[] = $this->method_scopes[$called_method_class][$called_method_name];
+							}
+						} else {
+							throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
 						}
-					} else {
-						throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in method scopes", $class, $call->name));
 					}
+					return $called_scopes;
+				} else {
+					throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 				}
-				return $called_scopes;
 			} else {
-				throw new \UnexpectedValueException(sprintf("Method %s::%s() could not be found in applies to set (%d) ", $class, is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
+				throw new \UnexpectedValueException(sprintf("Class %s cannot be found in the state", $class));
 			}
 		} else {
-			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, method-name is %s", $call->class->getAttribute("type", Type::unknown()), $call->name));
+			throw new \UnexpectedValueException(sprintf("Cannot resolve static call; class expression has type %s, call %s is located at line %d", $call->class->getAttribute("type", Type::unknown()), is_string($call->name) === true ? $call->name : $call->name->getType(), $call->getLine()));
 		}
 	}
 }
